@@ -8,19 +8,28 @@ export const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState('All');
+  const [vatRate, setVatRate] = useState(15);
 
   useEffect(() => {
-    async function fetchProducts() {
-      const { data, error } = await supabase
+    async function fetchData() {
+      // 1. Fetch Products
+      const { data: pData } = await supabase
         .from('products')
         .select(`*, images:product_images(*)`)
         .eq('is_published', true);
 
-      if (error) console.error(error);
-      else setProducts(data || []);
+      // 2. Fetch Global VAT Settings
+      const { data: sData } = await supabase
+        .from('settings')
+        .select('*');
+      
+      const vRate = sData?.find(s => s.key === 'vat_rate')?.value;
+
+      setProducts(pData || []);
+      if (vRate) setVatRate(parseFloat(vRate));
       setLoading(false);
     }
-    fetchProducts();
+    fetchData();
   }, []);
 
   const categories = ['All', ...new Set(products.map(p => p.category || 'General'))];
@@ -77,7 +86,7 @@ export const Products = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
               >
-                <ProductCard product={product} />
+                <ProductCard product={product} vatRate={vatRate} />
               </motion.div>
             ))}
           </div>

@@ -1,12 +1,12 @@
 import type { OrderStatus } from '../types';
 
 /**
- * Format a numeric amount as a currency string.
+ * Format a numeric amount as a Namibian currency string.
  */
 export function formatCurrency(
   amount: number,
-  currency = 'ZAR',
-  locale = 'en-ZA'
+  currency = 'NAD',
+  locale = 'en-NA'
 ): string {
   return new Intl.NumberFormat(locale, {
     style: 'currency',

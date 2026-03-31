@@ -7,19 +7,22 @@
 @theme {
   --font-sans: "Inter", system-ui, sans-serif;
 
-  --color-charcoal-950: #0a0a0a;
-  --color-charcoal-900: #121212;
-  --color-charcoal-800: #1e1e1e;
-  --color-charcoal-700: #2a2a2a;
-  --color-charcoal-600: #3a3a3a;
-  --color-charcoal-500: #5a5a5a;
+  --color-navy-950: #020617;
+  --color-navy-900: #050b18;
+  --color-navy-800: #0f172a;
+  --color-navy-700: #1e293b;
+  --color-navy-600: #334155;
+  --color-navy-500: #64748b;
 
-  --color-gold-500: #c9a84c;
+  --color-gold-500: #c19b3a;
   --color-gold-400: #d4a853;
   --color-gold-600: #a88838;
 
-  --color-cream-100: #f5f0e8;
-  --color-cream-200: #ece3d0;
+  --color-accent-blue: #1e3a8a;
+  --color-accent-light: #3b82f6;
+
+  --color-cream-100: #f8fafc;
+  --color-cream-200: #e2e8f0;
   
   --color-success: #10b981;
   --color-warning: #f59e0b;
@@ -28,33 +31,37 @@
 
 @layer base {
   body {
-    @apply font-sans antialiased bg-charcoal-900 text-cream-100;
+    @apply font-sans antialiased bg-navy-950 text-cream-100 selection:bg-gold-500 selection:text-navy-950;
   }
 }
 
 @layer utilities {
   .dashboard-card {
-    @apply bg-charcoal-800 border border-charcoal-700/50 rounded-xl p-6 shadow-sm;
+    @apply bg-navy-900/50 backdrop-blur-sm border border-navy-800/50 rounded-2xl p-6 shadow-2xl;
   }
   
   .sidebar-link {
-    @apply flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors hover:bg-charcoal-700 hover:text-white;
+    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-navy-800 hover:text-white;
   }
   
   .sidebar-link-active {
-    @apply bg-gold-500/10 text-gold-500 hover:bg-gold-500/20;
+    @apply bg-gold-500/10 text-gold-500 border-l-2 border-gold-500 rounded-l-none hover:bg-gold-500/20;
   }
   
   .input-base {
-    @apply w-full bg-charcoal-950 border border-charcoal-700 rounded-lg px-4 py-2.5 text-sm text-white placeholder-charcoal-500 focus:outline-none focus:border-gold-500 transition-colors;
+    @apply w-full bg-navy-950 border border-navy-800 rounded-xl px-4 py-3 text-sm text-white placeholder-navy-500 focus:outline-none focus:border-gold-500 transition-all focus:ring-1 focus:ring-gold-500/20;
   }
   
   .btn-dashboard-primary {
-    @apply bg-gold-500 text-charcoal-950 px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-gold-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-gold-500 text-navy-950 px-6 py-3 rounded-xl text-sm font-bold uppercase tracking-widest hover:bg-gold-400 transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
   }
   
   .btn-dashboard-ghost {
-    @apply text-cream-100/60 hover:text-white hover:bg-charcoal-700 px-4 py-2 rounded-lg text-sm transition-colors;
+    @apply text-cream-100/60 hover:text-white hover:bg-navy-800 px-4 py-2 rounded-xl text-sm transition-colors;
+  }
+
+  .gold-divider {
+    @apply h-px w-full bg-linear-to-r from-transparent via-gold-500/30 to-transparent my-6;
   }
 }
 

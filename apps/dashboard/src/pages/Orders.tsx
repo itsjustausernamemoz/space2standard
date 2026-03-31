@@ -7,16 +7,19 @@ import {
   getOrderStatusColor,
   formatDate
 } from '@shared/utils';
+import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
   Eye, 
   Mail, 
   Phone, 
-  Clock
+  Clock,
+  FileText
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 export const Orders = () => {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -173,7 +176,15 @@ export const Orders = () => {
                              <option value="cancelled">Cancelled</option>
                            </select>
                            
-                           {/* Quick Details Popover placeholder */}
+                            {/* Quick Actions */}
+                           <button 
+                             onClick={() => navigate(`/invoices/new?orderId=${o.id}`)}
+                             className="p-2 bg-charcoal-800 rounded-lg text-gold-500 hover:bg-gold-500 hover:text-charcoal-950 transition-all shadow-lg"
+                             title="Issue Invoice"
+                           >
+                              <FileText size={16} />
+                           </button>
+                           
                            <button className="p-2 bg-charcoal-800 rounded-lg text-charcoal-500 hover:text-white transition-colors">
                               <Eye size={16} />
                            </button>

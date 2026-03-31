@@ -15,22 +15,38 @@ create table if not exists profiles (
   created_at  timestamptz default now()
 );
 
+-- Security function to- [x] Fix RLS infinite recursion (is_admin security function)
+-- **Database Stabilization**: Resolved the "Database error creating new user" issue and fixed a critical **"Infinite recursion detected in policy"** error by implementing a `security definer` function (`is_admin()`). This ensures Row-Level Security (RLS) checks are performed safely and efficiently.
+create or replace function public.is_admin()
+returns boolean language plpgsql security definer 
+set search_path = public
+as $$
+begin
+  return exists (
+    select 1 from public.profiles 
+    where id = auth.uid() 
+    and role = 'admin'
+  );
+end;
+$$;
+
 alter table profiles enable row level security;
 
 create policy "Users can view own profile"
   on profiles for select using (auth.uid() = id);
 
 create policy "Admin full access profiles"
-  on profiles for all using (
-    exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-  );
+  on profiles for all using (is_admin());
 
 -- Auto-create profile on sign-up
 create or replace function handle_new_user()
-returns trigger language plpgsql security definer as $$
+returns trigger language plpgsql security definer 
+set search_path = public
+as $$
 begin
   insert into profiles (id, email, full_name)
-  values (new.id, new.email, new.raw_user_meta_data->>'full_name');
+  values (new.id, new.email, new.raw_user_meta_data->>'full_name')
+  on conflict (id) do nothing;
   return new;
 end;
 $$;
@@ -65,9 +81,7 @@ create policy "Public can view published products"
   on products for select using (is_published = true);
 
 create policy "Admin full access products"
-  on products for all using (
-    exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-  );
+  on products for all using (is_admin());
 
 -- ─────────────────────────────────────────────────────────────
 -- 3. PRODUCT IMAGES
@@ -86,9 +100,7 @@ create policy "Public can view product images"
   on product_images for select using (true);
 
 create policy "Admin full access product images"
-  on product_images for all using (
-    exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-  );
+  on product_images for all using (is_admin());
 
 -- ─────────────────────────────────────────────────────────────
 -- 4. ORDERS
@@ -112,9 +124,7 @@ create policy "Anyone can insert order"
   on orders for insert with check (true);
 
 create policy "Admin full access orders"
-  on orders for all using (
-    exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-  );
+  on orders for all using (is_admin());
 
 -- ─────────────────────────────────────────────────────────────
 -- 5. ORDER ITEMS
@@ -135,9 +145,7 @@ create policy "Anyone can insert order items"
   on order_items for insert with check (true);
 
 create policy "Admin full access order items"
-  on order_items for all using (
-    exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-  );
+  on order_items for all using (is_admin());
 
 -- ─────────────────────────────────────────────────────────────
 -- 6. DOCUMENTS (invoices & quotations)
@@ -159,9 +167,7 @@ create table if not exists documents (
 alter table documents enable row level security;
 
 create policy "Admin full access documents"
-  on documents for all using (
-    exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-  );
+  on documents for all using (is_admin());
 
 -- ─────────────────────────────────────────────────────────────
 -- 7. STOCK LOG
@@ -178,9 +184,7 @@ create table if not exists stock_log (
 alter table stock_log enable row level security;
 
 create policy "Admin full access stock log"
-  on stock_log for all using (
-    exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-  );
+  on stock_log for all using (is_admin());
 
 -- ─────────────────────────────────────────────────────────────
 -- 8. ANNOUNCEMENTS
@@ -202,9 +206,7 @@ create policy "Public can view active announcements"
   on announcements for select using (is_active = true);
 
 create policy "Admin full access announcements"
-  on announcements for all using (
-    exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-  );
+  on announcements for all using (is_admin());
 
 -- ─────────────────────────────────────────────────────────────
 -- 9. SETTINGS
@@ -217,9 +219,7 @@ create table if not exists settings (
 alter table settings enable row level security;
 
 create policy "Admin full access settings"
-  on settings for all using (
-    exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-  );
+  on settings for all using (is_admin());
 
 -- Seed default settings
 insert into settings (key, value) values
@@ -243,13 +243,59 @@ begin
 end;
 $$;
 
-create trigger products_updated_at
-  before update on products
-  for each row execute procedure set_updated_at();
+-- ─────────────────────────────────────────────────────────────
+-- 11. ATOMIC ORDER SUBMISSION (RPC)
+-- ─────────────────────────────────────────────────────────────
+create or replace function public.place_order(order_data jsonb, items_data jsonb)
+returns jsonb language plpgsql security definer 
+set search_path = public
+as $$
+declare
+  new_order_id uuid;
+  result jsonb;
+begin
+  -- 1. Insert the order
+  insert into orders (
+    customer_name, 
+    customer_email, 
+    customer_phone, 
+    delivery_address, 
+    special_notes, 
+    status
+  )
+  values (
+    order_data->>'customer_name',
+    order_data->>'customer_email',
+    order_data->>'customer_phone',
+    order_data->>'delivery_address',
+    order_data->>'special_notes',
+    coalesce(order_data->>'status', 'new')
+  )
+  returning id into new_order_id;
 
-create trigger orders_updated_at
-  before update on orders
-  for each row execute procedure set_updated_at();
+  -- 2. Insert the items
+  -- We assume items_data is an array of items
+  insert into order_items (
+    order_id,
+    product_id,
+    product_name_snapshot,
+    unit_price_snapshot,
+    quantity,
+    discount_applied
+  )
+  select 
+    new_order_id,
+    (item->>'product_id')::uuid,
+    item->>'product_name_snapshot',
+    (item->>'unit_price_snapshot')::numeric,
+    (item->>'quantity')::int,
+    coalesce((item->>'discount_applied')::numeric, 0)
+  from jsonb_array_elements(items_data) as item;
+
+  -- 3. Return the created order id
+  return jsonb_build_object('id', new_order_id);
+end;
+$$;
 
 -- ─────────────────────────────────────────────────────────────
 -- 11. STORAGE BUCKET POLICY (run in Supabase Studio → Storage)

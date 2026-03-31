@@ -27,10 +27,10 @@ export const Navbar = () => {
   return (
     <nav className={cn(
       'fixed top-0 left-0 right-0 z-50 transition-all duration-500',
-      isScrolled ? 'bg-cream-50/90 backdrop-blur-md shadow-sm py-4' : 'bg-transparent py-6'
+      isScrolled ? 'bg-navy-950/90 backdrop-blur-md shadow-lg py-4 border-b border-white/5' : 'bg-transparent py-6'
     )}>
       <div className="container mx-auto px-6 flex items-center justify-between">
-        <Link to="/" className="text-2xl font-serif text-walnut-950 tracking-tighter hover:text-gold-600 transition-colors">
+        <Link to="/" className="text-2xl font-serif text-white tracking-tighter hover:text-gold-500 transition-all">
           Space<span className="text-gold-500 italic">2</span>Standard
         </Link>
 
@@ -42,8 +42,8 @@ export const Navbar = () => {
                 key={link.name}
                 to={link.path}
                 className={cn(
-                  'text-[10px] font-bold uppercase tracking-[0.25em] transition-colors hover:text-gold-500',
-                  location.pathname === link.path ? 'text-gold-500' : 'text-charcoal-700'
+                  'text-[10px] font-bold uppercase tracking-[0.25em] transition-all hover:text-gold-500',
+                  location.pathname === link.path ? 'text-gold-500' : 'text-navy-400'
                 )}
               >
                 {link.name}
@@ -52,15 +52,15 @@ export const Navbar = () => {
           </div>
           
           <Link to="/products">
-            <Button size="sm" variant="primary">
-              Order a Piece
+            <Button size="sm" variant="primary" className="bg-gold-600 hover:bg-gold-500 text-white rounded-lg px-6">
+              Commission
             </Button>
           </Link>
         </div>
 
         {/* Mobile Toggle */}
         <button 
-          className="md:hidden text-walnut-950"
+          className="md:hidden text-white"
           onClick={() => setIsOpen(!isOpen)}
         >
           {isOpen ? <X size={24} /> : <Menu size={24} />}
@@ -69,22 +69,22 @@ export const Navbar = () => {
 
       {/* Mobile Menu */}
       <div className={cn(
-        'fixed inset-0 bg-cream-50 z-40 flex flex-col items-center justify-center gap-8 transition-all duration-500 md:hidden',
+        'fixed inset-0 bg-navy-950 z-40 flex flex-col items-center justify-center gap-10 transition-all duration-500 md:hidden',
         isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full'
       )}>
         {navLinks.map((link) => (
           <Link
             key={link.name}
             to={link.path}
-            className="text-2xl font-serif text-walnut-950 hover:text-gold-500 transition-colors"
+            className="text-3xl font-serif text-white hover:text-gold-500 transition-all"
             onClick={() => setIsOpen(false)}
           >
             {link.name}
           </Link>
         ))}
         <Link to="/products" onClick={() => setIsOpen(false)}>
-          <Button size="lg" variant="primary">
-            Order a Piece
+          <Button size="lg" variant="primary" className="bg-gold-600 px-12 py-6 rounded-xl text-white">
+            Begin Commission
           </Button>
         </Link>
       </div>

@@ -19,20 +19,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // 1. Initial session check
-    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
+    // 1. Listen for auth changes (including initial session load)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log(`AuthContext: Auth event [${event}] triggered.`);
+      
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) checkAdminRole(session.user.id);
-      else setLoading(false);
-    });
 
-    // 2. Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: string, session: Session | null) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) await checkAdminRole(session.user.id);
-      else {
+      if (session?.user) {
+        await checkAdminRole(session.user.id);
+      } else {
         setIsAdmin(false);
         setLoading(false);
       }
@@ -43,16 +39,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkAdminRole = async (userId: string) => {
     try {
+      // 1. Fetch current profile
       const { data, error } = await supabase
         .from('profiles')
-        .select('role')
+        .select('*')
         .eq('id', userId)
         .single();
       
-      if (error) throw error;
-      setIsAdmin(data?.role === 'admin');
+      if (error && error.code === 'PGRST116') {
+        // Profile doesn't exist, try to auto-create (Fail-safe)
+        console.warn('AuthContext: Profile missing for user. Attempting auto-creation...');
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user) {
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              id: userId,
+              email: userData.user.email,
+              role: 'customer' // Default to customer for safety
+            })
+            .select()
+            .single();
+          
+          if (createError) throw createError;
+          setIsAdmin(newProfile?.role === 'admin');
+        }
+      } else if (error) {
+        throw error;
+      } else {
+        setIsAdmin(data?.role === 'admin');
+      }
     } catch (err) {
-      console.error('Error checking admin role:', err);
+      console.error('AuthContext: Error checking admin role:', err);
       setIsAdmin(false);
     } finally {
       setLoading(false);

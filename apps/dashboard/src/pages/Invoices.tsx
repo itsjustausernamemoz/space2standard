@@ -11,9 +11,9 @@ import {
   History,
   FileCheck
 } from 'lucide-react';
-import { PDFDownloadLink, Document as PDFDoc, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { PDFDownloadLink, Document as PDFDoc, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
 
-// Register fonts for PDF
+// Register fonts for PDF (Using premium sans-serif)
 Font.register({
   family: 'Inter',
   fonts: [
@@ -22,103 +22,209 @@ Font.register({
   ]
 });
 
-// PDF Styles
+// Safari Craft High-Fidelity Styles
 const styles = StyleSheet.create({
-  page: { padding: 40, fontFamily: 'Inter', backgroundColor: '#ffffff', color: '#1a1a1a' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 40, borderBottomWidth: 1, borderBottomColor: '#f1f1f1', paddingBottom: 20 },
-  logo: { fontSize: 24, fontWeight: 700, letterSpacing: -1 },
-  documentInfo: { textAlign: 'right' },
-  docType: { fontSize: 20, fontWeight: 700, textTransform: 'uppercase', color: '#c9a84c', marginBottom: 4 },
-  section: { marginBottom: 30 },
-  sectionTitle: { fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#888', marginBottom: 10, letterSpacing: 1 },
-  row: { flexDirection: 'row', marginBottom: 15 },
-  label: { width: 100, fontSize: 10, fontWeight: 700, color: '#888' },
-  value: { flex: 1, fontSize: 10 },
-  table: { marginTop: 20 },
-  tableHeader: { flexDirection: 'row', backgroundColor: '#fafafa', padding: 8, borderBottomWidth: 1, borderBottomColor: '#eeeeee' },
-  tableRow: { flexDirection: 'row', padding: 8, borderBottomWidth: 1, borderBottomColor: '#f9f9f9' },
-  cellHeader: { fontSize: 9, fontWeight: 700, color: '#888', textTransform: 'uppercase' },
-  cell: { fontSize: 9 },
-  colDesc: { flex: 3 },
-  colQty: { flex: 0.5, textAlign: 'center' },
-  colPrice: { flex: 1, textAlign: 'right' },
-  colTotal: { flex: 1, textAlign: 'right' },
-  totalsArea: { marginTop: 30, paddingLeft: 300 },
-  totalRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
-  grandTotal: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#eeeeee', fontSize: 14, fontWeight: 700, color: '#c9a84c' },
-  footer: { position: 'absolute', bottom: 40, left: 40, right: 40, textAlign: 'center', borderTopWidth: 1, borderTopColor: '#f1f1f1', paddingTop: 20, fontSize: 8, color: '#888' }
+  page: { padding: 40, fontFamily: 'Inter', backgroundColor: '#ffffff', color: '#1a1a1a', fontSize: 9 },
+  header: { alignItems: 'center', marginBottom: 20 },
+  logo: { width: 120, height: 60, objectFit: 'contain', marginBottom: 10 },
+  studioName: { fontSize: 18, fontWeight: 700, color: '#c19b3a', letterSpacing: 1, textTransform: 'uppercase' },
+  studioDetails: { fontSize: 8, color: '#444', marginTop: 4, fontWeight: 700 },
+  
+  divider: { height: 1, backgroundColor: '#c19b3a', marginVertical: 15, width: '100%' },
+  
+  docTitle: { fontSize: 22, fontWeight: 700, color: '#c19b3a', textAlign: 'center', textTransform: 'uppercase', marginBottom: 20, letterSpacing: 2 },
+  
+  metaContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
+  metaBox: { width: '48%', border: '0.5pt solid #eee' },
+  metaRow: { flexDirection: 'row', borderBottom: '0.5pt solid #eee' },
+  metaLabel: { width: '40%', padding: 6, backgroundColor: '#fffbeb', fontWeight: 700, borderRight: '0.5pt solid #eee' },
+  metaValue: { width: '60%', padding: 6 },
+  
+  detailsContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 30 },
+  detailsBox: { width: '48%', padding: 10, backgroundColor: '#fffbeb', borderRadius: 2 },
+  detailsTitle: { fontSize: 8, fontWeight: 700, color: '#c19b3a', textTransform: 'uppercase', marginBottom: 8 },
+  detailsText: { marginBottom: 3, lineHeight: 1.4 },
+  detailsTextBold: { fontWeight: 700, fontSize: 10, marginTop: 4 },
+  
+  table: { marginTop: 10 },
+  tableHeader: { flexDirection: 'row', backgroundColor: '#c19b3a', paddingVertical: 8, paddingHorizontal: 4 },
+  tableRow: { flexDirection: 'row', borderBottom: '0.5pt solid #eee', paddingVertical: 8, paddingHorizontal: 4, alignItems: 'center' },
+  cellHeader: { color: '#ffffff', fontWeight: 700, fontSize: 8, textTransform: 'uppercase' },
+  cell: { fontSize: 8.5 },
+  
+  colId: { width: '5%', textAlign: 'center' },
+  colDesc: { width: '45%' },
+  colQty: { width: '8%', textAlign: 'center' },
+  colUnit: { width: '12%', textAlign: 'center' },
+  colRate: { width: '15%', textAlign: 'right' },
+  colAmount: { width: '15%', textAlign: 'right', fontWeight: 700 },
+  
+  totalContainer: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 },
+  totalBox: { width: '40%', border: '1pt solid #c19b3a', flexDirection: 'row' },
+  totalLabel: { width: '40%', padding: 8, backgroundColor: '#fffbeb', fontWeight: 700, borderRight: '1pt solid #c19b3a', textAlign: 'right' },
+  totalValue: { width: '60%', padding: 8, textAlign: 'right', fontWeight: 700, fontSize: 11 },
+  
+  sectionTitle: { fontSize: 10, fontWeight: 700, color: '#c19b3a', marginTop: 30, marginBottom: 10, borderBottom: '0.5pt solid #eee', paddingBottom: 4 },
+  termsText: { fontSize: 7, color: '#666', lineHeight: 1.6, marginBottom: 2 },
+  
+  bankTable: { width: '50%', border: '0.5pt solid #eee', marginTop: 5 },
+  bankRow: { flexDirection: 'row', borderBottom: '0.5pt solid #eee' },
+  bankLabel: { width: '40%', padding: 4, backgroundColor: '#f9f9f9', fontWeight: 700, borderRight: '0.5pt solid #eee' },
+  bankValue: { width: '60%', padding: 4 },
+  
+  authoriseContainer: { marginTop: 40, borderTop: '0.5pt solid #c19b3a', paddingTop: 10, width: '40%' },
+  signatureLine: { height: 30, marginBottom: 5 },
+  authoriseName: { fontWeight: 700, fontSize: 9 },
+  authoriseTitle: { fontSize: 8, color: '#666', marginTop: 2 },
+  
+  footer: { position: 'absolute', bottom: 30, left: 40, right: 40, textAlign: 'center', fontSize: 7, color: '#aaa', borderTop: '0.5pt solid #eee', paddingTop: 10 }
 });
 
+const formatN = (val: number) => `N$ ${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
 // PDF Component
-const InvoicePDF = ({ doc, businessInfo }: { doc: Document, businessInfo: any }) => (
+const InvoicePDF = ({ doc, businessInfo, order }: { doc: Document, businessInfo: any, order?: any }) => (
   <PDFDoc>
     <Page size="A4" style={styles.page}>
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.logo}>Space2Standard</Text>
-        <View style={styles.documentInfo}>
-          <Text style={styles.docType}>{doc.type}</Text>
-          <Text style={styles.value}>#{doc.id.slice(0, 8).toUpperCase()}</Text>
-          <Text style={styles.value}>{formatDate(doc.created_at)}</Text>
+        {businessInfo.business_logo_url && <Image src={businessInfo.business_logo_url} style={styles.logo} />}
+        <Text style={styles.studioName}>{businessInfo.business_name || 'Safari Craft Studios'}</Text>
+        <Text style={styles.studioDetails}>
+          {businessInfo.business_address || 'Windhoek, Namibia'} | {businessInfo.business_email} | {businessInfo.business_phone}
+        </Text>
+      </View>
+
+      <View style={styles.divider} />
+      
+      <Text style={styles.docTitle}>{doc.type}</Text>
+
+      {/* Metadata Grid */}
+      <View style={styles.metaContainer}>
+        <View style={styles.metaBox}>
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>{doc.type} No:</Text>
+            <Text style={styles.metaValue}>SCS-{new Date().getFullYear()}-{doc.id.slice(0, 4).toUpperCase()}</Text>
+          </View>
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>Valid Until:</Text>
+            <Text style={styles.metaValue}>{formatDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString())}</Text>
+          </View>
+        </View>
+        <View style={styles.metaBox}>
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>Date Issued:</Text>
+            <Text style={styles.metaValue}>{formatDate(doc.created_at)}</Text>
+          </View>
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>Project Start:</Text>
+            <Text style={styles.metaValue}>TBD</Text>
+          </View>
         </View>
       </View>
 
-      <View style={styles.section}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <View style={{ width: '45%' }}>
-            <Text style={styles.sectionTitle}>From</Text>
-            <Text style={styles.value}>{businessInfo.business_name || 'Space2Standard Carpentry'}</Text>
-            <Text style={styles.value}>{businessInfo.business_address || '123 Artisan Way, Craftville'}</Text>
-            <Text style={styles.value}>{businessInfo.business_email || 'hello@space2standard.com'}</Text>
-          </View>
-          <View style={{ width: '45%' }}>
-            <Text style={styles.sectionTitle}>Bill To</Text>
-            <Text style={styles.value}>Inquiry Ref: {doc.order_id?.slice(0, 8)}</Text>
-            <Text style={styles.value}>Client Details On Record</Text>
-          </View>
+      {/* Details Boxes */}
+      <View style={styles.detailsContainer}>
+        <View style={styles.detailsBox}>
+          <Text style={styles.detailsTitle}>Bill To</Text>
+          <Text style={styles.detailsText}>{order?.customer_name || 'Valued Client'}</Text>
+          <Text style={styles.detailsText}>{order?.customer_phone || ''}</Text>
+          <Text style={[styles.detailsText, styles.detailsTextBold]}>Space2Standard</Text>
+          <Text style={styles.detailsText}>{order?.customer_email || ''}</Text>
+        </View>
+        <View style={styles.detailsBox}>
+          <Text style={styles.detailsTitle}>Project Details</Text>
+          <Text style={styles.detailsText}>Client: {order?.customer_name || 'Internal'}</Text>
+          <Text style={styles.detailsText}>Domain: {businessInfo.business_url || 'www.space2standard.com'}</Text>
+          <Text style={styles.detailsText}>Ref ID: #{doc.order_id?.slice(0, 8).toUpperCase() || 'N/A'}</Text>
         </View>
       </View>
 
+      {/* Line Items Table */}
       <View style={styles.table}>
         <View style={styles.tableHeader}>
-          <Text style={[styles.cellHeader, styles.colDesc]}>Description</Text>
+          <Text style={[styles.cellHeader, styles.colId]}>#</Text>
+          <Text style={[styles.cellHeader, styles.colDesc]}>Description of Service</Text>
           <Text style={[styles.cellHeader, styles.colQty]}>Qty</Text>
-          <Text style={[styles.cellHeader, styles.colPrice]}>Unit Price</Text>
-          <Text style={[styles.cellHeader, styles.colTotal]}>Total</Text>
+          <Text style={[styles.cellHeader, styles.colUnit]}>Unit</Text>
+          <Text style={[styles.cellHeader, styles.colRate]}>Unit Rate</Text>
+          <Text style={[styles.cellHeader, styles.colAmount]}>Amount (N$)</Text>
         </View>
         {(doc.line_items || []).map((item: any, i: number) => (
           <View key={i} style={styles.tableRow}>
+            <Text style={[styles.cell, styles.colId]}>{i + 1}</Text>
             <Text style={[styles.cell, styles.colDesc]}>{item.product_name}</Text>
             <Text style={[styles.cell, styles.colQty]}>{item.quantity}</Text>
-            <Text style={[styles.cell, styles.colPrice]}>{formatCurrency(item.unit_price)}</Text>
-            <Text style={[styles.cell, styles.colTotal]}>{formatCurrency(item.total)}</Text>
+            <Text style={[styles.cell, styles.colUnit]}>{item.unit || 'Piece'}</Text>
+            <Text style={[styles.cell, styles.colRate]}>{formatN(item.unit_price)}</Text>
+            <Text style={[styles.cell, styles.colAmount]}>{formatN(item.total)}</Text>
           </View>
         ))}
       </View>
 
-      <View style={styles.totalsArea}>
-        <View style={styles.totalRow}>
-          <Text style={styles.label}>Subtotal</Text>
-          <Text style={styles.cell}>{formatCurrency(doc.subtotal)}</Text>
-        </View>
-        <View style={styles.totalRow}>
-          <Text style={styles.label}>VAT ({doc.vat_rate}%)</Text>
-          <Text style={styles.cell}>{formatCurrency(doc.vat_amount)}</Text>
-        </View>
-        <View style={[styles.totalRow, styles.grandTotal]}>
-          <Text style={{ fontWeight: 700 }}>Total Due</Text>
-          <Text style={{ fontWeight: 700 }}>{formatCurrency(doc.grand_total)}</Text>
+      {/* Totals Box */}
+      <View style={styles.totalContainer}>
+        <View style={styles.totalBox}>
+          <Text style={styles.totalLabel}>Total:</Text>
+          <Text style={styles.totalValue}>{formatN(doc.grand_total)}</Text>
         </View>
       </View>
 
+      {/* Footer Info */}
+      <Text style={styles.sectionTitle}>Terms & Conditions</Text>
+      <View>
+        <Text style={styles.termsText}>1. A 50% deposit ({formatN(doc.grand_total * 0.5)}) is required upon acceptance to confirm the booking.</Text>
+        <Text style={styles.termsText}>2. The remaining balance is due after delivery of the service requested.</Text>
+        <Text style={styles.termsText}>3. Cancellations made less than 5 days after acceptance will forfeit the deposit.</Text>
+        <Text style={styles.termsText}>4. All prices are quoted in Namibian Dollars (N$).</Text>
+      </View>
+
+      <Text style={styles.sectionTitle}>Banking Details</Text>
+      <View style={styles.bankTable}>
+        <View style={styles.bankRow}>
+          <Text style={styles.bankLabel}>Bank:</Text>
+          <Text style={styles.bankValue}>{businessInfo.bank_name || 'N/A'}</Text>
+        </View>
+        <View style={styles.bankRow}>
+          <Text style={styles.bankLabel}>Account Name:</Text>
+          <Text style={styles.bankValue}>{businessInfo.bank_account_name || 'N/A'}</Text>
+        </View>
+        <View style={styles.bankRow}>
+          <Text style={styles.bankLabel}>Account No:</Text>
+          <Text style={styles.bankValue}>{businessInfo.bank_account_number || 'N/A'}</Text>
+        </View>
+        <View style={styles.bankRow}>
+          <Text style={styles.bankLabel}>Branch Code:</Text>
+          <Text style={styles.bankValue}>{businessInfo.bank_branch_code || 'N/A'}</Text>
+        </View>
+        <View style={styles.bankRow}>
+          <Text style={styles.bankLabel}>Reference:</Text>
+          <Text style={styles.bankValue}>{businessInfo.bank_reference || 'SCS-' + doc.id.slice(0,4)}</Text>
+        </View>
+      </View>
+
+      {/* Authorisation */}
+      <View style={styles.sectionTitle}>Authorised By</View>
+      <View style={styles.authoriseContainer}>
+        <View style={styles.signatureLine} />
+        <Text style={styles.authoriseName}>{businessInfo.authorised_by_name || 'Studio Principal'}</Text>
+        <Text style={styles.authoriseTitle}>{businessInfo.authorised_by_title || 'Managing Director'}</Text>
+        <Text style={styles.authoriseTitle}>{businessInfo.business_name || 'Safari Craft Studios'}</Text>
+        <Text style={styles.authoriseTitle}>Date: {formatDate(doc.created_at)}</Text>
+      </View>
+
       <Text style={styles.footer}>
-        Space2Standard Carpentry &bull; 123 Artisan Way, Craftville &bull; Registered in South Africa
+        Thank you for choosing {businessInfo.business_name || 'Safari Craft Studios'}. We look forward to working with you.
       </Text>
     </Page>
   </PDFDoc>
 );
 
+import { useNavigate } from 'react-router-dom';
+
 export const Invoices = () => {
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const navigate = useNavigate();
+  const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [businessInfo, setBusinessInfo] = useState({});
 
@@ -128,10 +234,10 @@ export const Invoices = () => {
 
   async function fetchData() {
     setLoading(true);
-    // 1. Fetch documents
+    // 1. Fetch documents joined with orders
     const { data: docs } = await supabase
       .from('documents')
-      .select('*')
+      .select('*, orders(*)')
       .order('created_at', { ascending: false });
     
     // 2. Fetch business settings
@@ -148,94 +254,110 @@ export const Invoices = () => {
 
   return (
     <div className="space-y-12">
-      <header className="flex justify-between items-center">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-1">
-          <h1 className="text-3xl font-serif text-white tracking-tight">Financial Records</h1>
-          <p className="text-charcoal-500 text-sm">Issue and manage professional quotations and invoices.</p>
+          <h1 className="text-3xl font-serif text-white tracking-tight">Artisan Ledger</h1>
+          <p className="text-navy-400 text-sm italic font-light">Issue and manage professional quotations and invoices.</p>
         </div>
-        <button className="btn-dashboard-primary flex items-center gap-2">
+        <button 
+          onClick={() => navigate('/invoices/new')}
+          className="btn-dashboard-primary flex items-center gap-2 w-full md:w-auto justify-center"
+        >
           <Plus size={18} />
-          Create Document
+          Generate Record
         </button>
       </header>
 
       {/* Stats and Filter Overlay */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-         <div className="dashboard-card bg-charcoal-900 border-charcoal-800 flex gap-4 items-center">
-            <div className="p-3 bg-gold-500/10 text-gold-500 rounded-xl">
+         <div className="dashboard-card bg-navy-900 border-navy-800 flex gap-4 items-center">
+            <div className="p-3 bg-gold-500/10 text-gold-500 rounded-2xl">
                <FileText size={24} />
             </div>
             <div>
-               <p className="text-[10px] font-bold uppercase tracking-widest text-charcoal-500">Issued</p>
-               <h4 className="text-xl font-bold text-white">{documents.length} Total</h4>
+               <p className="text-[10px] font-bold uppercase tracking-widest text-navy-500">Total Issued</p>
+               <h4 className="text-xl font-bold text-white">{documents.length} Records</h4>
             </div>
          </div>
-         <div className="dashboard-card bg-charcoal-900 border-charcoal-800 flex gap-4 items-center col-span-2">
-            <Search size={18} className="text-charcoal-500 ml-2" />
-            <input type="text" placeholder="Search by document ID or client..." className="bg-transparent border-none outline-none text-sm w-full text-white placeholder-charcoal-600" />
+         <div className="dashboard-card bg-navy-900 border-navy-800 flex gap-4 items-center col-span-2">
+            <Search size={18} className="text-navy-500 ml-2" />
+            <input type="text" placeholder="Search by document ID or client..." className="bg-transparent border-none outline-none text-sm w-full text-white placeholder-navy-600" />
          </div>
       </div>
 
       {/* Docs List */}
-      <div className="dashboard-card p-0 overflow-hidden border-none">
-         <table className="w-full text-left">
-            <thead>
-              <tr className="bg-charcoal-950/50 text-[10px] uppercase font-bold tracking-[0.2em] text-charcoal-500 border-b border-charcoal-800">
-                <th className="px-8 py-5">Document</th>
-                <th className="px-8 py-5">Type</th>
-                <th className="px-8 py-5">Order Ref</th>
-                <th className="px-8 py-5">Grand Total</th>
-                <th className="px-8 py-5">Date</th>
-                <th className="px-8 py-5 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-charcoal-800">
-               {documents.map((doc) => (
-                 <tr key={doc.id} className="group hover:bg-charcoal-800/30">
-                    <td className="px-8 py-6 font-bold text-cream-100 uppercase tracking-widest text-xs">
-                       <div className="flex items-center gap-3">
-                          <div className={`p-1.5 rounded ${doc.type === 'invoice' ? 'bg-success/10 text-success' : 'bg-gold-500/10 text-gold-500'}`}>
-                             <FileCheck size={14}/>
-                          </div>
-                          #{doc.id.slice(0, 8)}
-                       </div>
-                    </td>
-                    <td className="px-8 py-6">
-                       <span className={`text-[10px] font-bold uppercase tracking-widest ${doc.type === 'invoice' ? 'text-success' : 'text-gold-500'}`}>
-                          {doc.type}
-                       </span>
-                    </td>
-                    <td className="px-8 py-6 text-xs text-charcoal-500">
-                       {doc.order_id ? `#${doc.order_id.slice(0,8)}` : 'N/A'}
-                    </td>
-                    <td className="px-8 py-6 text-sm font-bold text-white">
-                       {formatCurrency(doc.grand_total)}
-                    </td>
-                    <td className="px-8 py-6 text-xs text-charcoal-500">
-                       {formatDate(doc.created_at)}
-                    </td>
-                    <td className="px-8 py-6 text-right">
-                       <div className="flex justify-end gap-4">
-                          <PDFDownloadLink document={<InvoicePDF doc={doc} businessInfo={businessInfo} />} fileName={`${doc.type}_${doc.id.slice(0,8)}.pdf`}>
-                             {({ loading: pdfLoading }) => (
-                               <button className="p-2 text-charcoal-500 hover:text-white transition-colors" title="Download PDF">
-                                  {pdfLoading ? '...' : <Download size={16} />}
-                               </button>
-                             )}
-                          </PDFDownloadLink>
-                          <button className="p-2 text-charcoal-500 hover:text-white transition-colors" title="Email to Customer">
-                             <Mail size={16} />
-                          </button>
-                       </div>
-                    </td>
-                 </tr>
-               ))}
-            </tbody>
-         </table>
+      <div className="dashboard-card p-0 overflow-hidden border-navy-800/50">
+         <div className="overflow-x-auto shadow-2xl">
+           <table className="w-full text-left">
+              <thead>
+                <tr className="bg-navy-950/50 text-[10px] uppercase font-bold tracking-[0.2em] text-navy-500 border-b border-navy-800">
+                  <th className="px-8 py-5">Document</th>
+                  <th className="px-8 py-5">Type</th>
+                  <th className="px-8 py-5">Client</th>
+                  <th className="px-8 py-5">Grand Total</th>
+                  <th className="px-8 py-5">Date</th>
+                  <th className="px-8 py-5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-navy-800/50">
+                 {documents.map((doc) => (
+                   <tr key={doc.id} className="group hover:bg-gold-500/5 transition-colors">
+                      <td className="px-8 py-6 font-bold text-cream-100 uppercase tracking-widest text-xs">
+                         <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-xl ${doc.type === 'invoice' ? 'bg-success/10 text-success' : 'bg-gold-500/10 text-gold-500'}`}>
+                               <FileCheck size={14}/>
+                            </div>
+                            SCS-{doc.id.slice(0, 4).toUpperCase()}
+                         </div>
+                      </td>
+                      <td className="px-8 py-6">
+                         <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full ${doc.type === 'invoice' ? 'bg-success/10 text-success' : 'bg-gold-500/10 text-gold-500'}`}>
+                            {doc.type}
+                         </span>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="space-y-1">
+                           <p className="text-sm font-medium text-white">{doc.orders?.customer_name || 'N/A'}</p>
+                           <p className="text-[10px] text-navy-500 font-mono">ID: {doc.order_id?.slice(0,8)}</p>
+                        </div>
+                      </td>
+                      <td className="px-8 py-6 text-sm font-bold text-white">
+                         {formatCurrency(doc.grand_total)}
+                      </td>
+                      <td className="px-8 py-6 text-xs text-navy-400 font-light">
+                         {formatDate(doc.created_at)}
+                      </td>
+                      <td className="px-8 py-6 text-right">
+                         <div className="flex justify-end gap-3">
+                            <PDFDownloadLink 
+                              document={<InvoicePDF doc={doc} businessInfo={businessInfo} order={doc.orders} />} 
+                              fileName={`${doc.type}_${doc.id.slice(0,8)}.pdf`}
+                            >
+                               {({ loading: pdfLoading }) => (
+                                 <button className="p-2.5 bg-navy-800/50 rounded-xl text-navy-400 hover:text-gold-500 hover:bg-gold-500/10 transition-all" title="Download Document">
+                                    {pdfLoading ? <div className="w-4 h-4 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" /> : <Download size={16} />}
+                                 </button>
+                               )}
+                            </PDFDownloadLink>
+                            <button className="p-2.5 bg-navy-800/50 rounded-xl text-navy-400 hover:text-accent-light hover:bg-accent-blue/10 transition-all" title="Email to Customer">
+                               <Mail size={16} />
+                            </button>
+                         </div>
+                      </td>
+                   </tr>
+                 ))}
+              </tbody>
+           </table>
+         </div>
          {documents.length === 0 && !loading && (
-           <div className="p-20 text-center space-y-4">
-              <History size={48} className="mx-auto text-charcoal-800" strokeWidth={1} />
-              <p className="font-serif italic text-xl text-charcoal-500">No documents issued yet.</p>
+           <div className="p-20 text-center space-y-6">
+              <div className="w-20 h-20 bg-navy-950 rounded-full flex items-center justify-center mx-auto border border-navy-800 shadow-inner">
+                <History size={32} className="text-navy-700" strokeWidth={1} />
+              </div>
+              <div className="space-y-2">
+                <p className="font-serif italic text-2xl text-navy-500">No records found in the ledger.</p>
+                <p className="text-navy-600 text-sm max-w-xs mx-auto">Generate your first premium quotation or invoice to begin tracking your artisan transactions.</p>
+              </div>
            </div>
          )}
       </div>

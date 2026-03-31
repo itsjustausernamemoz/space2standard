@@ -10,6 +10,7 @@ import { Products } from './pages/Products';
 import { ProductForm } from './pages/ProductForm';
 import { Orders } from './pages/Orders';
 import { Invoices } from './pages/Invoices';
+import { InvoiceForm } from './pages/InvoiceForm';
 import { Inventory } from './pages/Inventory';
 import { Settings } from './pages/Settings';
 
@@ -40,6 +41,8 @@ function App() {
             <Route path="/products/:id/edit" element={<Layout><ProductForm /></Layout>} />
             <Route path="/orders" element={<Layout><Orders /></Layout>} />
             <Route path="/invoices" element={<Layout><Invoices /></Layout>} />
+            <Route path="/invoices/new" element={<Layout><InvoiceForm /></Layout>} />
+            <Route path="/invoices/:id/edit" element={<Layout><InvoiceForm /></Layout>} />
             <Route path="/inventory" element={<Layout><Inventory /></Layout>} />
             <Route path="/settings" element={<Layout><Settings /></Layout>} />
           </Route>

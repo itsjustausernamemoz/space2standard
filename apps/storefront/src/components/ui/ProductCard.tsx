@@ -9,15 +9,19 @@ import { ArrowRight } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
+  vatRate?: number;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, vatRate = 0 }) => {
   const discountedPrice = calcDiscount(
     product.price,
     product.discount_type,
     product.discount_value
   );
   
+  const displayPrice = vatRate > 0 ? discountedPrice * (1 + vatRate / 100) : discountedPrice;
+  const originalPriceInclVat = vatRate > 0 ? product.price * (1 + vatRate / 100) : product.price;
+
   const hasDiscount = discountedPrice < product.price;
   const primaryImage = product.images?.find(img => img.is_primary)?.storage_url || '/images/placeholder.jpg';
 
@@ -43,7 +47,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         )}
 
         {product.stock_quantity === 0 && (
-          <div className="absolute inset-0 bg-charcoal-900/60 flex items-center justify-center z-10">
+          <div className="absolute inset-0 bg-navy-900/60 flex items-center justify-center z-10">
             <Badge variant="charcoal" className="px-4 py-2">Out of Stock</Badge>
           </div>
         )}
@@ -54,19 +58,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold-500">
             {product.category || 'Luxury Collection'}
           </p>
-          <h3 className="text-xl font-serif text-walnut-950 group-hover:text-gold-600 transition-colors">
+          <h3 className="text-xl font-serif text-navy-950 group-hover:text-gold-600 transition-colors">
             {product.name}
           </h3>
         </div>
 
-        <div className="flex items-baseline gap-3">
-          <span className="text-lg font-bold text-walnut-800">
-            {formatCurrency(discountedPrice)}
-          </span>
-          {hasDiscount && (
-            <span className="text-sm text-charcoal-500 line-through opacity-60">
-              {formatCurrency(product.price)}
+        <div className="space-y-1">
+          <div className="flex items-baseline gap-3">
+            <span className="text-lg font-bold text-navy-800">
+              {formatCurrency(displayPrice)}
             </span>
+            {hasDiscount && (
+              <span className="text-sm text-navy-400 line-through opacity-60">
+                {formatCurrency(originalPriceInclVat)}
+              </span>
+            )}
+          </div>
+          {vatRate > 0 && (
+            <p className="text-[9px] text-navy-400 font-light italic">Incl. {vatRate}% VAT</p>
           )}
         </div>
       </div>

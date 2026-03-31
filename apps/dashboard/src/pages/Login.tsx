@@ -31,21 +31,38 @@ export const Login = () => {
 
       if (error) throw error;
 
+      console.log('Login: Auth success. Fetching profile for user:', data.user.id);
+
       // Check if the user is actually an admin in the profiles table
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('role')
+        .select('*')
         .eq('id', data.user.id)
         .single();
       
-      if (profileError || profile?.role !== 'admin') {
+      console.log('Login: Profile response:', { profile, profileError });
+
+      if (profileError) {
+        console.error('Login: Profile fetch error:', profileError);
+        if (profileError.code === 'PGRST116') {
+          toast.error('Admin profile not found. Please run the setup SQL.');
+        } else {
+          toast.error(`Database error: ${profileError.message}`);
+        }
         await supabase.auth.signOut();
-        toast.error('Unauthorized. Access restricted to admin role only.');
+        return;
+      }
+
+      if (profile?.role !== 'admin') {
+        console.warn('Login: Unauthorized role detected:', profile?.role);
+        await supabase.auth.signOut();
+        toast.error(`Access Denied: Your account role is "${profile?.role}". Administrator access only.`);
       } else {
-        toast.success(`Welcome back, ${profile.role}`);
+        toast.success(`Welcome session active: ${profile.role} portal.`);
         navigate('/');
       }
     } catch (error: any) {
+      console.error('Login: Auth error:', error);
       toast.error(error.message || 'Error signing in.');
     } finally {
       setLoading(false);
