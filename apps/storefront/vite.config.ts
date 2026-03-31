@@ -11,5 +11,6 @@ export default defineConfig({
       '@shared': path.resolve(__dirname, '../../shared'),
     },
   },
+  envDir: '../../',
   server: { port: 3000 },
 });

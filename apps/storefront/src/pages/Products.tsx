@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Product } from '@shared/types';
+import type { Product } from '@shared/types';
 import { ProductCard } from '../components/ui/ProductCard';
 import { motion } from 'framer-motion';
 

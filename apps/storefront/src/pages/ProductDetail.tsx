@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { Product } from '@shared/types';
+import type { Product } from '@shared/types';
 import { formatCurrency, calcDiscount } from '@shared/utils';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ShoppingBag, Truck, ShieldCheck, Hammer } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Truck, ShieldCheck, Hammer } from 'lucide-react';
 
 export const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -53,7 +53,7 @@ export const ProductDetail = () => {
   const hasDiscount = discountedPrice < product.price;
 
   const images = product.images && product.images.length > 0 
-    ? product.images.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)) 
+    ? [...product.images].sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0)) 
     : [{ storage_url: '/images/placeholder.jpg', id: 'placeholder' }];
 
   return (
@@ -101,7 +101,7 @@ export const ProductDetail = () => {
 
             {images.length > 1 && (
               <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                {images.map((img, idx) => (
+                {images.map((img: any, idx: number) => (
                   <button
                     key={img.id}
                     onClick={() => setActiveImageIndex(idx)}

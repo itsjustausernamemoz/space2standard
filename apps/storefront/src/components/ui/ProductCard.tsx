@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Product } from '@shared/types';
+import type { Product } from '@shared/types';
 import { formatCurrency, calcDiscount } from '@shared/utils';
 import { Card } from './Card';
 import { Badge } from './Badge';

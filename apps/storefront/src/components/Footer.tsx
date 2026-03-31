@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, Facebook, Mail, MapPin, Phone } from 'lucide-react';
+import { Mail, MapPin, Phone } from 'lucide-react';
 
 export const Footer = () => {
   return (
@@ -15,8 +15,8 @@ export const Footer = () => {
             Blending traditional craftsmanship with modern design to perfection.
           </p>
           <div className="flex space-x-6">
-            <a href="#" className="hover:text-gold-500 transition opacity-80 hover:opacity-100"><Instagram size={24} strokeWidth={1.5} /></a>
-            <a href="#" className="hover:text-gold-500 transition opacity-80 hover:opacity-100"><Facebook size={24} strokeWidth={1.5} /></a>
+            <a href="#" className="hover:text-gold-500 transition opacity-80 hover:opacity-100"><Mail size={24} strokeWidth={1.5} /></a>
+            <a href="#" className="hover:text-gold-500 transition opacity-80 hover:opacity-100"><Mail size={24} strokeWidth={1.5} /></a>
             <a href="#" className="hover:text-gold-500 transition opacity-80 hover:opacity-100"><Mail size={24} strokeWidth={1.5} /></a>
           </div>
         </div>
