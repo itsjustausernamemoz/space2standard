@@ -10,38 +10,41 @@ import { ProductDetail } from './pages/ProductDetail';
 import { OrderForm } from './pages/OrderForm';
 import { About } from './pages/About';
 import { Contact } from './pages/Contact';
+import { SettingsProvider } from './contexts/SettingsContext';
 
 function App() {
   return (
     <Router>
-      <div className="flex flex-col min-h-screen">
-        <Toaster 
-          position="top-center" 
-          toastOptions={{
-            style: {
-              background: '#3d2314', // walnut-800
-              color: '#e8d5b7', // gold-300
-              border: '1px solid #c9a84c20', // gold-500/20
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '13px',
-              padding: '16px 24px',
-            },
-          }} 
-        />
-        <Navbar />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/products" element={<Products />} />
-            <Route path="/products/:id" element={<ProductDetail />} />
-            <Route path="/order" element={<OrderForm />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-          </Routes>
-        </main>
-        <Footer />
-        <WhatsAppFAB />
-      </div>
+      <SettingsProvider>
+        <div className="flex flex-col min-h-screen">
+          <Toaster 
+            position="top-center" 
+            toastOptions={{
+              style: {
+                background: '#3d2314', // walnut-800
+                color: '#e8d5b7', // gold-300
+                border: '1px solid #c9a84c20', // gold-500/20
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '13px',
+                padding: '16px 24px',
+              },
+            }} 
+          />
+          <Navbar />
+          <main className="flex-grow">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/products" element={<Products />} />
+              <Route path="/products/:id" element={<ProductDetail />} />
+              <Route path="/order" element={<OrderForm />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+            </Routes>
+          </main>
+          <Footer />
+          <WhatsAppFAB />
+        </div>
+      </SettingsProvider>
     </Router>
   );
 }

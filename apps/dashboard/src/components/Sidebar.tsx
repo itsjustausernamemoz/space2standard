@@ -9,7 +9,8 @@ import {
   Settings, 
   LogOut,
   ChevronRight,
-  X
+  X,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -25,6 +26,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const menuItems = [
     { name: 'Overview', icon: <LayoutDashboard size={20} />, path: '/' },
     { name: 'Products', icon: <Package size={20} />, path: '/products' },
+    { name: 'Image Gallery', icon: <ImageIcon size={20} />, path: '/gallery' },
     { name: 'Orders', icon: <ShoppingCart size={20} />, path: '/orders' },
     { name: 'Invoices', icon: <FileText size={20} />, path: '/invoices' },
     { name: 'Inventory', icon: <BarChart3 size={20} />, path: '/inventory' },

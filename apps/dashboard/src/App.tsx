@@ -6,6 +6,7 @@ import { AuthGuard } from './components/AuthGuard';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
+import { Gallery } from './pages/Gallery';
 import { Products } from './pages/Products';
 import { ProductForm } from './pages/ProductForm';
 import { Orders } from './pages/Orders';
@@ -36,6 +37,7 @@ function App() {
           
           <Route element={<AuthGuard />}>
             <Route path="/" element={<Layout><Dashboard /></Layout>} />
+            <Route path="/gallery" element={<Layout><Gallery /></Layout>} />
             <Route path="/products" element={<Layout><Products /></Layout>} />
             <Route path="/products/new" element={<Layout><ProductForm /></Layout>} />
             <Route path="/products/:id/edit" element={<Layout><ProductForm /></Layout>} />

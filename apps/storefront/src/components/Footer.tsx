@@ -1,22 +1,27 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, MapPin, Phone } from 'lucide-react';
+import { useSettings } from '../contexts/SettingsContext';
 
 export const Footer = () => {
+  const { settings } = useSettings();
+
   return (
     <footer className="bg-navy-950 text-cream-100 py-32 pb-16 border-t border-white/5">
       <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-24">
         <div className="space-y-10">
           <Link to="/" className="text-3xl font-serif tracking-tighter hover:text-gold-500 transition-all">
-            Space<span className="text-gold-500 italic">2</span>Standard
+            {settings.business_logo_url ? (
+              <img src={settings.business_logo_url} alt={settings.business_name} className="h-12 max-w-[200px] object-contain" />
+            ) : (
+              <>{settings.business_name || "Space2Standard"}</>
+            )}
           </Link>
           <p className="text-sm text-navy-400 leading-relaxed font-light italic">
             A premium Namibian artisan brand crafting bespoke furniture and architectural installations.
             Blending traditional craftsmanship with modern precision to perfection.
           </p>
           <div className="flex space-x-6 text-gold-500">
-            <a href="#" className="hover:text-white transition-all opacity-80 hover:opacity-100"><Mail size={22} strokeWidth={1.5} /></a>
-            <a href="#" className="hover:text-white transition-all opacity-80 hover:opacity-100"><Mail size={22} strokeWidth={1.5} /></a>
             <a href="#" className="hover:text-white transition-all opacity-80 hover:opacity-100"><Mail size={22} strokeWidth={1.5} /></a>
           </div>
         </div>
@@ -36,15 +41,15 @@ export const Footer = () => {
           <ul className="space-y-6 text-sm font-medium text-navy-400">
             <li className="flex items-start gap-4 italic font-light leading-relaxed">
               <MapPin size={18} className="text-gold-500 shrink-0" strokeWidth={1.5} />
-              <span>Artisan Quarter, Windhoek, <br/> Namibia</span>
+              <span className="whitespace-pre-line">{settings.business_address || "Artisan Quarter, Windhoek,\nNamibia"}</span>
             </li>
             <li className="flex items-center gap-4">
-              <Phone size={18} className="text-gold-500" strokeWidth={1.5} />
-              <span>+264 (81) 123 4567</span>
+              <Phone size={18} className="text-gold-500 shrink-0" strokeWidth={1.5} />
+              <span>{settings.business_phone || "+264 (81) 123 4567"}</span>
             </li>
             <li className="flex items-center gap-4">
-              <Mail size={18} className="text-gold-500" strokeWidth={1.5} />
-              <span>studio@space2standard.com</span>
+              <Mail size={18} className="text-gold-500 shrink-0" strokeWidth={1.5} />
+              <span>{settings.business_email || "studio@space2standard.com"}</span>
             </li>
           </ul>
         </div>

@@ -1,0 +1,18 @@
+{
+  "projects": {
+    "default": "space2standard"
+  },
+  "targets": {
+    "space2standard": {
+      "hosting": {
+        "storefront": [
+          "space2standard-store"
+        ],
+        "dashboard": [
+          "space2standard-admin"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

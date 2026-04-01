@@ -3,11 +3,13 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ShoppingBag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/Button';
+import { useSettings } from '../contexts/SettingsContext';
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
+  const { settings } = useSettings();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,8 +32,12 @@ export const Navbar = () => {
       isScrolled ? 'bg-navy-950/90 backdrop-blur-md shadow-lg py-4 border-b border-white/5' : 'bg-transparent py-6'
     )}>
       <div className="container mx-auto px-6 flex items-center justify-between">
-        <Link to="/" className="text-2xl font-serif text-white tracking-tighter hover:text-gold-500 transition-all">
-          Space<span className="text-gold-500 italic">2</span>Standard
+        <Link to="/" className="text-2xl font-serif text-white tracking-tighter hover:text-gold-500 transition-all flex items-center">
+          {settings.business_logo_url ? (
+            <img src={settings.business_logo_url} alt={settings.business_name} className="h-10 max-w-[200px] object-contain" />
+          ) : (
+            <>{settings.business_name || "Space2Standard"}</>
+          )}
         </Link>
 
         {/* Desktop Nav */}

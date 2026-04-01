@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import type { ProductImage } from '@shared/types';
 import { 
@@ -17,6 +17,7 @@ import { toast } from 'react-hot-toast';
 export const ProductForm = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isEdit = Boolean(id);
 
   const [loading, setLoading] = useState(false);
@@ -41,8 +42,20 @@ export const ProductForm = () => {
   useEffect(() => {
     if (isEdit && id) {
       fetchProduct(id);
+    } else {
+      const galleryUrl = searchParams.get('gallery_url');
+      const galleryName = searchParams.get('gallery_name');
+      
+      if (galleryUrl && galleryName) {
+        setFormData(prev => ({ ...prev, name: galleryName }));
+        setImages([{
+          storage_url: galleryUrl,
+          is_primary: true,
+          sort_order: 0
+        }]);
+      }
     }
-  }, [isEdit, id]);
+  }, [isEdit, id, searchParams]);
 
   async function fetchProduct(productId: string) {
     const { data, error } = await supabase

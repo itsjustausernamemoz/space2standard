@@ -5,8 +5,10 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
 import { toast } from 'react-hot-toast';
+import { useSettings } from '../contexts/SettingsContext';
 
 export const Contact = () => {
+  const { settings } = useSettings();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -24,6 +26,13 @@ export const Contact = () => {
       toast.success('Message sent. We will respond at our earliest convenience.');
       setFormData({ name: '', email: '', subject: '', message: '' });
     }, 1500);
+  };
+
+  const openWhatsApp = () => {
+    const fallbackNumber = '27830000000';
+    const num = settings.business_phone ? settings.business_phone.replace(/\D/g, '') : fallbackNumber;
+    const msg = `Hello ${settings.business_name || 'Space2Standard'}, I would like to arrange a consultation.`;
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   return (
@@ -47,9 +56,9 @@ export const Contact = () => {
           <div className="lg:col-span-5 space-y-16">
             <div className="space-y-12">
                {[
-                 { icon: <Mail size={24} />, label: 'Email', value: 'hello@space2standard.com', sub: 'Responsive within 24 hours' },
-                 { icon: <Phone size={24} />, label: 'Phone', value: '+1 (555) 123-4567', sub: 'Mon - Fri | 09:00 - 17:00' },
-                 { icon: <MapPin size={24} />, label: 'Atelier', value: '123 Artisan Way, Craftville, CT', sub: 'Visits by appointment only' },
+                 { icon: <Mail size={24} />, label: 'Email', value: settings.business_email || 'hello@space2standard.com', sub: 'Responsive within 24 hours' },
+                 { icon: <Phone size={24} />, label: 'Phone', value: settings.business_phone || '+1 (555) 123-4567', sub: 'Mon - Fri | 09:00 - 17:00' },
+                 { icon: <MapPin size={24} />, label: 'Atelier', value: settings.business_address || 'Windhoek, Namibia', sub: 'Visits by appointment only' },
                ].map((item, idx) => (
                  <motion.div 
                     key={idx}
@@ -64,7 +73,7 @@ export const Contact = () => {
                    </div>
                    <div className="space-y-2">
                      <h3 className="text-xs font-bold uppercase tracking-[0.25em] text-gold-500">{item.label}</h3>
-                     <p className="text-2xl font-serif text-walnut-950 tracking-wide">{item.value}</p>
+                     <p className="text-xl font-serif text-walnut-950 tracking-wide whitespace-pre-line leading-relaxed">{item.value}</p>
                      <p className="text-sm font-light text-charcoal-500 italic opacity-60 font-inter">{item.sub}</p>
                    </div>
                  </motion.div>
@@ -81,7 +90,7 @@ export const Contact = () => {
                   Connect directly with our master craftsmen via WhatsApp 
                   for immediate response on custom inquiries.
                 </p>
-                <Button variant="outline" className="border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-walnut-950 px-10">
+                <Button onClick={openWhatsApp} variant="outline" className="border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-walnut-950 px-10">
                    WhatsApp Us
                 </Button>
               </div>

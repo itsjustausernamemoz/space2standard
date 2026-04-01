@@ -1,10 +1,19 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { MessageCircle } from 'lucide-react';
+import { useSettings } from '../contexts/SettingsContext';
 
 export const WhatsAppFAB = () => {
-  const whatsappNumber = '27830000000'; // Replace with real admin number
-  const message = 'Hello Space2Standard, I have a question about your bespoke carpentry services.';
+  const { settings } = useSettings();
+  
+  // Clean phone number for WhatsApp API (strip everything except digits)
+  const fallbackNumber = '27830000000';
+  const whatsappNumber = settings.business_phone 
+    ? settings.business_phone.replace(/\D/g, '') 
+    : fallbackNumber;
+
+  const bizName = settings.business_name || 'Space2Standard';
+  const message = `Hello ${bizName}, I have a question about your bespoke carpentry services.`;
   const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
 
   return (
