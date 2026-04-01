@@ -15,7 +15,7 @@ export const Products = () => {
       // 1. Fetch Products
       const { data: pData } = await supabase
         .from('products')
-        .select(`*, images:product_images(*)`)
+        .select('*, images:product_images(*), category_rel:categories(name)')
         .eq('is_published', true);
 
       // 2. Fetch Global VAT Settings
@@ -32,22 +32,22 @@ export const Products = () => {
     fetchData();
   }, []);
 
-  const categories = ['All', ...new Set(products.map(p => p.category || 'General'))];
+  const categories = ['All', ...new Set(products.map(p => p.category_rel?.name || p.category || 'General'))];
   const filteredProducts = category === 'All' 
     ? products 
-    : products.filter(p => (p.category || 'General') === category);
+    : products.filter(p => (p.category_rel?.name || p.category || 'General') === category);
 
   return (
-    <div className="pt-40 pb-32 min-h-screen bg-cream-50">
+    <div className="pt-40 pb-32 min-h-screen bg-navy-950">
       <div className="container mx-auto px-6">
         <header className="max-w-4xl space-y-12 mb-24">
           <div className="space-y-6">
             <span className="section-label">Our Collection</span>
-            <h1 className="text-6xl md:text-8xl font-serif text-walnut-950 tracking-tight leading-none">
+            <h1 className="text-6xl md:text-8xl font-serif text-navy-300 tracking-tight leading-none">
               Bespoke Masterpieces
             </h1>
           </div>
-          <p className="text-xl font-light text-walnut-800/80 leading-relaxed max-w-2xl">
+          <p className="text-xl font-light text-navy-400 leading-relaxed max-w-2xl">
             Each piece is crafted from premium, sustainably sourced hardwoods. 
             Blending traditional artistry with modern functional design.
           </p>
@@ -62,7 +62,7 @@ export const Products = () => {
                 key={cat}
                 onClick={() => setCategory(cat)}
                 className={`text-[11px] font-bold uppercase tracking-[0.2em] pb-1 border-b-2 transition-all ${
-                  category === cat ? 'border-gold-500 text-gold-600' : 'border-transparent text-charcoal-500 hover:text-walnut-800'
+                  category === cat ? 'border-gold-500 text-gold-500' : 'border-transparent text-navy-400 hover:text-gold-300'
                 }`}
               >
                 {cat}
@@ -74,7 +74,7 @@ export const Products = () => {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {[1,2,3,4,5,6].map(i => (
-              <div key={i} className="aspect-[4/5] bg-cream-200 animate-pulse rounded-lg" />
+              <div key={i} className="aspect-[4/5] bg-navy-900 animate-pulse rounded-2xl" />
             ))}
           </div>
         ) : filteredProducts.length > 0 ? (
@@ -93,10 +93,10 @@ export const Products = () => {
         ) : (
           <div className="py-40 text-center space-y-8 max-w-xl mx-auto">
              <div className="gold-divider" />
-             <p className="text-2xl font-serif text-walnut-950 italic">
+             <p className="text-2xl font-serif text-navy-300 italic">
                No pieces in this collection yet.
              </p>
-             <p className="text-sm font-light text-charcoal-600">
+             <p className="text-sm font-light text-navy-500">
                Our master craftsmen are currently working on new designs. 
                Check back soon or start a bespoke journey through our contact form.
              </p>

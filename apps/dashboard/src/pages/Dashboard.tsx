@@ -39,10 +39,12 @@ export const Dashboard = () => {
         // 1. Get financial KPIs
         const { data: allOrders } = await supabase
           .from('orders')
-          .select('total_price, status, created_at')
+          .select('id, status, created_at, items:order_items(unit_price_snapshot, quantity)')
           .neq('status', 'cancelled');
         
-        const collected = allOrders?.filter(o => o.status === 'completed').reduce((acc, o) => acc + (o.total_price || 0), 0) || 0;
+        const calcOrderTotal = (o: any) => o.items?.reduce((sum: number, i: any) => sum + (i.unit_price_snapshot * i.quantity), 0) || 0;
+        
+        const collected = allOrders?.filter(o => o.status === 'completed').reduce((acc, o) => acc + calcOrderTotal(o), 0) || 0;
 
         // Inventory Value Calculation
         const { data: activeProducts } = await supabase
@@ -81,8 +83,8 @@ export const Dashboard = () => {
           
           return {
             name: new Date(date).toLocaleDateString('en-NA', { weekday: 'short' }),
-            expected: dayOrders.reduce((sum, o) => sum + (o.total_price || 0), 0),
-            collected: dayOrders.filter(o => o.status === 'completed').reduce((sum, o) => sum + (o.total_price || 0), 0)
+            expected: dayOrders.reduce((sum, o) => sum + calcOrderTotal(o), 0),
+            collected: dayOrders.filter(o => o.status === 'completed').reduce((sum, o) => sum + calcOrderTotal(o), 0)
           };
         });
 

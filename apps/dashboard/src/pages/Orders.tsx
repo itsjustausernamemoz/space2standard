@@ -45,6 +45,19 @@ export const Orders = () => {
   }
 
   const updateStatus = async (id: string, status: OrderStatus) => {
+    // If transitioning to completed, atomize the update via RPC to decrement inventory
+    if (status === 'completed') {
+       if (!window.confirm("Marking this complete will permanently deduct the materials from inventory. Proceed?")) return;
+       const { error } = await supabase.rpc('mark_order_completed', { target_order_id: id });
+       if (error) {
+         toast.error('Failed to trigger fulfillment synchronization');
+         return;
+       }
+       setOrders(orders.map(o => o.id === id ? { ...o, status } : o));
+       toast.success("Commission fulfilled and inventory decremented.");
+       return;
+    }
+
     const { error } = await supabase
       .from('orders')
       .update({ status })
@@ -165,8 +178,9 @@ export const Orders = () => {
                       <td className="px-8 py-6 text-right">
                         <div className="flex justify-end gap-3 items-center">
                            <select 
-                             className="bg-charcoal-900 border border-charcoal-750 text-[10px] font-bold uppercase tracking-widest text-charcoal-400 rounded px-3 py-1.5 focus:outline-none focus:border-gold-500 cursor-pointer"
+                             className={`bg-charcoal-900 border border-charcoal-750 text-[10px] font-bold uppercase tracking-widest text-charcoal-400 rounded px-3 py-1.5 focus:outline-none focus:border-gold-500 ${o.status !== 'completed' ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
                              value={o.status}
+                             disabled={o.status === 'completed'}
                              onChange={(e) => updateStatus(o.id, e.target.value as OrderStatus)}
                            >
                              <option value="new">New</option>

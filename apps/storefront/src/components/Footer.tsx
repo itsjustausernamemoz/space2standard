@@ -22,7 +22,7 @@ export const Footer = () => {
             Blending traditional craftsmanship with modern precision to perfection.
           </p>
           <div className="flex space-x-6 text-gold-500">
-            <a href="#" className="hover:text-white transition-all opacity-80 hover:opacity-100"><Mail size={22} strokeWidth={1.5} /></a>
+            <a href="#" className="hover:text-navy-300 transition-all opacity-80 hover:opacity-100"><Mail size={22} strokeWidth={1.5} /></a>
           </div>
         </div>
 
@@ -31,7 +31,6 @@ export const Footer = () => {
           <ul className="space-y-4 text-sm font-medium text-navy-400">
             <li><Link to="/" className="hover:text-gold-500 transition-all">Home</Link></li>
             <li><Link to="/products" className="hover:text-gold-500 transition-all">Collection</Link></li>
-            <li><Link to="/about" className="hover:text-gold-500 transition-all">Our Story</Link></li>
             <li><Link to="/contact" className="hover:text-gold-500 transition-all">Contact Us</Link></li>
           </ul>
         </div>
@@ -61,9 +60,9 @@ export const Footer = () => {
             <input
               type="email"
               placeholder="Your email"
-              className="bg-navy-900 border border-navy-800 outline-none p-4 pr-24 w-full text-sm text-white placeholder:text-navy-600 rounded-xl focus:border-gold-500/50 transition-all"
+              className="bg-navy-900 border border-navy-800 outline-none p-4 pr-24 w-full text-sm text-navy-300 placeholder:text-navy-600 rounded-xl focus:border-gold-500/50 transition-all"
             />
-            <button className="absolute right-4 text-[10px] font-bold uppercase tracking-widest text-gold-500 hover:text-white transition-all">
+            <button className="absolute right-4 text-[10px] font-bold uppercase tracking-widest text-gold-500 hover:text-navy-300 transition-all">
               Sign Up
             </button>
           </div>

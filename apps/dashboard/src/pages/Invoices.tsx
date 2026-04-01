@@ -104,7 +104,7 @@ const InvoicePDF = ({ doc, businessInfo, order }: { doc: Document, businessInfo:
         <View style={styles.metaBox}>
           <View style={styles.metaRow}>
             <Text style={styles.metaLabel}>{doc.type} No:</Text>
-            <Text style={styles.metaValue}>SCS-{new Date().getFullYear()}-{doc.id.slice(0, 4).toUpperCase()}</Text>
+            <Text style={styles.metaValue}>S2S-{new Date().getFullYear()}-{doc.id.slice(0, 4).toUpperCase()}</Text>
           </View>
           <View style={styles.metaRow}>
             <Text style={styles.metaLabel}>Valid Until:</Text>
@@ -117,8 +117,8 @@ const InvoicePDF = ({ doc, businessInfo, order }: { doc: Document, businessInfo:
             <Text style={styles.metaValue}>{formatDate(doc.created_at)}</Text>
           </View>
           <View style={styles.metaRow}>
-            <Text style={styles.metaLabel}>Project Start:</Text>
-            <Text style={styles.metaValue}>TBD</Text>
+            <Text style={styles.metaLabel}>Order Date:</Text>
+            <Text style={styles.metaValue}>{formatDate(doc.created_at)}</Text>
           </View>
         </View>
       </View>
@@ -129,8 +129,8 @@ const InvoicePDF = ({ doc, businessInfo, order }: { doc: Document, businessInfo:
           <Text style={styles.detailsTitle}>Bill To</Text>
           <Text style={styles.detailsText}>{order?.customer_name || 'Valued Client'}</Text>
           <Text style={styles.detailsText}>{order?.customer_phone || ''}</Text>
-          <Text style={[styles.detailsText, styles.detailsTextBold]}>Space2Standard</Text>
           <Text style={styles.detailsText}>{order?.customer_email || ''}</Text>
+          {order?.delivery_address && <Text style={[styles.detailsText, styles.detailsTextBold]}>{order.delivery_address}</Text>}
         </View>
         <View style={styles.detailsBox}>
           <Text style={styles.detailsTitle}>Project Details</Text>
@@ -144,7 +144,7 @@ const InvoicePDF = ({ doc, businessInfo, order }: { doc: Document, businessInfo:
       <View style={styles.table}>
         <View style={styles.tableHeader}>
           <Text style={[styles.cellHeader, styles.colId]}>#</Text>
-          <Text style={[styles.cellHeader, styles.colDesc]}>Description of Service</Text>
+          <Text style={[styles.cellHeader, styles.colDesc]}>Description of Product</Text>
           <Text style={[styles.cellHeader, styles.colQty]}>Qty</Text>
           <Text style={[styles.cellHeader, styles.colUnit]}>Unit</Text>
           <Text style={[styles.cellHeader, styles.colRate]}>Unit Rate</Text>
@@ -173,8 +173,8 @@ const InvoicePDF = ({ doc, businessInfo, order }: { doc: Document, businessInfo:
       {/* Footer Info */}
       <Text style={styles.sectionTitle}>Terms & Conditions</Text>
       <View>
-        <Text style={styles.termsText}>1. A 50% deposit ({formatN(doc.grand_total * 0.5)}) is required upon acceptance to confirm the booking.</Text>
-        <Text style={styles.termsText}>2. The remaining balance is due after delivery of the service requested.</Text>
+        <Text style={styles.termsText}>1. A 50% deposit ({formatN(doc.grand_total * 0.5)}) is required upon acceptance to confirm the order.</Text>
+        <Text style={styles.termsText}>2. The remaining balance is due after delivery of the product.</Text>
         <Text style={styles.termsText}>3. Cancellations made less than 5 days after acceptance will forfeit the deposit.</Text>
         <Text style={styles.termsText}>4. All prices are quoted in Namibian Dollars (N$).</Text>
       </View>
@@ -199,7 +199,7 @@ const InvoicePDF = ({ doc, businessInfo, order }: { doc: Document, businessInfo:
         </View>
         <View style={styles.bankRow}>
           <Text style={styles.bankLabel}>Reference:</Text>
-          <Text style={styles.bankValue}>{businessInfo.bank_reference || 'SCS-' + doc.id.slice(0,4)}</Text>
+          <Text style={styles.bankValue}>{businessInfo.bank_reference || 'S2S-' + doc.id.slice(0,4)}</Text>
         </View>
       </View>
 
@@ -341,7 +341,7 @@ export const Invoices = () => {
                             <div className={`p-2 rounded-xl ${doc.type === 'invoice' ? 'bg-success/10 text-success' : 'bg-gold-500/10 text-gold-500'}`}>
                                <FileCheck size={14}/>
                             </div>
-                            SCS-{doc.id.slice(0, 4).toUpperCase()}
+                            S2S-{doc.id.slice(0, 4).toUpperCase()}
                          </div>
                       </td>
                       <td className="px-8 py-6">

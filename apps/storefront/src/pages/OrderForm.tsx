@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useCart } from '../contexts/CartContext';
+import { useStorefrontAuth } from '../contexts/StorefrontAuthContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
@@ -13,18 +14,31 @@ import { calcDiscount, formatCurrency } from '@shared/utils';
 export const OrderForm = () => {
   const navigate = useNavigate();
   const { items, cartTotal, clearCart } = useCart();
+  const { user, profile } = useStorefrontAuth();
   
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [vatRate, setVatRate] = useState(15);
   
   const [formData, setFormData] = useState({
-    customer_name: '',
-    customer_email: '',
-    customer_phone: '',
-    delivery_address: '',
+    customer_name: profile?.full_name || '',
+    customer_email: user?.email || '',
+    customer_phone: profile?.phone || '',
+    delivery_address: profile?.delivery_address || '',
     special_notes: ''
   });
+
+  useEffect(() => {
+    if (user || profile) {
+      setFormData(prev => ({
+        ...prev,
+        customer_name: prev.customer_name || profile?.full_name || '',
+        customer_email: prev.customer_email || user?.email || '',
+        customer_phone: prev.customer_phone || profile?.phone || '',
+        delivery_address: prev.delivery_address || profile?.delivery_address || '',
+      }));
+    }
+  }, [user, profile]);
 
   useEffect(() => {
     async function fetchData() {
@@ -142,63 +156,98 @@ export const OrderForm = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-24 items-start">
           <div className="lg:col-span-7">
             <Card variant="solid" className="bg-navy-900 border-navy-800 p-12 rounded-2xl shadow-2xl">
-              <form onSubmit={handleSubmit} className="space-y-10">
-                <div className="grid md:grid-cols-2 gap-10">
-                  <Input 
-                    label="Full Name" 
-                    required 
-                    placeholder="e.g. Johannes Müller"
-                    className="bg-navy-950 border-navy-800 text-white"
-                    value={formData.customer_name}
-                    onChange={e => setFormData({...formData, customer_name: e.target.value})}
-                  />
-                  <Input 
-                    label="Email Address" 
-                    type="email" 
-                    required 
-                    placeholder="johannes@example.com"
-                    className="bg-navy-950 border-navy-800 text-white"
-                    value={formData.customer_email}
-                    onChange={e => setFormData({...formData, customer_email: e.target.value})}
-                  />
-                </div>
-                
-                <div className="grid md:grid-cols-2 gap-10">
-                  <Input 
-                    label="Phone Number" 
-                    required 
-                    placeholder="+264..."
-                    className="bg-navy-950 border-navy-800 text-white"
-                    value={formData.customer_phone}
-                    onChange={e => setFormData({...formData, customer_phone: e.target.value})}
-                  />
-                  <Input 
-                    label="Delivery Address" 
-                    required 
-                    placeholder="Street, City, Windhoek, etc."
-                    className="bg-navy-950 border-navy-800 text-white"
-                    value={formData.delivery_address}
-                    onChange={e => setFormData({...formData, delivery_address: e.target.value})}
-                  />
-                </div>
+              {user ? (
+                <div className="space-y-10">
+                  <div className="bg-navy-950 p-8 rounded-xl border border-navy-800 space-y-4">
+                    <h3 className="text-white font-serif text-3xl mb-6">Dispatch Details</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="text-navy-500 uppercase tracking-widest font-bold text-[10px]">Client</div>
+                      <div className="text-white">{profile?.full_name || 'Unspecified'}</div>
+                      
+                      <div className="text-navy-500 uppercase tracking-widest font-bold text-[10px]">Contact</div>
+                      <div className="text-white">{user.email}<br/>{profile?.phone}</div>
+                      
+                      <div className="text-navy-500 uppercase tracking-widest font-bold text-[10px]">Destination</div>
+                      <div className="text-white">{profile?.delivery_address || <span className="text-error italic">Please update your Account Settings</span>}</div>
+                    </div>
+                  </div>
 
-                <Input 
-                  label="Special Specifications or Notes (Optional)" 
-                  isTextArea 
-                  placeholder="Bespoke sizing, wood choice, or specific finish requirements..."
-                  className="bg-navy-950 border-navy-800 text-white h-32"
-                  value={formData.special_notes}
-                  onChange={e => setFormData({...formData, special_notes: e.target.value})}
-                />
+                  <Input 
+                    label="Special Specifications or Notes (Optional)" 
+                    isTextArea 
+                    placeholder="Bespoke sizing, wood choice, or specific finish requirements..."
+                    className="bg-navy-950 border-navy-800 text-white h-32"
+                    value={formData.special_notes}
+                    onChange={e => setFormData({...formData, special_notes: e.target.value})}
+                  />
 
-                <Button size="xl" variant="primary" className="w-full bg-gold-600 hover:bg-gold-500 text-white rounded-xl py-6 font-bold tracking-widest uppercase transition-all shadow-lg" isLoading={loading}>
-                  Dispatch Final Inquiry
-                </Button>
-                
-                <p className="text-[10px] text-center uppercase tracking-widest text-navy-600 font-bold">
-                  Secure Encryption &bull; Premium Artisan Consultation
-                </p>
-              </form>
+                  <Button size="xl" variant="primary" onClick={handleSubmit} className="w-full bg-gold-600 hover:bg-gold-500 text-navy-950 rounded-xl py-6 font-bold tracking-widest uppercase transition-all shadow-lg" isLoading={loading}>
+                    Dispatch Final Inquiry
+                  </Button>
+                  
+                  <p className="text-[10px] text-center uppercase tracking-widest text-navy-600 font-bold">
+                    Secure Encryption &bull; Premium Artisan Consultation
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-10">
+                  <div className="grid md:grid-cols-2 gap-10">
+                    <Input 
+                      label="Full Name" 
+                      required 
+                      placeholder="e.g. Johannes Müller"
+                      className="bg-navy-950 border-navy-800 text-white"
+                      value={formData.customer_name}
+                      onChange={e => setFormData({...formData, customer_name: e.target.value})}
+                    />
+                    <Input 
+                      label="Email Address" 
+                      type="email" 
+                      required 
+                      placeholder="johannes@example.com"
+                      className="bg-navy-950 border-navy-800 text-white"
+                      value={formData.customer_email}
+                      onChange={e => setFormData({...formData, customer_email: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-10">
+                    <Input 
+                      label="Phone Number" 
+                      required 
+                      placeholder="+264..."
+                      className="bg-navy-950 border-navy-800 text-white"
+                      value={formData.customer_phone}
+                      onChange={e => setFormData({...formData, customer_phone: e.target.value})}
+                    />
+                    <Input 
+                      label="Delivery Address" 
+                      required 
+                      placeholder="Street, City, Windhoek, etc."
+                      className="bg-navy-950 border-navy-800 text-white"
+                      value={formData.delivery_address}
+                      onChange={e => setFormData({...formData, delivery_address: e.target.value})}
+                    />
+                  </div>
+
+                  <Input 
+                    label="Special Specifications or Notes (Optional)" 
+                    isTextArea 
+                    placeholder="Bespoke sizing, wood choice, or specific finish requirements..."
+                    className="bg-navy-950 border-navy-800 text-white h-32"
+                    value={formData.special_notes}
+                    onChange={e => setFormData({...formData, special_notes: e.target.value})}
+                  />
+
+                  <Button size="xl" variant="primary" className="w-full bg-gold-600 hover:bg-gold-500 text-navy-950 rounded-xl py-6 font-bold tracking-widest uppercase transition-all shadow-lg" isLoading={loading}>
+                    Dispatch Final Inquiry
+                  </Button>
+                  
+                  <p className="text-[10px] text-center uppercase tracking-widest text-navy-600 font-bold">
+                    Secure Encryption &bull; Premium Artisan Consultation
+                  </p>
+                </form>
+              )}
             </Card>
           </div>
 

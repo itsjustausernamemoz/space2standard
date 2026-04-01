@@ -8,18 +8,21 @@ import { Home } from './pages/Home';
 import { Products } from './pages/Products';
 import { ProductDetail } from './pages/ProductDetail';
 import { OrderForm } from './pages/OrderForm';
-import { About } from './pages/About';
 import { Contact } from './pages/Contact';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { CartProvider } from './contexts/CartContext';
+import { StorefrontAuthProvider } from './contexts/StorefrontAuthContext';
+import { Auth } from './pages/Auth';
+import { AccountSettings } from './pages/AccountSettings';
 import { CartDrawer } from './components/CartDrawer';
 
 function App() {
   return (
     <Router>
       <SettingsProvider>
-        <CartProvider>
-          <div className="flex flex-col min-h-screen relative overflow-x-hidden">
+        <StorefrontAuthProvider>
+          <CartProvider>
+            <div className="flex flex-col min-h-screen relative overflow-x-hidden">
             <Toaster 
               position="top-center" 
               toastOptions={{
@@ -41,14 +44,16 @@ function App() {
                 <Route path="/products" element={<Products />} />
                 <Route path="/products/:id" element={<ProductDetail />} />
                 <Route path="/order" element={<OrderForm />} />
-                <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/settings" element={<AccountSettings />} />
               </Routes>
             </main>
             <Footer />
             <WhatsAppFAB />
           </div>
-        </CartProvider>
+          </CartProvider>
+        </StorefrontAuthProvider>
       </SettingsProvider>
     </Router>
   );

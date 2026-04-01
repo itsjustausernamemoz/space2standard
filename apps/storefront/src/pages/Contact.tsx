@@ -36,16 +36,16 @@ export const Contact = () => {
   };
 
   return (
-    <div className="pt-40 pb-32 min-h-screen bg-cream-50">
+    <div className="pt-40 pb-32 min-h-screen bg-navy-950">
       <div className="container mx-auto px-6">
         <header className="max-w-4xl space-y-12 mb-32">
           <div className="space-y-6">
             <span className="section-label">Get in Touch</span>
-            <h1 className="text-5xl sm:text-6xl md:text-8xl font-serif text-walnut-950 tracking-tight leading-none break-words">
+            <h1 className="text-5xl sm:text-6xl md:text-8xl font-serif text-navy-300 tracking-tight leading-none break-words">
               Start a <br/> Conversation.
             </h1>
           </div>
-          <p className="text-xl font-light text-walnut-800/80 leading-relaxed max-w-2xl italic">
+          <p className="text-xl font-light text-navy-400 leading-relaxed max-w-2xl italic">
             Whether it's a bespoke commission, a collaboration, or a simple question — 
             we are here to bring excellence to your space.
           </p>
@@ -68,19 +68,19 @@ export const Contact = () => {
                     transition={{ delay: idx * 0.1 }}
                     className="flex gap-8 group"
                  >
-                   <div className="w-14 h-14 bg-gold-500/10 rounded-2xl flex items-center justify-center shrink-0 text-gold-500 border border-gold-500/10 group-hover:bg-gold-500 group-hover:text-white transition-all duration-500">
+                   <div className="w-14 h-14 bg-gold-500/10 rounded-2xl flex items-center justify-center shrink-0 text-gold-500 border border-gold-500/10 group-hover:bg-gold-500 group-hover:text-navy-950 transition-all duration-500">
                      {item.icon}
                    </div>
                    <div className="space-y-2">
                      <h3 className="text-xs font-bold uppercase tracking-[0.25em] text-gold-500">{item.label}</h3>
-                     <p className="text-xl font-serif text-walnut-950 tracking-wide whitespace-pre-line leading-relaxed">{item.value}</p>
-                     <p className="text-sm font-light text-charcoal-500 italic opacity-60 font-inter">{item.sub}</p>
+                     <p className="text-xl font-serif text-navy-300 tracking-wide whitespace-pre-line leading-relaxed">{item.value}</p>
+                     <p className="text-sm font-light text-navy-500 italic font-inter">{item.sub}</p>
                    </div>
                  </motion.div>
                ))}
             </div>
 
-            <Card className="bg-walnut-800 text-gold-300 overflow-hidden relative group">
+            <Card className="bg-navy-900 border border-gold-500/10 text-gold-300 overflow-hidden relative group shadow-2xl">
               <div className="absolute top-0 right-0 p-8 text-gold-500 opacity-10 scale-150 group-hover:scale-125 transition-transform duration-1000">
                 <MessageCircle size={120} strokeWidth={1} />
               </div>
@@ -90,7 +90,7 @@ export const Contact = () => {
                   Connect directly with our master craftsmen via WhatsApp 
                   for immediate response on custom inquiries.
                 </p>
-                <Button onClick={openWhatsApp} variant="outline" className="border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-walnut-950 px-10">
+                <Button onClick={openWhatsApp} variant="outline" className="border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-navy-950 px-10">
                    WhatsApp Us
                 </Button>
               </div>
@@ -99,7 +99,7 @@ export const Contact = () => {
 
           {/* Contact Form */}
           <div className="lg:col-span-7">
-            <Card variant="solid" className="bg-white/80 p-12">
+            <Card variant="solid" className="bg-navy-900/50 backdrop-blur-xl border border-gold-500/10 p-12 shadow-2xl">
                <form onSubmit={handleSubmit} className="space-y-10">
                  <div className="grid md:grid-cols-2 gap-10">
                     <Input 

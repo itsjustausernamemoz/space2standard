@@ -54,7 +54,7 @@ export const Home = () => {
             className="space-y-6"
           >
             <span className="section-label text-gold-500">Excellence in Craftsmanship</span>
-            <h1 className="text-5xl sm:text-7xl md:text-9xl font-serif text-white tracking-tight leading-none break-words">
+            <h1 className="text-5xl sm:text-7xl md:text-9xl font-serif text-navy-300 tracking-tight leading-none break-words">
               Space<span className="text-gold-500 italic">2</span>Standard
             </h1>
             <p className="text-base sm:text-lg md:text-2xl font-light uppercase tracking-[0.4em] text-navy-400 max-w-3xl mx-auto break-words">
@@ -69,7 +69,7 @@ export const Home = () => {
             className="flex flex-col sm:flex-row items-center justify-center gap-8"
           >
             <Link to="/order">
-              <Button size="xl" variant="primary" className="bg-gold-600 hover:bg-gold-500 text-white rounded-xl px-12 py-4 shadow-lg shadow-gold-600/10 transition-all font-bold tracking-widest uppercase text-xs">
+              <Button size="xl" variant="primary" className="bg-gold-600 hover:bg-gold-500 text-navy-950 rounded-xl px-12 py-4 shadow-lg shadow-gold-600/10 transition-all font-bold tracking-widest uppercase text-xs">
                 Order a Piece
               </Button>
             </Link>
@@ -95,7 +95,7 @@ export const Home = () => {
         <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-24">
           <div className="space-y-6">
             <span className="section-label text-gold-500">Our Masterpieces</span>
-            <h2 className="text-4xl sm:text-5xl md:text-7xl font-serif text-white tracking-tight leading-tight italic break-words">Featured <br/> Collection</h2>
+            <h2 className="text-4xl sm:text-5xl md:text-7xl font-serif text-navy-300 tracking-tight leading-tight italic break-words">Featured <br/> Collection</h2>
           </div>
           <Link to="/products" className="group flex items-center gap-3 text-gold-500 uppercase text-xs font-bold tracking-[0.2em] pb-2 border-b border-gold-500/20 hover:border-gold-500 transition-all">
             Browse All <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
@@ -144,7 +144,7 @@ export const Home = () => {
           >
             <div className="space-y-6">
               <span className="section-label text-gold-500">The Artisan Way</span>
-              <h2 className="text-4xl sm:text-5xl md:text-7xl font-serif text-white tracking-tight leading-tight break-words">From Tree <br/> to Table</h2>
+              <h2 className="text-4xl sm:text-5xl md:text-7xl font-serif text-navy-300 tracking-tight leading-tight break-words">From Tree <br/> to Table</h2>
               <p className="text-base md:text-lg font-light leading-relaxed text-navy-400 break-words">
                 At Space2Standard, we don't just build furniture; we curate masterpieces. 
                 Our process combines ancient woodworking techniques with modern precision to 
@@ -163,7 +163,7 @@ export const Home = () => {
                     <CheckCircle2 className="text-gold-500" size={20} />
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-xl font-serif text-white tracking-wide">{item.title}</h3>
+                    <h3 className="text-xl font-serif text-navy-300 tracking-wide">{item.title}</h3>
                     <p className="text-sm font-light text-navy-500 leading-relaxed italic">{item.desc}</p>
                   </div>
                 </div>
@@ -184,7 +184,7 @@ export const Home = () => {
                 <div className="flex gap-1 text-gold-500">
                   {[1,2,3,4,5].map(i => <Star key={i} size={16} fill="currentColor" />)}
                 </div>
-                <p className="text-2xl font-serif italic text-white leading-tight">
+                <p className="text-2xl font-serif italic text-navy-300 leading-tight">
                   "Exceeded all my expectations. <br/> A true heirloom."
                 </p>
                 <p className="text-xs uppercase tracking-widest text-gold-500 font-bold">
@@ -199,7 +199,7 @@ export const Home = () => {
       {/* CTA Section */}
       <section className="py-60 bg-navy-950 text-center relative overflow-hidden">
         <div className="container mx-auto px-6 max-w-4xl space-y-16">
-          <h2 className="text-4xl sm:text-5xl md:text-8xl font-serif text-white tracking-tight leading-[1.1] break-words">
+          <h2 className="text-4xl sm:text-5xl md:text-8xl font-serif text-navy-300 tracking-tight leading-[1.1] break-words">
             Elevate your space with <span className="text-gold-500 italic break-words">excellence</span>
           </h2>
           <div className="gold-divider" />
@@ -207,7 +207,7 @@ export const Home = () => {
             Our master artisans in Windhoek are ready to bring your vision to life.
           </p>
           <Link to="/order">
-            <Button size="xl" variant="primary" className="bg-gold-600 hover:bg-gold-500 text-white rounded-xl px-20">
+            <Button size="xl" variant="primary" className="bg-gold-600 hover:bg-gold-500 text-navy-950 rounded-xl px-20">
               Start Your Journey
             </Button>
           </Link>

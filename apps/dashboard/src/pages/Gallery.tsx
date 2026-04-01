@@ -40,7 +40,7 @@ export const Gallery = () => {
       const files = Array.from(e.target.files);
       const newImages: any[] = [];
 
-      for (const file of files) {
+      const uploadPromises = files.map(async (file) => {
         const fileExt = file.name.split('.').pop();
         const rawName = file.name.replace(`.${fileExt}`, '');
         const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
@@ -66,15 +66,18 @@ export const Gallery = () => {
           .single();
           
         if (dbError) throw dbError;
-        newImages.push(data);
-      }
+        return data;
+      });
 
-      setImages(prev => [...newImages, ...prev]);
+      const processedImages = await Promise.all(uploadPromises);
+      setImages(prev => [...processedImages, ...prev]);
       toast.success(`${files.length} asset(s) added to gallery`);
     } catch (error: any) {
       console.error(error);
       toast.error(error.message || 'Upload failed');
     } finally {
+      // Clear the input value so the same file can be triggered again if needed
+      e.target.value = '';
       setUploading(false);
     }
   };
@@ -121,7 +124,7 @@ export const Gallery = () => {
           ) : (
             <Upload size={16} />
           )}
-          <span className="leading-none pt-0.5">{uploading ? 'Processing...' : 'Upload Asset'}</span>
+          <span className="leading-none pt-0.5">{uploading ? 'Processing...' : 'Upload Assets'}</span>
           <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" disabled={uploading}/>
         </label>
       </header>

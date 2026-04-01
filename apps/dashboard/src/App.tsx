@@ -39,6 +39,7 @@ function App() {
           <Route element={<AuthGuard />}>
             <Route path="/" element={<Layout><Dashboard /></Layout>} />
             <Route path="/gallery" element={<Layout><Gallery /></Layout>} />
+            <Route path="/categories" element={<Layout><Categories /></Layout>} />
             <Route path="/products" element={<Layout><Products /></Layout>} />
             <Route path="/products/new" element={<Layout><ProductForm /></Layout>} />
             <Route path="/products/:id/edit" element={<Layout><ProductForm /></Layout>} />
