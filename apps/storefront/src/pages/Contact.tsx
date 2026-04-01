@@ -41,7 +41,7 @@ export const Contact = () => {
         <header className="max-w-4xl space-y-12 mb-32">
           <div className="space-y-6">
             <span className="section-label">Get in Touch</span>
-            <h1 className="text-6xl md:text-8xl font-serif text-walnut-950 tracking-tight leading-none">
+            <h1 className="text-5xl sm:text-6xl md:text-8xl font-serif text-walnut-950 tracking-tight leading-none break-words">
               Start a <br/> Conversation.
             </h1>
           </div>

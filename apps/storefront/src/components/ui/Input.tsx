@@ -7,7 +7,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement | HTMLTe
 }
 
 export const Input: React.FC<InputProps> = ({ label, isTextArea = false, className = '', ...props }) => {
-  const baseStyles = "w-full bg-white/5 border border-walnut-800/10 p-4 text-sm text-charcoal-800 placeholder:opacity-30 focus:outline-none focus:border-gold-500 transition duration-300 rounded-lg backdrop-blur-md focus:bg-cream-100";
+  const baseStyles = "w-full bg-cream-50 border border-walnut-800/20 p-4 text-sm text-navy-950 font-medium placeholder:opacity-40 focus:outline-none focus:border-gold-500 transition duration-300 rounded-lg shadow-inner focus:bg-white";
   
   return (
     <div className={cn("space-y-2 group", className)}>

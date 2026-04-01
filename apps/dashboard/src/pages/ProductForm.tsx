@@ -23,11 +23,12 @@ export const ProductForm = () => {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEdit);
   const [images, setImages] = useState<Partial<ProductImage>[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
-    category: 'Tables',
+    category_id: '',
     description: '',
     dimensions: '',
     materials: '',
@@ -40,6 +41,7 @@ export const ProductForm = () => {
   });
 
   useEffect(() => {
+    fetchCategories();
     if (isEdit && id) {
       fetchProduct(id);
     } else {
@@ -57,6 +59,11 @@ export const ProductForm = () => {
     }
   }, [isEdit, id, searchParams]);
 
+  async function fetchCategories() {
+    const { data } = await supabase.from('categories').select('*').order('name');
+    if (data) setCategories(data);
+  }
+
   async function fetchProduct(productId: string) {
     const { data, error } = await supabase
       .from('products')
@@ -70,7 +77,7 @@ export const ProductForm = () => {
     } else {
       setFormData({
         name: data.name,
-        category: data.category || 'Tables',
+        category_id: data.category_id || '',
         description: data.description || '',
         dimensions: data.dimensions || '',
         materials: data.materials || '',
@@ -242,15 +249,13 @@ export const ProductForm = () => {
                   <label className="text-[10px] font-bold uppercase tracking-widest text-charcoal-500 ml-1">Category</label>
                   <select 
                     className="input-base cursor-pointer" 
-                    value={formData.category} 
-                    onChange={e => setFormData({...formData, category: e.target.value})}
+                    value={formData.category_id} 
+                    onChange={e => setFormData({...formData, category_id: e.target.value})}
                   >
-                    <option value="Tables">Tables</option>
-                    <option value="Seating">Seating</option>
-                    <option value="Storage">Storage</option>
-                    <option value="Beds">Beds</option>
-                    <option value="Outdoor">Outdoor</option>
-                    <option value="Installations">Installations</option>
+                    <option value="" disabled>Select a Category...</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
                   </select>
                 </div>
               </div>

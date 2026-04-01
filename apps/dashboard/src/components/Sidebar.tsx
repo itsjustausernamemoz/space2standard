@@ -27,6 +27,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { name: 'Overview', icon: <LayoutDashboard size={20} />, path: '/' },
     { name: 'Products', icon: <Package size={20} />, path: '/products' },
     { name: 'Image Gallery', icon: <ImageIcon size={20} />, path: '/gallery' },
+    { name: 'Categories', icon: <Package size={20} />, path: '/categories' },
     { name: 'Orders', icon: <ShoppingCart size={20} />, path: '/orders' },
     { name: 'Invoices', icon: <FileText size={20} />, path: '/invoices' },
     { name: 'Inventory', icon: <BarChart3 size={20} />, path: '/inventory' },

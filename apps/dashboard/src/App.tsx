@@ -9,6 +9,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Gallery } from './pages/Gallery';
 import { Products } from './pages/Products';
 import { ProductForm } from './pages/ProductForm';
+import { Categories } from './pages/Categories';
 import { Orders } from './pages/Orders';
 import { Invoices } from './pages/Invoices';
 import { InvoiceForm } from './pages/InvoiceForm';

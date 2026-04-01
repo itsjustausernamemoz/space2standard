@@ -7,10 +7,12 @@ import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Truck, ShieldCheck, Hammer } from 'lucide-react';
+import { useCart } from '../contexts/CartContext';
 
 export const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -182,11 +184,9 @@ export const ProductDetail = () => {
             </div>
 
             <div className="space-y-8 pt-8">
-               <Link to={`/order?product=${product.id}`}>
-                 <Button size="xl" variant="primary" className="w-full bg-gold-600 hover:bg-gold-500 text-white rounded-xl py-6">
-                   Order This Masterpiece
-                 </Button>
-               </Link>
+               <Button onClick={() => addToCart(product)} size="xl" variant="primary" className="w-full bg-gold-600 hover:bg-gold-500 text-white rounded-xl py-6">
+                 Add to Cart
+               </Button>
                
                <div className="flex flex-col gap-5 text-[10px] uppercase tracking-[0.2em] font-bold text-navy-500">
                   <div className="flex items-center gap-3">

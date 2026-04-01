@@ -11,7 +11,7 @@ export const About = () => {
           <div className="space-y-12">
             <header className="space-y-6">
               <span className="section-label">Our Story</span>
-              <h1 className="text-6xl md:text-8xl font-serif text-walnut-950 tracking-tight leading-none">
+              <h1 className="text-5xl sm:text-6xl md:text-8xl font-serif text-walnut-950 tracking-tight leading-none break-words">
                 Handcrafted <br/> for Life.
               </h1>
             </header>

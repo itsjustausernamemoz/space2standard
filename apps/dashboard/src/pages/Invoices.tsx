@@ -227,18 +227,37 @@ export const Invoices = () => {
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [businessInfo, setBusinessInfo] = useState({});
+  const [timeframe, setTimeframe] = useState('all');
 
   useEffect(() => {
-    fetchData();
+    fetchData(timeframe);
   }, []);
 
-  async function fetchData() {
+  async function fetchData(selectedTimeframe = 'all') {
     setLoading(true);
-    // 1. Fetch documents joined with orders
-    const { data: docs } = await supabase
+
+    let query = supabase
       .from('documents')
       .select('*, orders(*)')
       .order('created_at', { ascending: false });
+
+    if (selectedTimeframe !== 'all') {
+      const now = new Date();
+      let startDate;
+      if (selectedTimeframe === 'month') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      } else if (selectedTimeframe === '30days') {
+        startDate = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+      } else if (selectedTimeframe === 'year') {
+        startDate = new Date(now.getFullYear(), 0, 1);
+      }
+      
+      if (startDate) {
+        query = query.gte('created_at', startDate.toISOString());
+      }
+    }
+
+    const { data: docs } = await query;
     
     // 2. Fetch business settings
     const { data: settings } = await supabase
@@ -279,9 +298,24 @@ export const Invoices = () => {
                <h4 className="text-xl font-bold text-white">{documents.length} Records</h4>
             </div>
          </div>
-         <div className="dashboard-card bg-navy-900 border-navy-800 flex gap-4 items-center col-span-2">
-            <Search size={18} className="text-navy-500 ml-2" />
-            <input type="text" placeholder="Search by document ID or client..." className="bg-transparent border-none outline-none text-sm w-full text-white placeholder-navy-600" />
+         <div className="dashboard-card bg-navy-900 border-navy-800 flex flex-col md:flex-row gap-4 items-center col-span-2">
+            <div className="flex flex-1 items-center gap-4 w-full">
+               <Search size={18} className="text-navy-500 ml-2" />
+               <input type="text" placeholder="Search by document ID or client..." className="bg-transparent border-none outline-none text-sm w-full text-white placeholder-navy-600" />
+            </div>
+            <select 
+              className="bg-navy-950 border border-navy-800 text-[10px] font-bold uppercase tracking-widest text-navy-400 rounded px-4 py-2 focus:outline-none focus:border-gold-500 cursor-pointer w-full md:w-auto"
+              value={timeframe}
+              onChange={(e) => {
+                 setTimeframe(e.target.value);
+                 fetchData(e.target.value);
+              }}
+            >
+              <option value="all">All Time</option>
+              <option value="month">This Month</option>
+              <option value="30days">Last 30 Days</option>
+              <option value="year">This Year</option>
+            </select>
          </div>
       </div>
 

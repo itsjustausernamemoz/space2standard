@@ -7,10 +7,19 @@ export interface Profile {
   created_at: string;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  created_at: string;
+}
+
 export interface Product {
   id: string;
   name: string;
-  category: string | null;
+  category: string | null;      // deprecated string version
+  category_id: string | null;
+  category_rel?: Category;      // nested object from Supabase Join
   description: string | null;
   dimensions: string | null;
   materials: string | null;

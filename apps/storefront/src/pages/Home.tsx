@@ -54,10 +54,10 @@ export const Home = () => {
             className="space-y-6"
           >
             <span className="section-label text-gold-500">Excellence in Craftsmanship</span>
-            <h1 className="text-7xl md:text-9xl font-serif text-white tracking-tight leading-none">
+            <h1 className="text-5xl sm:text-7xl md:text-9xl font-serif text-white tracking-tight leading-none break-words">
               Space<span className="text-gold-500 italic">2</span>Standard
             </h1>
-            <p className="text-lg md:text-2xl font-light uppercase tracking-[0.4em] text-navy-400 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg md:text-2xl font-light uppercase tracking-[0.4em] text-navy-400 max-w-3xl mx-auto break-words">
               Bespoke furniture crafted to your vision. <br className="hidden md:inline" /> Built to last generations.
             </p>
           </motion.div>
@@ -95,7 +95,7 @@ export const Home = () => {
         <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-24">
           <div className="space-y-6">
             <span className="section-label text-gold-500">Our Masterpieces</span>
-            <h2 className="text-5xl md:text-7xl font-serif text-white tracking-tight leading-tight italic">Featured <br/> Collection</h2>
+            <h2 className="text-4xl sm:text-5xl md:text-7xl font-serif text-white tracking-tight leading-tight italic break-words">Featured <br/> Collection</h2>
           </div>
           <Link to="/products" className="group flex items-center gap-3 text-gold-500 uppercase text-xs font-bold tracking-[0.2em] pb-2 border-b border-gold-500/20 hover:border-gold-500 transition-all">
             Browse All <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
@@ -144,8 +144,8 @@ export const Home = () => {
           >
             <div className="space-y-6">
               <span className="section-label text-gold-500">The Artisan Way</span>
-              <h2 className="text-5xl md:text-7xl font-serif text-white tracking-tight leading-tight">From Tree <br/> to Table</h2>
-              <p className="text-lg font-light leading-relaxed text-navy-400">
+              <h2 className="text-4xl sm:text-5xl md:text-7xl font-serif text-white tracking-tight leading-tight break-words">From Tree <br/> to Table</h2>
+              <p className="text-base md:text-lg font-light leading-relaxed text-navy-400 break-words">
                 At Space2Standard, we don't just build furniture; we curate masterpieces. 
                 Our process combines ancient woodworking techniques with modern precision to 
                 create pieces that are as functional as they are beautiful.
@@ -199,8 +199,8 @@ export const Home = () => {
       {/* CTA Section */}
       <section className="py-60 bg-navy-950 text-center relative overflow-hidden">
         <div className="container mx-auto px-6 max-w-4xl space-y-16">
-          <h2 className="text-5xl md:text-8xl font-serif text-white tracking-tight leading-[1.1]">
-            Elevate your space with <span className="text-gold-500 italic">excellence</span>
+          <h2 className="text-4xl sm:text-5xl md:text-8xl font-serif text-white tracking-tight leading-[1.1] break-words">
+            Elevate your space with <span className="text-gold-500 italic break-words">excellence</span>
           </h2>
           <div className="gold-divider" />
           <p className="text-xl font-light text-navy-400 tracking-wide">

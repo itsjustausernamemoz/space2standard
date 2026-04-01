@@ -29,7 +29,7 @@ export const Products = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('products')
-      .select(`*, images:product_images(*)`)
+      .select('*, images:product_images(*), category_rel:categories(name)')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -73,7 +73,8 @@ export const Products = () => {
 
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.category?.toLowerCase().includes(searchTerm.toLowerCase())
+    p.category_rel?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.category?.toLowerCase().includes(searchTerm.toLowerCase()) // Fallback for old data
   );
 
   return (
@@ -144,7 +145,7 @@ export const Products = () => {
                         </div>
                       </td>
                       <td className="px-8 py-6">
-                        <span className="text-xs font-medium text-cream-100/60 uppercase tracking-widest">{p.category || 'General'}</span>
+                        <span className="text-xs font-medium text-cream-100/60 uppercase tracking-widest">{p.category_rel?.name || p.category || 'General'}</span>
                       </td>
                       <td className="px-8 py-6">
                         <span className="text-sm font-bold text-white tracking-wide">{formatCurrency(p.price)}</span>

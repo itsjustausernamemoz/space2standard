@@ -4,12 +4,14 @@ import { Menu, X, ShoppingBag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/Button';
 import { useSettings } from '../contexts/SettingsContext';
+import { useCart } from '../contexts/CartContext';
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const { settings } = useSettings();
+  const { itemCount, setIsCartOpen } = useCart();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -57,20 +59,46 @@ export const Navbar = () => {
             ))}
           </div>
           
-          <Link to="/products">
-            <Button size="sm" variant="primary" className="bg-gold-600 hover:bg-gold-500 text-white rounded-lg px-6">
-              Commission
-            </Button>
-          </Link>
+          <div className="flex items-center gap-6 border-l border-white/10 pl-6">
+            <button 
+              onClick={() => setIsCartOpen(true)}
+              className="relative text-navy-400 hover:text-gold-500 transition-colors"
+            >
+              <ShoppingBag size={20} />
+              {itemCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-error text-white text-[9px] font-bold flex items-center justify-center rounded-full border border-navy-950">
+                  {itemCount}
+                </span>
+              )}
+            </button>
+            <Link to="/products">
+              <Button size="sm" variant="primary" className="bg-gold-600 hover:bg-gold-500 text-white rounded-lg px-6">
+                Commission
+              </Button>
+            </Link>
+          </div>
         </div>
 
-        {/* Mobile Toggle */}
-        <button 
-          className="md:hidden text-white"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          {isOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        {/* Mobile Toggle & Cart */}
+        <div className="flex items-center gap-4 md:hidden">
+          <button 
+            onClick={() => setIsCartOpen(true)}
+            className="relative text-white hover:text-gold-500 transition-colors"
+          >
+            <ShoppingBag size={22} />
+            {itemCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-error text-white text-[9px] font-bold flex items-center justify-center rounded-full border border-navy-950">
+                {itemCount}
+              </span>
+            )}
+          </button>
+          <button 
+            className="text-white"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu */}
