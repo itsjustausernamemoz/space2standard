@@ -90,7 +90,7 @@ export const Navbar = () => {
             )}
             <Link to="/products">
               <Button size="sm" variant="primary" className="bg-gold-600 hover:bg-gold-500 text-navy-950 rounded-lg px-6">
-                Commission
+                Order
               </Button>
             </Link>
           </div>
@@ -144,7 +144,7 @@ export const Navbar = () => {
         ))}
         <Link to="/products" onClick={() => setIsOpen(false)}>
           <Button size="lg" variant="primary" className="bg-gold-600 px-12 py-6 rounded-xl text-navy-950">
-            Begin Commission
+            Begin Order
           </Button>
         </Link>
       </div>

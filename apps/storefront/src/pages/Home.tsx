@@ -17,7 +17,7 @@ export const Home = () => {
       // 1. Fetch featured products (limit to 3)
       const { data: pData } = await supabase
         .from('products')
-        .select(`*, images:product_images(*)`)
+        .select(`*, images:product_images(*), product_reviews(*)`)
         .eq('is_published', true)
         .limit(3);
 

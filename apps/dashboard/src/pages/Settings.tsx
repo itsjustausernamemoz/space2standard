@@ -11,7 +11,8 @@ import {
   Upload,
   CreditCard,
   UserCheck,
-  Trash2
+  Trash2,
+  FileText
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -60,7 +61,7 @@ export const Settings = () => {
         .getPublicUrl(filePath);
 
       handleUpdate('business_logo_url', publicUrl);
-      toast.success('Studio logo uploaded.');
+      toast.success('Business logo uploaded.');
     } catch (error: any) {
       toast.error('Logo upload failed: ' + error.message);
     } finally {
@@ -100,7 +101,7 @@ export const Settings = () => {
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-1">
           <h1 className="text-3xl font-serif text-white tracking-tight">System Core</h1>
-          <p className="text-navy-500 text-sm italic">Configuring high-fidelity studio documentation & identity.</p>
+          <p className="text-navy-500 text-sm italic">Configuring high-fidelity business documentation & identity.</p>
         </div>
         <button 
           onClick={saveAll} 
@@ -108,7 +109,7 @@ export const Settings = () => {
           className="btn-dashboard-primary flex items-center gap-2 w-full md:w-auto justify-center"
         >
           <Save size={18} />
-          {saving ? 'Mastering...' : 'Save Studio Config'}
+          {saving ? 'Mastering...' : 'Save Business Config'}
         </button>
       </header>
 
@@ -122,7 +123,7 @@ export const Settings = () => {
                
                <div className="flex flex-col md:flex-row gap-10">
                   <div className="shrink-0 space-y-4">
-                     <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1">Studio Logo</label>
+                     <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1">Business Logo</label>
                      <div className="relative group w-40 h-40 bg-navy-950 border-2 border-dashed border-navy-800 rounded-2xl flex items-center justify-center overflow-hidden transition-all hover:border-gold-500/50">
                         {settings.business_logo_url ? (
                           <>
@@ -144,11 +145,11 @@ export const Settings = () => {
                   <div className="flex-1 space-y-8">
                      <div className="grid md:grid-cols-2 gap-8">
                         <div className="space-y-2">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1">Studio Name</label>
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1">Business Name</label>
                           <input 
                             className="input-base" 
                             value={settings.business_name || ''} 
-                            placeholder="e.g. Safari Craft Studios"
+                            placeholder="e.g. Space2Standard Business"
                             onChange={e => handleUpdate('business_name', e.target.value)}
                           />
                         </div>
@@ -162,7 +163,7 @@ export const Settings = () => {
                         </div>
                      </div>
                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1 flex items-center gap-2">Studio Website <Globe size={12}/></label>
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1 flex items-center gap-2">Business Website <Globe size={12}/></label>
                         <input 
                           className="input-base" 
                           value={settings.business_url || ''} 
@@ -173,7 +174,7 @@ export const Settings = () => {
                </div>
                
                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1">Studio Base Address (Namibia)</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1">Business Base Address (Namibia)</label>
                   <textarea 
                     className="input-base min-h-[100px] resize-none" 
                     value={settings.business_address || ''} 
@@ -184,7 +185,7 @@ export const Settings = () => {
 
                <div className="grid md:grid-cols-2 gap-8">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1 flex items-center gap-2">Studio Line <Phone size={12}/></label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1 flex items-center gap-2">Business Line <Phone size={12}/></label>
                     <input 
                       className="input-base" 
                       value={settings.business_phone || ''} 
@@ -276,6 +277,39 @@ export const Settings = () => {
                       value={settings.authorised_by_title || ''} 
                       onChange={e => handleUpdate('authorised_by_title', e.target.value)}
                     />
+                  </div>
+               </div>
+            </div>
+
+            {/* Footer Content */}
+            <div className="dashboard-card space-y-10">
+               <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-white flex items-center gap-2">
+                  <FileText size={16} className="text-gold-500" /> Storefront Footer
+               </h3>
+               <div className="space-y-8">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1">Footer Tagline</label>
+                    <textarea 
+                      className="input-base min-h-[100px] resize-none" 
+                      value={settings.footer_tagline || ''} 
+                      placeholder="A short description of your business shown in the website footer."
+                      onChange={e => handleUpdate('footer_tagline', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1">Footer Copyright Text</label>
+                    <input 
+                      className="input-base" 
+                      value={settings.footer_copyright || ''} 
+                      placeholder="e.g. Space2Standard Artisan Business. Crafted for life in Namibia."
+                      onChange={e => handleUpdate('footer_copyright', e.target.value)}
+                    />
+                  </div>
+                  <div className="p-4 bg-navy-950 border border-navy-800 rounded-xl space-y-3">
+                     <p className="text-[10px] font-bold uppercase tracking-widest text-navy-500">Live Preview</p>
+                     <p className="text-[11px] font-inter text-navy-500 italic leading-relaxed">
+                        These fields control the tagline paragraph and the copyright line displayed at the bottom of your storefront website.
+                     </p>
                   </div>
                </div>
             </div>

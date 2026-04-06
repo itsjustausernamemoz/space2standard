@@ -5,14 +5,13 @@ import type { OrderStatus } from '../types';
  */
 export function formatCurrency(
   amount: number,
-  currency = 'NAD',
-  locale = 'en-NA'
+  _currency = 'NAD',
+  _locale = 'en-NA'
 ): string {
-  return new Intl.NumberFormat(locale, {
-    style: 'currency',
-    currency,
+  return `N$ ${amount.toLocaleString('en-ZA', {
     minimumFractionDigits: 2,
-  }).format(amount);
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 /**

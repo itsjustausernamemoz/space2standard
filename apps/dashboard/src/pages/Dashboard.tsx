@@ -141,7 +141,7 @@ export const Dashboard = () => {
       <header className="flex justify-between items-end">
         <div className="space-y-1">
           <h1 className="text-3xl font-serif text-white tracking-tight">Executive Overview</h1>
-          <p className="text-navy-400 text-sm italic">Live performance metrics for your artisan studio.</p>
+          <p className="text-navy-400 text-sm italic">Live performance metrics for your artisan business.</p>
         </div>
         <div className="bg-navy-900 border border-navy-800 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-[0.2em] text-navy-400">
           Last 7 Days (Real-time)
@@ -240,7 +240,7 @@ export const Dashboard = () => {
                  <div className="w-1.5 h-1.5 rounded-full bg-gold-500 mt-1.5 shrink-0 shadow-[0_0_8px_rgba(193,155,58,0.4)] group-hover:scale-125 transition-transform"/>
                  <div className="space-y-1">
                     <p className="text-xs text-navy-100 group-hover:text-white transition-colors leading-relaxed">
-                      Commission received from <span className="text-gold-500 font-bold">{order.customer_name}</span>
+                      Order received from <span className="text-gold-500 font-bold">{order.customer_name}</span>
                     </p>
                     <p className="text-[10px] uppercase tracking-widest text-navy-400 font-bold">{formatTimeAgo(order.created_at)}</p>
                  </div>

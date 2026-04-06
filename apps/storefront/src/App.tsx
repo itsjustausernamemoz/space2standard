@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
@@ -16,9 +16,18 @@ import { Auth } from './pages/Auth';
 import { AccountSettings } from './pages/AccountSettings';
 import { CartDrawer } from './components/CartDrawer';
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <SettingsProvider>
         <StorefrontAuthProvider>
           <CartProvider>
@@ -60,3 +69,4 @@ function App() {
 }
 
 export default App;
+

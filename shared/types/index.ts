@@ -34,6 +34,7 @@ export interface Product {
   created_at: string;
   updated_at: string;
   images?: ProductImage[];
+  product_reviews?: ProductReview[];
 }
 
 export interface ProductImage {
@@ -42,6 +43,16 @@ export interface ProductImage {
   storage_url: string;
   is_primary: boolean;
   sort_order: number;
+}
+
+export interface ProductReview {
+  id: string;
+  product_id: string;
+  customer_name: string;
+  rating: number;
+  comment: string | null;
+  is_approved: boolean;
+  created_at: string;
 }
 
 export interface Order {

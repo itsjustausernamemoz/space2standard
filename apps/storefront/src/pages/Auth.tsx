@@ -58,7 +58,7 @@ export const Auth = () => {
           </h2>
           <p className="text-sm font-light text-navy-400 italic">
             {isLogin 
-              ? 'Sign in to access your commissions and saved pieces.' 
+              ? 'Sign in to access your orders and saved pieces.' 
               : 'Join Space2Standard for expedited checkout.'}
           </p>
         </div>

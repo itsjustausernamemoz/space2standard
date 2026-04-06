@@ -9,6 +9,8 @@ interface SettingsData {
   business_email: string;
   business_url: string;
   vat_rate: string;
+  footer_tagline: string;
+  footer_copyright: string;
 }
 
 interface SettingsContextType {
@@ -23,7 +25,9 @@ const defaultSettings: SettingsData = {
   business_phone: '',
   business_email: 'hello@space2standard.com',
   business_url: '',
-  vat_rate: '15'
+  vat_rate: '15',
+  footer_tagline: 'A premium Namibian artisan brand crafting bespoke furniture and architectural installations. Blending traditional craftsmanship with modern precision to perfection.',
+  footer_copyright: 'Space2Standard Artisan Business. Crafted for life in Namibia.',
 };
 
 const SettingsContext = createContext<SettingsContextType>({

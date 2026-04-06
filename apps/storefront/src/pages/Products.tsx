@@ -15,7 +15,7 @@ export const Products = () => {
       // 1. Fetch Products
       const { data: pData } = await supabase
         .from('products')
-        .select('*, images:product_images(*), category_rel:categories(name)')
+        .select(`*, images:product_images(*), product_reviews(*), category_rel:categories(name)`)
         .eq('is_published', true);
 
       // 2. Fetch Global VAT Settings

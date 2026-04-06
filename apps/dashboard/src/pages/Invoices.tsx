@@ -12,6 +12,7 @@ import {
   FileCheck
 } from 'lucide-react';
 import { PDFDownloadLink, Document as PDFDoc, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
+import { useNavigate } from 'react-router-dom';
 
 // Register fonts for PDF (Using premium sans-serif)
 Font.register({
@@ -89,7 +90,7 @@ const InvoicePDF = ({ doc, businessInfo, order }: { doc: Document, businessInfo:
       {/* Header */}
       <View style={styles.header}>
         {businessInfo.business_logo_url && <Image src={businessInfo.business_logo_url} style={styles.logo} />}
-        <Text style={styles.studioName}>{businessInfo.business_name || 'Safari Craft Studios'}</Text>
+        <Text style={styles.studioName}>{businessInfo.business_name || 'Space2Standard Business'}</Text>
         <Text style={styles.studioDetails}>
           {businessInfo.business_address || 'Windhoek, Namibia'} | {businessInfo.business_email} | {businessInfo.business_phone}
         </Text>
@@ -207,21 +208,18 @@ const InvoicePDF = ({ doc, businessInfo, order }: { doc: Document, businessInfo:
       <View style={styles.sectionTitle}>Authorised By</View>
       <View style={styles.authoriseContainer}>
         <View style={styles.signatureLine} />
-        <Text style={styles.authoriseName}>{businessInfo.authorised_by_name || 'Studio Principal'}</Text>
+        <Text style={styles.authoriseName}>{businessInfo.authorised_by_name || 'Business Principal'}</Text>
         <Text style={styles.authoriseTitle}>{businessInfo.authorised_by_title || 'Managing Director'}</Text>
-        <Text style={styles.authoriseTitle}>{businessInfo.business_name || 'Safari Craft Studios'}</Text>
+        <Text style={styles.authoriseTitle}>{businessInfo.business_name || 'Space2Standard Business'}</Text>
         <Text style={styles.authoriseTitle}>Date: {formatDate(doc.created_at)}</Text>
       </View>
 
       <Text style={styles.footer}>
-        Thank you for choosing {businessInfo.business_name || 'Safari Craft Studios'}. We look forward to working with you.
+        Thank you for choosing {businessInfo.business_name || 'Space2Standard Business'}. We look forward to working with you.
       </Text>
     </Page>
   </PDFDoc>
 );
-
-import { useNavigate } from 'react-router-dom';
-
 export const Invoices = () => {
   const navigate = useNavigate();
   const [documents, setDocuments] = useState<any[]>([]);

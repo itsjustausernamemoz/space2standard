@@ -88,7 +88,7 @@ export const OrderForm = () => {
 
       clearCart();
       setSubmitted(true);
-      toast.success('Our master artisan has received your commission request.');
+      toast.success('Our master artisan has received your order request.');
     } catch (error: any) {
       console.error('Order Submission Error:', error);
       toast.error(error.message || 'Something went wrong. Please try again.');
@@ -109,10 +109,9 @@ export const OrderForm = () => {
             <CheckCircle2 className="text-gold-500" size={48} strokeWidth={1} />
           </div>
           <div className="space-y-6">
-            <h1 className="text-5xl font-serif text-white tracking-tight">Commission Received</h1>
-            <p className="text-lg font-light text-navy-400 leading-relaxed max-w-xl mx-auto italic">
-              Thank you, {formData.customer_name}. We have logged your request. 
-              Our studio in Windhoek will contact you within 24 hours to discuss the materiality and dimensions.
+            <h1 className="text-5xl font-serif text-white tracking-tight">Order Received</h1>
+            <p className="text-navy-400 text-lg p-6 bg-navy-900 border border-navy-800 rounded-2xl mx-auto shadow-2xl">
+              Our business in Windhoek will contact you within 24 hours to discuss the materiality and dimensions.
             </p>
           </div>
           <div className="gold-divider" />
@@ -146,7 +145,7 @@ export const OrderForm = () => {
       <div className="container mx-auto px-6 max-w-6xl">
         <header className="mb-24 space-y-6 text-center max-w-3xl mx-auto">
           <span className="section-label">Artisan Checkout</span>
-          <h1 className="text-6xl font-serif text-white tracking-tight leading-none">Complete Commission</h1>
+          <h1 className="text-6xl font-serif text-white tracking-tight leading-none">Complete Order</h1>
           <p className="text-lg font-light text-navy-400 leading-relaxed italic">
             Each piece is handcrafted in Windhoek. No payment is required now — 
             we will contact you to finalise the bespoke specifications.
@@ -300,11 +299,11 @@ export const OrderForm = () => {
             </Card>
 
             <div className="space-y-10">
-               <h3 className="section-label">Studio Assurance</h3>
+               <h3 className="section-label">Business Assurance</h3>
                {[
                  { icon: <Package size={20} />, title: "Artisan Packing", desc: "Expertly protected for nationwide shipping within Namibia." },
                  { icon: <PhoneCall size={20} />, title: "Consultation", desc: "We contact you to verify dimensions and finishing details." },
-                 { icon: <Truck size={20} />, title: "Windhoek Delivery", desc: "Professional studio-to-home installation included." },
+                 { icon: <Truck size={20} />, title: "Windhoek Delivery", desc: "Professional business-to-home installation included." },
                ].map((item, idx) => (
                  <div key={idx} className="flex gap-6 group">
                    <div className="w-14 h-14 bg-navy-900 border border-navy-800 rounded-2xl flex items-center justify-center shrink-0 text-gold-500 transition-all group-hover:bg-gold-500/10 group-hover:border-gold-500/30">

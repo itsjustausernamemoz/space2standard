@@ -63,7 +63,7 @@ export const CartDrawer = () => {
                 <div className="flex flex-col items-center justify-center h-full text-center space-y-4 opacity-50">
                   <ShoppingBag size={64} className="text-navy-700" strokeWidth={1} />
                   <p className="font-serif text-2xl text-navy-400">Your cart is empty.</p>
-                  <p className="text-sm text-navy-600 max-w-[200px]">Browse our artisan collection to begin your commission.</p>
+                  <p className="text-sm text-navy-600 max-w-[200px]">Browse our artisan collection to begin your order.</p>
                 </div>
               ) : (
                 items.map((item) => {

@@ -46,7 +46,7 @@ export const Contact = () => {
             </h1>
           </div>
           <p className="text-xl font-light text-navy-400 leading-relaxed max-w-2xl italic">
-            Whether it's a bespoke commission, a collaboration, or a simple question — 
+            Whether it's a bespoke order, a collaboration, or a simple question — 
             we are here to bring excellence to your space.
           </p>
         </header>

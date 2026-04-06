@@ -5,7 +5,7 @@ import { formatCurrency, calcDiscount } from '@shared/utils';
 import { Card } from './Card';
 import { Badge } from './Badge';
 import { Button } from './Button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Star } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -24,6 +24,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, vatRate = 0 }
 
   const hasDiscount = discountedPrice < product.price;
   const primaryImage = product.images?.find(img => img.is_primary)?.storage_url || '/images/placeholder.jpg';
+
+  const approvedReviews = product.product_reviews?.filter(r => r.is_approved) || [];
+  const avgRating = approvedReviews.length > 0
+    ? approvedReviews.reduce((sum, r) => sum + r.rating, 0) / approvedReviews.length
+    : 0;
 
   return (
     <Card className="group flex flex-col h-full bg-cream-100/50 hover:bg-white transition-all cursor-pointer">
@@ -58,9 +63,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, vatRate = 0 }
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold-500">
             {product.category || 'Luxury Collection'}
           </p>
-          <h3 className="text-xl font-serif text-navy-950 group-hover:text-gold-600 transition-colors">
-            {product.name}
-          </h3>
+          <div className="flex justify-between items-start gap-2">
+            <h3 className="text-xl font-serif text-navy-950 group-hover:text-gold-600 transition-colors line-clamp-2">
+              {product.name}
+            </h3>
+            {approvedReviews.length > 0 && (
+              <div className="flex items-center gap-1 shrink-0 pt-1">
+                <Star className="text-gold-500 fill-gold-500" size={12} strokeWidth={1} />
+                <span className="text-[10px] font-bold text-navy-600">{avgRating.toFixed(1)}</span>
+                <span className="text-[10px] text-navy-400">({approvedReviews.length})</span>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="space-y-1">

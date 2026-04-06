@@ -54,7 +54,7 @@ export const Orders = () => {
          return;
        }
        setOrders(orders.map(o => o.id === id ? { ...o, status } : o));
-       toast.success("Commission fulfilled and inventory decremented.");
+       toast.success("Order fulfilled and inventory decremented.");
        return;
     }
 
@@ -87,7 +87,7 @@ export const Orders = () => {
       <header className="flex justify-between items-center">
         <div className="space-y-1">
           <h1 className="text-3xl font-serif text-white tracking-tight">Order Management</h1>
-          <p className="text-charcoal-500 text-sm">Track artisan commissions and customer inquiries.</p>
+          <p className="text-charcoal-500 text-sm">Track artisan orders and customer inquiries.</p>
         </div>
         <div className="bg-charcoal-800 border border-charcoal-700/50 rounded-lg px-6 py-3 text-xs font-bold uppercase tracking-widest text-gold-500 shadow-xl">
            {orders.filter(o => o.status === 'new').length} New Inquiries
@@ -210,7 +210,7 @@ export const Orders = () => {
               ) : (
                 <tr>
                   <td colSpan={5} className="px-8 py-20 text-center text-charcoal-500 font-serif italic text-xl">
-                    No active commissions matching these criteria.
+                    No active orders matching these criteria.
                   </td>
                 </tr>
               )}
