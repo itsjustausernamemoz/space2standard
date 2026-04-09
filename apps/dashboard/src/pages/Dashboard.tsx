@@ -9,6 +9,7 @@ import {
   ArrowUpRight, 
   ArrowDownRight 
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { 
   BarChart, 
   Bar, 
@@ -21,6 +22,7 @@ import {
   Area
 } from 'recharts';
 import { formatCurrency } from '@shared/utils';
+import { subDays, startOfDay } from 'date-fns';
 
 export const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -36,42 +38,52 @@ export const Dashboard = () => {
   useEffect(() => {
     async function fetchData() {
       try {
-        // 1. Get financial KPIs
-        const { data: allOrders } = await supabase
-          .from('orders')
-          .select('id, status, created_at, items:order_items(unit_price_snapshot, quantity)')
-          .neq('status', 'cancelled');
+        const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
+
+        // 1. Parallelize all core metrics
+        const [
+          allRecentOrders,
+          activeProducts,
+          orderCountRes,
+          productCountRes,
+          lifetimeRevenueRes
+        ] = await Promise.all([
+          // Fetch orders from last 30 days for KPIs and Trends
+          supabase
+            .from('orders')
+            .select('id, status, created_at, customer_name, items:order_items(unit_price_snapshot, quantity)')
+            .gte('created_at', thirtyDaysAgo)
+            .neq('status', 'cancelled'),
+          
+          // Fetch inventory value components
+          supabase
+            .from('products')
+            .select('price, stock_quantity')
+            .eq('is_published', true),
+          
+          // Total counts (head only for performance)
+          supabase.from('orders').select('*', { count: 'exact', head: true }),
+          supabase.from('products').select('*', { count: 'exact', head: true }).eq('is_published', true),
+          
+          // Lifetime revenue query (optimized)
+          supabase
+            .from('orders')
+            .select('items:order_items(unit_price_snapshot, quantity)')
+            .eq('status', 'completed')
+        ]);
+
+        const allOrders = allRecentOrders.data || [];
+        const lifetimeOrders = lifetimeRevenueRes.data || [];
         
         const calcOrderTotal = (o: any) => o.items?.reduce((sum: number, i: any) => sum + (i.unit_price_snapshot * i.quantity), 0) || 0;
         
-        const collected = allOrders?.filter(o => o.status === 'completed').reduce((acc, o) => acc + calcOrderTotal(o), 0) || 0;
+        // Calculate lifetime revenue
+        const lifetimeCollected = lifetimeOrders.reduce((acc, o) => acc + calcOrderTotal(o), 0) || 0;
 
         // Inventory Value Calculation
-        const { data: activeProducts } = await supabase
-          .from('products')
-          .select('price, stock_quantity')
-          .eq('is_published', true);
-        
-        const invValue = activeProducts?.reduce((acc, p) => acc + (p.price * (p.stock_quantity || 0)), 0) || 0;
+        const invValue = activeProducts.data?.reduce((acc, p) => acc + (p.price * (p.stock_quantity || 0)), 0) || 0;
 
-        // 2. Counts
-        const { count: orderCount } = await supabase
-          .from('orders')
-          .select('*', { count: 'exact', head: true });
-
-        const { count: productCount } = await supabase
-          .from('products')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_published', true);
-
-        // 3. Fetch Recent Activity
-        const { data: latestOrders } = await supabase
-          .from('orders')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(5);
-
-        // 4. Generate Dual-Series 7-Day Revenue Data
+        // 7-day Trend Data calculation
         const last7Days = Array.from({ length: 7 }, (_, i) => {
           const d = new Date();
           d.setDate(d.getDate() - i);
@@ -79,8 +91,7 @@ export const Dashboard = () => {
         }).reverse();
 
         const chartData = last7Days.map(date => {
-          const dayOrders = allOrders?.filter(o => o.created_at.startsWith(date)) || [];
-          
+          const dayOrders = allOrders.filter(o => o.created_at.startsWith(date));
           return {
             name: new Date(date).toLocaleDateString('en-NA', { weekday: 'short' }),
             expected: dayOrders.reduce((sum, o) => sum + calcOrderTotal(o), 0),
@@ -89,15 +100,16 @@ export const Dashboard = () => {
         });
 
         setStats({
-          totalRevenue: collected,
+          totalRevenue: lifetimeCollected,
           inventoryValue: invValue,
-          totalOrders: orderCount || 0,
-          activeProducts: productCount || 0
+          totalOrders: orderCountRes.count || 0,
+          activeProducts: productCountRes.count || 0
         });
         setRevenueData(chartData);
-        setRecentActivity(latestOrders || []);
+        setRecentActivity(allOrders.slice(0, 5)); // Reuse allOrders for recent activity
       } catch (err) {
         console.error('Dashboard Fetch Error:', err);
+        toast.error('Failed to load some artisan metrics. Still manifesting the overview.');
       } finally {
         setLoading(false);
       }

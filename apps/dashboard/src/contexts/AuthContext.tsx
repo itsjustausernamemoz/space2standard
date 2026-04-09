@@ -19,7 +19,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // 1. Listen for auth changes (including initial session load)
+    // 1. Initial proactive session fetch
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await checkAdminRole(session.user.id);
+        } else {
+          setIsAdmin(false);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('AuthContext: Initialization error:', err);
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    // 2. Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log(`AuthContext: Auth event [${event}] triggered.`);
       

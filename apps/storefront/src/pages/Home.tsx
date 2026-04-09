@@ -35,7 +35,7 @@ export const Home = () => {
   return (
     <div className="flex flex-col bg-navy-950">
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden border-b border-navy-800">
+      <section className="relative min-h-screen py-20 flex items-center justify-center overflow-hidden border-b border-navy-800">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
           <img 
@@ -193,24 +193,6 @@ export const Home = () => {
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-60 bg-navy-950 text-center relative overflow-hidden">
-        <div className="container mx-auto px-6 max-w-4xl space-y-16">
-          <h2 className="text-4xl sm:text-5xl md:text-8xl font-serif text-navy-300 tracking-tight leading-[1.1] break-words">
-            Elevate your space with <span className="text-gold-500 italic break-words">excellence</span>
-          </h2>
-          <div className="gold-divider" />
-          <p className="text-xl font-light text-navy-400 tracking-wide">
-            Our master artisans in Windhoek are ready to bring your vision to life.
-          </p>
-          <Link to="/order">
-            <Button size="xl" variant="primary" className="bg-gold-600 hover:bg-gold-500 text-navy-950 rounded-xl px-20">
-              Start Your Journey
-            </Button>
-          </Link>
         </div>
       </section>
     </div>

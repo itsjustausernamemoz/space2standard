@@ -10,7 +10,8 @@ import {
   LogOut,
   ChevronRight,
   X,
-  Image as ImageIcon
+  Image as ImageIcon,
+  MessageSquare
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -31,6 +32,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { name: 'Orders', icon: <ShoppingCart size={20} />, path: '/orders' },
     { name: 'Invoices', icon: <FileText size={20} />, path: '/invoices' },
     { name: 'Inventory', icon: <BarChart3 size={20} />, path: '/inventory' },
+    { name: 'Messages', icon: <MessageSquare size={20} />, path: '/messages' },
     { name: 'Settings', icon: <Settings size={20} />, path: '/settings' },
   ];
 

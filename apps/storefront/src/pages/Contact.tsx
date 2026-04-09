@@ -6,6 +6,7 @@ import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
 import { toast } from 'react-hot-toast';
 import { useSettings } from '../contexts/SettingsContext';
+import { supabase } from '../lib/supabase';
 
 export const Contact = () => {
   const { settings } = useSettings();
@@ -17,15 +18,33 @@ export const Contact = () => {
     message: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate contact form submission
-    setTimeout(() => {
-      setLoading(false);
-      toast.success('Message sent. We will respond at our earliest convenience.');
+    
+    try {
+      const { error } = await supabase
+        .from('contact_messages')
+        .insert([
+          {
+            name: formData.name,
+            email: formData.email,
+            subject: formData.subject,
+            message: formData.message,
+            status: 'new'
+          }
+        ]);
+
+      if (error) throw error;
+
+      toast.success('Message sent to info@space2standard.com. We will respond within 24 hours.');
       setFormData({ name: '', email: '', subject: '', message: '' });
-    }, 1500);
+    } catch (error: any) {
+      console.error('Submission error:', error);
+      toast.error('Failed to send message properly. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const openWhatsApp = () => {
@@ -56,8 +75,8 @@ export const Contact = () => {
           <div className="lg:col-span-5 space-y-16">
             <div className="space-y-12">
                {[
-                 { icon: <Mail size={24} />, label: 'Email', value: settings.business_email || 'hello@space2standard.com', sub: 'Responsive within 24 hours' },
-                 { icon: <Phone size={24} />, label: 'Phone', value: settings.business_phone || '+1 (555) 123-4567', sub: 'Mon - Fri | 09:00 - 17:00' },
+                 { icon: <Mail size={24} />, label: 'Email', value: 'info@space2standard.com', sub: 'Responsive within 24 hours' },
+                 { icon: <Phone size={24} />, label: 'Phone', value: '+264 81 123 4567', sub: 'Mon - Fri | 09:00 - 17:00' },
                  { icon: <MapPin size={24} />, label: 'Atelier', value: settings.business_address || 'Windhoek, Namibia', sub: 'Visits by appointment only' },
                ].map((item, idx) => (
                  <motion.div 
