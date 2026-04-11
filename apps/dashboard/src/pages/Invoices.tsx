@@ -402,7 +402,7 @@ export const Invoices = () => {
                      <div className="flex gap-2 w-full lg:w-auto">
                         {doc.type === 'quotation' && (
                            <button 
-                             onClick={() => navigate(`/invoices/new?type=invoice&orderId=${doc.order_id}`)}
+                             onClick={() => navigate(`/invoices/new?type=invoice&orderId=${doc.order_id}&fromQuote=${doc.id}`)}
                              className="flex items-center gap-2 px-4 py-2.5 bg-success/10 hover:bg-success/20 border border-success/20 rounded-[4px] text-[9px] font-bold uppercase tracking-[0.2em] text-success transition-all"
                            >
                               <ShieldCheck size={14} /> Issue Invoice

@@ -35,7 +35,9 @@ export const Dashboard = () => {
     inventoryValue: 0,
     totalOrders: 0,
     activeProducts: 0,
-    ordersCount: { new: 0, pending: 0, completed: 0 }
+    ordersCount: { new: 0, pending: 0, completed: 0 },
+    topProducts: [] as any[],
+    topClients: [] as any[]
   });
   const [timeframe, setTimeframe] = useState('Last 7 Days (Real-time)');
   const [revenueData, setRevenueData] = useState<any[]>([]);
@@ -56,7 +58,9 @@ export const Dashboard = () => {
           lifetimeRevenueRes,
           newOrdersRes,
           pendingOrdersRes,
-          completedOrdersRes
+          completedOrdersRes,
+          topClientsRes,
+          topProductsRes
         ] = await Promise.all([
           supabase
             .from('orders')
@@ -79,7 +83,21 @@ export const Dashboard = () => {
             
           supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'new'),
           supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-          supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'completed')
+          supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
+          
+          // Fetch Top Clients
+          supabase
+            .from('clients')
+            .select('full_name, email, total_revenue')
+            .order('total_revenue', { ascending: false })
+            .limit(5),
+            
+          // Additional data for Top Products (last 90 days for better statistics)
+          supabase
+            .from('order_items')
+            .select('product_name_snapshot, quantity, unit_price_snapshot')
+            .order('quantity', { ascending: false })
+            .limit(100)
         ]);
 
         const { data: recentActivityData } = await supabase
@@ -110,16 +128,32 @@ export const Dashboard = () => {
           };
         });
 
+        // Calculate Top Products from order_items
+        const productMap = new Map();
+        (topProductsRes.data || []).forEach((item: any) => {
+          const name = item.product_name_snapshot;
+          const current = productMap.get(name) || { name, quantity: 0, revenue: 0 };
+          current.quantity += item.quantity;
+          current.revenue += item.quantity * item.unit_price_snapshot;
+          productMap.set(name, current);
+        });
+        
+        const topProducts = Array.from(productMap.values())
+          .sort((a, b) => (b as any).revenue - (a as any).revenue)
+          .slice(0, 5);
+
         setStats({
           totalRevenue: lifetimeCollected,
           inventoryValue: invValue,
           totalOrders: orderCountRes.count || 0,
           activeProducts: productCountRes.count || 0,
           ordersCount: {
-            new: newOrdersRes.count || 0,
-            pending: pendingOrdersRes.count || 0,
-            completed: completedOrdersRes.count || 0
-          }
+            new: (newOrdersRes as any).count || 0,
+            pending: (pendingOrdersRes as any).count || 0,
+            completed: (completedOrdersRes as any).count || 0
+          },
+          topProducts,
+          topClients: (topClientsRes as any).data || []
         });
         setRevenueData(chartData);
         setRecentActivity(recentActivityData || []);
@@ -186,7 +220,7 @@ export const Dashboard = () => {
            </div>
 
            <PDFDownloadLink 
-             document={<FinanceReport stats={stats} timeframe={timeframe} />} 
+             document={<FinanceReport stats={stats} timeframe={timeframe} recentActivity={recentActivity} />} 
              fileName={`Artisan_Ledger_Report_${new Date().toISOString().split('T')[0]}.pdf`}
              className="flex items-center gap-3 bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/20 px-6 py-2 rounded-lg text-[10px] font-bold uppercase tracking-[0.2em] text-gold-500 transition-all"
            >

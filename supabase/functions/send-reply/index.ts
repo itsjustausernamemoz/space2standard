@@ -1,23 +1,32 @@
 import nodemailer from "npm:nodemailer@6.9.16";
-import { serve } from 'https://deno.land/std@0.131.0/http/server.ts';
 
-const SMTP_HOST = Deno.env.get('SMTP_HOST') || 'mail.privateemail.com';
-const SMTP_PORT = parseInt(Deno.env.get('SMTP_PORT') || '465');
-const SMTP_USER = Deno.env.get('SMTP_USER');
-const SMTP_PASS = Deno.env.get('SMTP_PASS');
-const BUSINESS_NAME = Deno.env.get('BUSINESS_NAME') || 'Space2Standard';
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS'
+};
 
-serve(async (req) => {
-  // Handle CORS
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' } });
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
     const { to, subject, message, originalMessage } = await req.json();
+    
+    const SMTP_HOST = Deno.env.get('SMTP_HOST') || 'mail.privateemail.com';
+    const SMTP_PORT = parseInt(Deno.env.get('SMTP_PORT') || '465');
+    const SMTP_USER = Deno.env.get('SMTP_USER');
+    const SMTP_PASS = Deno.env.get('SMTP_PASS');
+    const BUSINESS_NAME = Deno.env.get('BUSINESS_NAME') || 'Space2Standard';
+
+    console.log(`[SMTP] Attempting delivery to: ${to} via ${SMTP_HOST}`);
 
     if (!SMTP_USER || !SMTP_PASS) {
-      throw new Error('SMTP credentials not configured in Supabase secrets.');
+      return new Response(JSON.stringify({ error: "SMTP credentials (USER/PASS) are missing in Supabase Secrets." }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
     const transporter = nodemailer.createTransport({
@@ -28,50 +37,57 @@ serve(async (req) => {
         user: SMTP_USER,
         pass: SMTP_PASS,
       },
+      tls: {
+        rejectUnauthorized: false // Required for some segments of Namecheap infrastructure
+      },
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 30000,
+      debug: false,
+      logger: false
     });
 
-    const htmlContent = `
-      <div style="font-family: 'Playfair Display', serif; color: #020617; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #c19b3a20;">
-        <h2 style="color: #c19b3a; border-bottom: 1px solid #c19b3a40; padding-bottom: 10px;">${BUSINESS_NAME} Artisan Response</h2>
-        <p style="font-size: 16px; line-height: 1.6; color: #1e293b;">
-          ${message.replace(/\n/g, '<br/>')}
-        </p>
-        
-        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-          <p style="font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: #64748b; margin-bottom: 15px;">Original Inquiry:</p>
-          <blockquote style="margin: 0; padding-left: 20px; border-left: 3px solid #cbd5e1; italic; color: #94a3b8; font-size: 14px;">
-            ${originalMessage}
-          </blockquote>
+    const htmlBody = `
+      <div style="font-family: sans-serif; color: #0f172a; line-height: 1.5; padding: 20px;">
+        <h2 style="color: #c19b3a; border-bottom: 1px solid #c19b3a20; padding-bottom: 10px;">${BUSINESS_NAME} Artisan Response</h2>
+        <p style="margin-vertical: 20px; white-space: pre-wrap;">${message}</p>
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 13px; color: #64748b;">
+          <strong>Original Inquiry:</strong>
+          <p style="font-style: italic; border-left: 2px solid #e2e8f0; padding-left: 10px;">${originalMessage}</p>
         </div>
-        
-        <p style="margin-top: 40px; font-size: 11px; color: #94a3b8; text-align: center;">
-          This message was sent with excellence from the Windhoek Atelier.
-        </p>
       </div>
     `;
 
     await transporter.sendMail({
       from: `"${BUSINESS_NAME}" <${SMTP_USER}>`,
       to: to,
+      replyTo: SMTP_USER,
       subject: subject,
-      html: htmlContent,
+      html: htmlBody,
     });
 
-    return new Response(JSON.stringify({ success: true, message: "Email sent successfully" }), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
+    console.log(`[SMTP] Successfully sent to ${to}`);
+
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
     });
 
   } catch (error: any) {
-    console.error('SMTP Error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error(`[SMTP ERROR] ${error.name}: ${error.message}`);
+    
+    // Categorize errors for the UI
+    let userFriendlyError = error.message;
+    if (error.code === 'EAUTH') userFriendlyError = "Authentication failed. Please verify your SMTP password.";
+    if (error.code === 'ECONNREFUSED') userFriendlyError = "Connection refused. Check SMTP host and port.";
+    if (error.code === 'ETIMEOUT') userFriendlyError = "Connection timed out. The SMTP server is not responding.";
+
+    return new Response(JSON.stringify({ 
+      error: userFriendlyError,
+      details: error.code || error.name 
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
     });
   }
 });

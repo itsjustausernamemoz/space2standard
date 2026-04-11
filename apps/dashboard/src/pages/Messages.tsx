@@ -66,16 +66,34 @@ export const Messages = () => {
     
     try {
       // 1. Call Edge Function to send email
-      const { data, error: functionError } = await supabase.functions.invoke('send-reply', {
-        body: {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-reply`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({
           to: selectedMessage.email,
           subject: `Re: ${selectedMessage.subject || 'Your Inquiry'}`,
           message: replyText,
           originalMessage: selectedMessage.message
-        }
+        })
       });
 
-      if (functionError) throw functionError;
+      if (!response.ok) {
+        let errorMsg = `Server error: ${response.status}`;
+        try {
+          const body = await response.json();
+          if (body && body.error) errorMsg = body.error;
+        } catch (e) {
+          errorMsg = await response.text() || errorMsg;
+        }
+        throw new Error(errorMsg);
+      }
 
       // 2. Update status in database
       const { error: dbError } = await supabase
@@ -91,7 +109,7 @@ export const Messages = () => {
       setSelectedMessage(null);
     } catch (error: any) {
       console.error('Reply failed:', error);
-      toast.error('Failed to send reply. Check Edge Function logs.');
+      toast.error(error.message || 'Failed to send reply. Please verify SMTP secrets.');
     } finally {
       setSendingReply(false);
     }

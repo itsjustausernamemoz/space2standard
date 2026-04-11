@@ -19,6 +19,7 @@ export const InvoiceForm = () => {
   const navigate = useNavigate();
   const isEdit = Boolean(id);
   const orderId = searchParams.get('orderId');
+  const fromQuoteId = searchParams.get('fromQuote');
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -53,8 +54,10 @@ export const InvoiceForm = () => {
 
       if (isEdit && id) {
         await fetchInvoice(id);
-      } else if (orderId) {
+      } else if (orderId && orderId !== 'null') {
         await fetchOrderDetails(orderId);
+      } else if (fromQuoteId) {
+        await fetchQuoteDetails(fromQuoteId);
       } else {
         addLineItem();
       }
@@ -126,6 +129,29 @@ export const InvoiceForm = () => {
       }
       
       toast.success('Inquiry pieces imported successfully');
+    }
+  }
+
+  async function fetchQuoteDetails(quoteId: string) {
+    const { data: quoteData, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', quoteId)
+      .single();
+
+    if (error) {
+      toast.error('Failed to load source quotation');
+    } else if (quoteData) {
+      setLineItems(quoteData.line_items || []);
+      setFormData(prev => ({ 
+        ...prev, 
+        client_id: quoteData.client_id || '',
+        discount_total: quoteData.discount_total || 0,
+        vat_rate: quoteData.vat_rate || 15,
+        order_id: quoteData.order_id || ''
+      }));
+      setSelectedClientId(quoteData.client_id || '');
+      toast.success('Specifications imported from quotation');
     }
   }
 
