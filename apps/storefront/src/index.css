@@ -4,36 +4,28 @@
    Space2Standard — Luxury Design Tokens
    ───────────────────────────────────────── */
 @theme {
-  --font-display: "Playfair Display", Georgia, serif;
-  --font-body: "Inter", system-ui, sans-serif;
+  --font-display: "Playfair Display", "Cormorant Garamond", Georgia, serif;
+  --font-body: "Inter", "DM Sans", system-ui, sans-serif;
 
-  --color-navy-950: #020617;
-  --color-navy-900: #050b18;
-  --color-navy-800: #0f172a;
-  --color-navy-700: #1e293b;
-  --color-navy-600: #64748b;
-  --color-navy-500: #94a3b8;
-  --color-navy-400: #cbd5e1;
-  --color-navy-300: #e2e8f0;
+  --color-background: #060b18;
+  --color-surface: #1a1f2e;
+  --color-gold: #c9a46a;
+  --color-text-muted: #a0a8b8;
+  --color-text-bright: #ffffff;
+  --color-text-dark: #060b18;
 
-  --color-walnut-950: #020617;
-  --color-walnut-900: #050b18;
-  --color-walnut-800: #0f172a;
-  --color-walnut-700: #1e293b;
-  --color-walnut-600: #64748b;
-  --color-walnut-500: #94a3b8;
-  --color-walnut-400: #cbd5e1;
-  --color-walnut-300: #e2e8f0;
+  --color-navy-950: #060b18;
+  --color-navy-900: #0d1220;
+  --color-navy-800: #1a1f2e;
+  --color-navy-700: #2a3040;
+  --color-navy-600: #3a4050;
+  --color-navy-500: #5a6070;
+  --color-navy-400: #a0a8b8;
+  --color-navy-300: #ffffff;
 
-  --color-gold-300: #e8d5b7;
-  --color-gold-400: #d4a853;
-  --color-gold-500: #c19b3a;
-  --color-gold-600: #a88838;
-  --color-gold-700: #876a28;
-
-  --color-cream-50:  #f8fafc;
-  --color-cream-100: #f1f5f9;
-  --color-cream-200: #e2e8f0;
+  --color-gold-500: #c9a46a;
+  --color-gold-600: #b58d55;
+  --color-gold-700: #9e7a4a;
 }
 
 /* ─────────────────────────────────────────
@@ -46,20 +38,22 @@
 
   body {
     font-family: var(--font-body);
-    background-color: var(--color-navy-950);
-    color: var(--color-cream-100);
+    background-color: var(--color-background);
+    color: var(--color-text-muted);
+    line-height: 1.75;
     -webkit-font-smoothing: antialiased;
   }
 
   a, button {
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.15s ease;
   }
 
   h1, h2, h3, h4, h5 {
     font-family: var(--font-display);
-    font-weight: 500;
-    line-height: 1.15;
+    font-weight: 400;
+    line-height: 1.2;
     letter-spacing: -0.01em;
+    color: var(--color-text-bright);
   }
 }
 
@@ -67,99 +61,89 @@
    Utilities
    ───────────────────────────────────────── */
 @layer utilities {
-  .text-gold      { color: var(--color-gold-500); }
-  .text-walnut    { color: var(--color-walnut-800); }
-  .text-cream     { color: var(--color-cream-100); }
-  .bg-walnut      { background-color: var(--color-walnut-800); }
-  .bg-cream       { background-color: var(--color-cream-100); }
-
-  .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.875rem 2.5rem;
-    background-color: var(--color-walnut-800);
-    color: var(--color-gold-300);
-    font-family: var(--font-body);
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    border: 1px solid var(--color-walnut-700);
-    transition: all 0.25s ease;
-  }
-  .btn-primary:hover {
-    background-color: var(--color-walnut-700);
-    border-color: var(--color-gold-500);
-    color: var(--color-gold-400);
-  }
-
-  .btn-outline {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.875rem 2.5rem;
-    background-color: transparent;
-    color: var(--color-walnut-800);
-    font-family: var(--font-body);
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    border: 1px solid var(--color-walnut-600);
-    transition: all 0.25s ease;
-  }
-  .btn-outline:hover {
-    background-color: var(--color-walnut-800);
-    color: var(--color-gold-300);
-  }
+  .text-gold      { color: var(--color-gold); }
+  .text-bright    { color: var(--color-text-bright); }
+  .text-muted     { color: var(--color-text-muted); }
 
   .section-label {
     display: block;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 600;
     letter-spacing: 0.25em;
     text-transform: uppercase;
-    color: var(--color-gold-500);
-    margin-bottom: 0.75rem;
+    color: var(--color-gold);
+    margin-bottom: 1.5rem;
   }
 
-  .gold-divider {
-    width: 3rem;
-    height: 1px;
-    background: linear-gradient(to right, transparent, var(--color-gold-500), transparent);
-    margin: 0 auto;
+  .btn-apple-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 2rem;
+    background-color: var(--color-gold);
+    color: var(--color-background);
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+  }
+  .btn-apple-cta:hover {
+    background-color: var(--color-text-bright);
+    color: var(--color-background);
   }
 
-  .btn-shimmer {
-    position: relative;
-    overflow: hidden;
+  .btn-apple-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 2rem;
+    background-color: transparent;
+    color: var(--color-gold);
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    border: 1px solid var(--color-gold);
+    border-radius: 4px;
+    transition: all 0.2s ease;
   }
-  .btn-shimmer::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(
-      45deg,
-      transparent,
-      rgba(232, 213, 183, 0.1),
-      transparent
-    );
-    transform: rotate(45deg);
-    transition: all 0.6s;
+  .btn-apple-outline:hover {
+    background-color: var(--color-gold);
+    color: var(--color-background);
+  }
+
+  .input-apple {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--color-text-bright);
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+  }
+  .input-apple:focus {
+    outline: none;
+    border-color: var(--color-gold);
+    background-color: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 0 1px rgba(201, 164, 106, 0.2);
+  }
+  .input-apple::placeholder {
+    color: #3a4050;
+  }
+
+  .reveal-up {
     opacity: 0;
-  }
-  .btn-shimmer:hover::after {
-    animation: shimmer 1.5s infinite;
-    opacity: 1;
+    transform: translateY(24px);
   }
 
-  @keyframes shimmer {
-    0% { transform: translate(-100%, -100%) rotate(45deg); }
-    100% { transform: translate(100%, 100%) rotate(45deg); }
+  /* Thin borders */
+  .border-thin {
+    border: 0.5px solid rgba(255, 255, 255, 0.08);
   }
 }
 

@@ -7,43 +7,43 @@
 @theme {
   --font-sans: "Inter", system-ui, sans-serif;
 
-  --color-navy-950: #020617;
-  --color-navy-900: #050b18;
-  --color-navy-800: #0f172a;
-  --color-navy-700: #1e293b;
-  --color-navy-600: #64748b;
-  --color-navy-500: #94a3b8;
+  --color-navy-950: #060b18; /* Matched to storefront primary */
+  --color-navy-900: #1a1f2e; /* Matched to storefront card */
+  --color-navy-800: #252b3d;
+  --color-navy-700: #3a4050;
+  --color-navy-600: #6a7080;
+  --color-navy-500: #a0a8b8; /* Matched to storefront body text */
   --color-navy-400: #cbd5e1;
   --color-navy-300: #e2e8f0;
 
-  --color-gold-500: #c19b3a;
-  --color-gold-400: #d4a853;
-  --color-gold-600: #a88838;
+  --color-gold-500: #c9a46a; /* Matched to storefront accent gold */
+  --color-gold-400: #d4b88a;
+  --color-gold-600: #b08d5a;
 
-  --color-accent-blue: #1e3a8a;
-  --color-accent-light: #3b82f6;
+  --color-accent-blue: #1a1f2e;
+  --color-accent-light: #c9a46a;
 
-  --color-cream-100: #f8fafc;
-  --color-cream-200: #e2e8f0;
+  --color-cream-100: #ffffff;
+  --color-cream-200: #6a7080;
   
-  --color-success: #10b981;
+  --color-success: #c9a46a; /* Standardized to gold for luxury feel */
   --color-warning: #f59e0b;
   --color-error: #ef4444;
 }
 
 @layer base {
   body {
-    @apply font-sans antialiased bg-navy-950 text-cream-100 selection:bg-gold-500 selection:text-navy-950;
+    @apply font-sans antialiased bg-navy-950 text-white selection:bg-gold-500 selection:text-navy-950;
   }
 }
 
 @layer utilities {
   .dashboard-card {
-    @apply bg-navy-900/50 backdrop-blur-sm border border-navy-800/50 rounded-2xl p-6 shadow-2xl;
+    @apply bg-navy-900 border border-white/5 rounded-[6px] p-8 shadow-sm;
   }
   
   .sidebar-link {
-    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-navy-800 hover:text-white;
+    @apply flex items-center gap-3 px-4 py-3 rounded-[4px] text-xs font-bold uppercase tracking-widest text-[#a0a8b8] transition-all hover:bg-white/5 hover:text-white;
   }
   
   .sidebar-link-active {
@@ -51,19 +51,19 @@
   }
   
   .input-base {
-    @apply w-full bg-navy-950 border border-navy-800 rounded-xl px-4 py-3 text-sm text-white placeholder-navy-500 focus:outline-none focus:border-gold-500 transition-all focus:ring-1 focus:ring-gold-500/20;
+    @apply w-full bg-white/[0.03] border border-white/10 rounded-[4px] px-4 py-3 text-[13px] text-white placeholder-white/20 focus:outline-none focus:border-gold-500 transition-all focus:bg-white/[0.05];
   }
   
   .btn-dashboard-primary {
-    @apply bg-gold-500 text-navy-950 px-6 py-3 rounded-xl text-sm font-bold uppercase tracking-widest hover:bg-gold-400 transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-gold-500 text-[#060b18] px-6 py-3 rounded-[4px] text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-white transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
   }
   
   .btn-dashboard-ghost {
-    @apply text-cream-100/60 hover:text-white hover:bg-navy-800 px-4 py-2 rounded-xl text-sm transition-colors;
+    @apply text-white/40 hover:text-white hover:bg-white/5 px-4 py-2 rounded-[4px] text-[10px] uppercase font-bold tracking-widest transition-colors;
   }
 
   .gold-divider {
-    @apply h-px w-full bg-linear-to-r from-transparent via-gold-500/30 to-transparent my-6;
+    @apply h-px w-full bg-white/5 my-8;
   }
 }
 

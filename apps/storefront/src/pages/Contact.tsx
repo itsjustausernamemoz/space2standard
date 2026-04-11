@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Mail, Phone, MapPin, MessageCircle, Send } from 'lucide-react';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Card } from '../components/ui/Card';
+import { Mail, Phone, MapPin, Send } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useSettings } from '../contexts/SettingsContext';
 import { supabase } from '../lib/supabase';
+import { ScrollReveal } from '../components/ScrollReveal';
 
 export const Contact = () => {
   const { settings } = useSettings();
@@ -37,133 +34,108 @@ export const Contact = () => {
 
       if (error) throw error;
 
-      toast.success('Message sent to info@space2standard.com. We will respond within 24 hours.');
+      toast.success(`Message sent to ${settings.business_email || 'info@space2standard.com'}. We will respond within 24 hours.`);
       setFormData({ name: '', email: '', subject: '', message: '' });
     } catch (error: any) {
       console.error('Submission error:', error);
-      toast.error('Failed to send message properly. Please try again.');
+      toast.error('Failed to send message. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const openWhatsApp = () => {
-    const fallbackNumber = '27830000000';
-    const num = settings.business_phone ? settings.business_phone.replace(/\D/g, '') : fallbackNumber;
-    const msg = `Hello ${settings.business_name || 'Space2Standard'}, I would like to arrange a consultation.`;
-    window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
-  };
-
   return (
-    <div className="pt-40 pb-32 min-h-screen bg-navy-950">
+    <div className="pt-[160px] pb-32 min-h-screen bg-[#060b18]">
       <div className="container mx-auto px-6">
-        <header className="max-w-4xl space-y-12 mb-32">
-          <div className="space-y-6">
-            <span className="section-label">Get in Touch</span>
-            <h1 className="text-5xl sm:text-6xl md:text-8xl font-serif text-navy-300 tracking-tight leading-none break-words">
-              Start a <br/> Conversation.
-            </h1>
-          </div>
-          <p className="text-xl font-light text-navy-400 leading-relaxed max-w-2xl italic">
-            Whether it's a bespoke order, a collaboration, or a simple question — 
-            we are here to bring excellence to your space.
-          </p>
-        </header>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-24 items-start">
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-24 items-start">
           {/* Contact Details */}
-          <div className="lg:col-span-5 space-y-16">
-            <div className="space-y-12">
-               {[
-                 { icon: <Mail size={24} />, label: 'Email', value: 'info@space2standard.com', sub: 'Responsive within 24 hours' },
-                 { icon: <Phone size={24} />, label: 'Phone', value: '+264 81 123 4567', sub: 'Mon - Fri | 09:00 - 17:00' },
-                 { icon: <MapPin size={24} />, label: 'Atelier', value: settings.business_address || 'Windhoek, Namibia', sub: 'Visits by appointment only' },
-               ].map((item, idx) => (
-                 <motion.div 
-                    key={idx}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: idx * 0.1 }}
-                    className="flex gap-8 group"
-                 >
-                   <div className="w-14 h-14 bg-gold-500/10 rounded-2xl flex items-center justify-center shrink-0 text-gold-500 border border-gold-500/10 group-hover:bg-gold-500 group-hover:text-navy-950 transition-all duration-500">
-                     {item.icon}
+          <div className="lg:col-span-5">
+            <ScrollReveal>
+              <div className="space-y-16">
+                 {[
+                   { icon: <Mail size={18} />, label: 'Email', value: settings.business_email || 'info@space2standard.com', sub: 'Responsive within 24 hours' },
+                   { icon: <Phone size={18} />, label: 'Phone', value: settings.business_phone || '+264 81 123 4567', sub: 'Mon - Fri | 09:00 - 17:00' },
+                   { icon: <MapPin size={18} />, label: 'Atelier', value: settings.business_address || 'Windhoek, Namibia', sub: 'Visits by appointment only' },
+                 ].map((item, idx) => (
+                   <div key={idx} className="flex gap-8 group">
+                     <div className="w-12 h-12 border border-[#c9a46a]/20 rounded-full flex items-center justify-center shrink-0 text-[#c9a46a]">
+                       {item.icon}
+                     </div>
+                     <div className="space-y-2">
+                       <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">{item.label}</h3>
+                       <p className="text-[20px] font-serif text-white tracking-wide">{item.value}</p>
+                       <p className="text-[13px] font-light text-[#a0a8b8] italic">{item.sub}</p>
+                     </div>
                    </div>
-                   <div className="space-y-2">
-                     <h3 className="text-xs font-bold uppercase tracking-[0.25em] text-gold-500">{item.label}</h3>
-                     <p className="text-xl font-serif text-navy-300 tracking-wide whitespace-pre-line leading-relaxed">{item.value}</p>
-                     <p className="text-sm font-light text-navy-500 italic font-inter">{item.sub}</p>
-                   </div>
-                 </motion.div>
-               ))}
-            </div>
-
-            <Card className="bg-navy-900 border border-gold-500/10 text-gold-300 overflow-hidden relative group shadow-2xl">
-              <div className="absolute top-0 right-0 p-8 text-gold-500 opacity-10 scale-150 group-hover:scale-125 transition-transform duration-1000">
-                <MessageCircle size={120} strokeWidth={1} />
+                 ))}
               </div>
-              <div className="relative z-10 space-y-8 p-4">
-                <h3 className="text-2xl font-serif tracking-wide">Instant Consultation?</h3>
-                <p className="text-sm opacity-70 leading-relaxed font-light font-inter">
-                  Connect directly with our master craftsmen via WhatsApp 
-                  for immediate response on custom inquiries.
-                </p>
-                <Button onClick={openWhatsApp} variant="outline" className="border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-navy-950 px-10">
-                   WhatsApp Us
-                </Button>
-              </div>
-            </Card>
+            </ScrollReveal>
           </div>
 
           {/* Contact Form */}
           <div className="lg:col-span-7">
-            <Card variant="solid" className="bg-navy-900/50 backdrop-blur-xl border border-gold-500/10 p-12 shadow-2xl">
-               <form onSubmit={handleSubmit} className="space-y-10">
-                 <div className="grid md:grid-cols-2 gap-10">
-                    <Input 
-                      label="Your Name" 
+            <ScrollReveal delay={0.1}>
+              <form onSubmit={handleSubmit} className="space-y-10 bg-white/[0.02] border border-white/5 p-12 rounded-[6px]">
+                <div className="grid md:grid-cols-2 gap-10">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">Your Name</label>
+                    <input 
                       required 
-                      placeholder="Enter your name"
+                      className="input-apple"
+                      placeholder="Johannes Müller"
                       value={formData.name}
                       onChange={e => setFormData({...formData, name: e.target.value})}
                     />
-                    <Input 
-                      label="Email Address" 
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">Email Address</label>
+                    <input 
                       type="email" 
                       required 
-                      placeholder="example@email.com"
+                      className="input-apple"
+                      placeholder="johannes@example.com"
                       value={formData.email}
                       onChange={e => setFormData({...formData, email: e.target.value})}
                     />
-                 </div>
-                 
-                 <Input 
-                    label="Subject" 
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">Subject</label>
+                  <input 
                     required 
-                    placeholder="How can we help?"
+                    className="input-apple"
+                    placeholder="Bespoke Commission Inquiry"
                     value={formData.subject}
                     onChange={e => setFormData({...formData, subject: e.target.value})}
-                 />
+                  />
+                </div>
 
-                 <Input 
-                    label="Your Message" 
-                    isTextArea 
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">Your Message</label>
+                  <textarea 
                     required 
-                    placeholder="Tell us about your project..."
+                    rows={4}
+                    className="input-apple resize-none"
+                    placeholder="Share your vision for a bespoke artisan piece..."
                     value={formData.message}
                     onChange={e => setFormData({...formData, message: e.target.value})}
-                 />
+                  />
+                </div>
 
-                 <Button size="xl" variant="primary" className="w-full group" isLoading={loading}>
-                   Send Message
-                   <Send size={14} className="ml-3 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                 </Button>
-               </form>
-            </Card>
+                <button 
+                  disabled={loading}
+                  className="btn-apple-cta w-full py-4 flex items-center justify-center gap-3"
+                >
+                  {loading ? 'Sending Request...' : 'Dispatch Message'}
+                  <Send size={14} />
+                </button>
+              </form>
+            </ScrollReveal>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );
 };
+

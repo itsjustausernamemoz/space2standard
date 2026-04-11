@@ -226,6 +226,7 @@ export const Invoices = () => {
   const [loading, setLoading] = useState(true);
   const [businessInfo, setBusinessInfo] = useState({});
   const [timeframe, setTimeframe] = useState('all');
+  const [activeTab, setActiveTab] = useState<'invoice' | 'quotation'>('invoice');
 
   useEffect(() => {
     fetchData(timeframe);
@@ -256,12 +257,7 @@ export const Invoices = () => {
     }
 
     const { data: docs } = await query;
-    
-    // 2. Fetch business settings
-    const { data: settings } = await supabase
-      .from('settings')
-      .select('*');
-    
+    const { data: settings } = await supabase.from('settings').select('*');
     const info = settings?.reduce((acc: Record<string, any>, s: any) => ({ ...acc, [s.key]: s.value }), {}) || {};
     
     setDocuments(docs || []);
@@ -269,40 +265,54 @@ export const Invoices = () => {
     setLoading(false);
   }
 
+  const filteredDocs = documents.filter(d => d.type === activeTab);
+
   return (
     <div className="space-y-12">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-1">
           <h1 className="text-3xl font-serif text-white tracking-tight">Artisan Ledger</h1>
-          <p className="text-navy-400 text-sm italic font-light">Issue and manage professional quotations and invoices.</p>
+          <p className="text-navy-500 text-sm font-light italic">Maintaining financial records of bespoke craftsmanship.</p>
         </div>
         <button 
-          onClick={() => navigate('/invoices/new')}
-          className="btn-dashboard-primary flex items-center gap-2 w-full md:w-auto justify-center"
+          onClick={() => navigate(`/invoices/new?type=${activeTab}`)}
+          className="btn-dashboard-primary flex items-center justify-center gap-3 w-full md:w-auto"
         >
           <Plus size={18} />
-          Generate Record
+          Issue New {activeTab === 'invoice' ? 'Invoice' : 'Quotation'}
         </button>
       </header>
 
-      {/* Stats and Filter Overlay */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-         <div className="dashboard-card bg-navy-900 border-navy-800 flex gap-4 items-center">
-            <div className="p-3 bg-gold-500/10 text-gold-500 rounded-2xl">
-               <FileText size={24} />
-            </div>
-            <div>
-               <p className="text-[10px] font-bold uppercase tracking-widest text-navy-500">Total Issued</p>
-               <h4 className="text-xl font-bold text-white">{documents.length} Records</h4>
-            </div>
+      {/* Navigation and Filters */}
+      <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
+         <div className="flex bg-white/5 p-1 rounded-[6px] w-full md:w-auto">
+            <button 
+              onClick={() => setActiveTab('invoice')}
+              className={cn(
+                "flex-1 md:flex-none px-8 py-2.5 rounded-[4px] text-[10px] font-bold uppercase tracking-widest transition-all",
+                activeTab === 'invoice' ? "bg-gold-500 text-navy-950 shadow-md" : "text-navy-500 hover:text-white"
+              )}
+            >
+               Tax Invoices
+            </button>
+            <button 
+              onClick={() => setActiveTab('quotation')}
+              className={cn(
+                "flex-1 md:flex-none px-8 py-2.5 rounded-[4px] text-[10px] font-bold uppercase tracking-widest transition-all",
+                activeTab === 'quotation' ? "bg-gold-500 text-navy-950 shadow-md" : "text-navy-500 hover:text-white"
+              )}
+            >
+               Project Quotations
+            </button>
          </div>
-         <div className="dashboard-card bg-navy-900 border-navy-800 flex flex-col md:flex-row gap-4 items-center col-span-2">
-            <div className="flex flex-1 items-center gap-4 w-full">
-               <Search size={18} className="text-navy-500 ml-2" />
-               <input type="text" placeholder="Search by document ID or client..." className="bg-transparent border-none outline-none text-sm w-full text-white placeholder-navy-600" />
+
+         <div className="flex gap-4 w-full md:w-auto">
+            <div className="relative flex-1 md:w-64">
+               <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-navy-600" />
+               <input type="text" placeholder="Search ref..." className="input-base pl-12 py-2.5" />
             </div>
             <select 
-              className="bg-navy-950 border border-navy-800 text-[10px] font-bold uppercase tracking-widest text-navy-400 rounded px-4 py-2 focus:outline-none focus:border-gold-500 cursor-pointer w-full md:w-auto"
+              className="input-base py-2.5 text-[10px] font-bold uppercase tracking-widest text-white/40 w-full md:w-32"
               value={timeframe}
               onChange={(e) => {
                  setTimeframe(e.target.value);
@@ -310,87 +320,79 @@ export const Invoices = () => {
               }}
             >
               <option value="all">All Time</option>
-              <option value="month">This Month</option>
-              <option value="30days">Last 30 Days</option>
-              <option value="year">This Year</option>
+              <option value="month">Month</option>
+              <option value="year">Year</option>
             </select>
          </div>
       </div>
 
-      {/* Docs List */}
-      <div className="dashboard-card p-0 overflow-hidden border-navy-800/50">
-         <div className="overflow-x-auto shadow-2xl">
-           <table className="w-full text-left">
-              <thead>
-                <tr className="bg-navy-950/50 text-[10px] uppercase font-bold tracking-[0.2em] text-navy-500 border-b border-navy-800">
-                  <th className="px-8 py-5">Document</th>
-                  <th className="px-8 py-5">Type</th>
-                  <th className="px-8 py-5">Client</th>
-                  <th className="px-8 py-5">Grand Total</th>
-                  <th className="px-8 py-5">Date</th>
-                  <th className="px-8 py-5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-navy-800/50">
-                 {documents.map((doc) => (
-                   <tr key={doc.id} className="group hover:bg-gold-500/5 transition-colors">
-                      <td className="px-8 py-6 font-bold text-cream-100 uppercase tracking-widest text-xs">
-                         <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-xl ${doc.type === 'invoice' ? 'bg-success/10 text-success' : 'bg-gold-500/10 text-gold-500'}`}>
-                               <FileCheck size={14}/>
-                            </div>
-                            S2S-{doc.id.slice(0, 4).toUpperCase()}
-                         </div>
-                      </td>
-                      <td className="px-8 py-6">
-                         <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full ${doc.type === 'invoice' ? 'bg-success/10 text-success' : 'bg-gold-500/10 text-gold-500'}`}>
-                            {doc.type}
-                         </span>
-                      </td>
-                      <td className="px-8 py-6">
-                        <div className="space-y-1">
-                           <p className="text-sm font-medium text-white">{doc.orders?.customer_name || 'N/A'}</p>
-                           <p className="text-[10px] text-navy-500 font-mono">ID: {doc.order_id?.slice(0,8)}</p>
+      {/* Documents Grid */}
+      <div className="grid grid-cols-1 gap-4">
+         {loading ? (
+            [1,2,3].map(i => <div key={i} className="h-24 bg-navy-900/40 animate-pulse rounded-[6px]" />)
+         ) : filteredDocs.length > 0 ? (
+            filteredDocs.map((doc) => (
+               <div key={doc.id} className="dashboard-card py-6 px-8 group hover:border-gold-500/10 transition-all">
+                  <div className="flex flex-col lg:flex-row gap-8 items-start lg:items-center">
+                     <div className="flex items-center gap-6 flex-1">
+                        <div className={cn(
+                           "p-3 rounded-[4px]",
+                           doc.type === 'invoice' ? "bg-success/5 text-success/60" : "bg-gold-500/10 text-gold-500"
+                        )}>
+                           <FileCheck size={20} />
                         </div>
-                      </td>
-                      <td className="px-8 py-6 text-sm font-bold text-white">
-                         {formatCurrency(doc.grand_total)}
-                      </td>
-                      <td className="px-8 py-6 text-xs text-navy-400 font-light">
-                         {formatDate(doc.created_at)}
-                      </td>
-                      <td className="px-8 py-6 text-right">
-                         <div className="flex justify-end gap-3">
-                            <PDFDownloadLink 
-                              document={<InvoicePDF doc={doc} businessInfo={businessInfo} order={doc.orders} />} 
-                              fileName={`${doc.type}_${doc.id.slice(0,8)}.pdf`}
-                            >
-                               {({ loading: pdfLoading }) => (
-                                 <button className="p-2.5 bg-navy-800/50 rounded-xl text-navy-400 hover:text-gold-500 hover:bg-gold-500/10 transition-all" title="Download Document">
-                                    {pdfLoading ? <div className="w-4 h-4 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" /> : <Download size={16} />}
-                                 </button>
-                               )}
-                            </PDFDownloadLink>
-                            <button className="p-2.5 bg-navy-800/50 rounded-xl text-navy-400 hover:text-accent-light hover:bg-accent-blue/10 transition-all" title="Email to Customer">
-                               <Mail size={16} />
-                            </button>
-                         </div>
-                      </td>
-                   </tr>
-                 ))}
-              </tbody>
-           </table>
-         </div>
-         {documents.length === 0 && !loading && (
-           <div className="p-20 text-center space-y-6">
-              <div className="w-20 h-20 bg-navy-950 rounded-full flex items-center justify-center mx-auto border border-navy-800 shadow-inner">
-                <History size={32} className="text-navy-700" strokeWidth={1} />
-              </div>
-              <div className="space-y-2">
-                <p className="font-serif italic text-2xl text-navy-500">No records found in the ledger.</p>
-                <p className="text-navy-600 text-sm max-w-xs mx-auto">Generate your first premium quotation or invoice to begin tracking your artisan transactions.</p>
-              </div>
-           </div>
+                        <div className="space-y-1">
+                           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-navy-600 leading-none">
+                              S2S-{doc.id.slice(0, 4).toUpperCase()}
+                           </p>
+                           <h3 className="text-lg font-serif text-white">{doc.orders?.customer_name || 'Individual Client'}</h3>
+                        </div>
+                     </div>
+
+                     <div className="flex flex-wrap gap-12 text-[10px] font-bold uppercase tracking-widest text-navy-500">
+                        <div className="space-y-1">
+                           <p className="text-navy-700">Issued On</p>
+                           <p className="text-white/80">{formatDate(doc.created_at)}</p>
+                        </div>
+                        <div className="space-y-1">
+                           <p className="text-navy-700">Total Value</p>
+                           <p className="text-white text-base">{formatCurrency(doc.grand_total)}</p>
+                        </div>
+                     </div>
+
+                     <div className="flex gap-2 w-full lg:w-auto">
+                        <PDFDownloadLink 
+                          document={<InvoicePDF doc={doc} businessInfo={businessInfo} order={doc.orders} />} 
+                          fileName={`${doc.type}_${doc.id.slice(0,8)}.pdf`}
+                          className="flex-1 lg:flex-none"
+                        >
+                           {({ loading: pdfLoading }) => (
+                             <button className="w-full flex items-center justify-center p-3 bg-white/5 rounded-[4px] text-white/40 hover:text-white transition-all">
+                                {pdfLoading ? <div className="w-4 h-4 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" /> : <Download size={18} />}
+                             </button>
+                           )}
+                        </PDFDownloadLink>
+                        <button 
+                          onClick={() => navigate(`/invoices/${doc.id}/edit`)}
+                          className="flex-1 lg:flex-none p-3 bg-white/5 rounded-[4px] text-white/40 hover:text-gold-500 transition-all"
+                        >
+                           <FileText size={18} />
+                        </button>
+                        <button className="flex-1 lg:flex-none p-3 bg-white/5 rounded-[4px] text-white/40 hover:text-accent-light transition-all">
+                           <Mail size={18} />
+                        </button>
+                     </div>
+                  </div>
+               </div>
+            ))
+         ) : (
+            <div className="py-40 flex flex-col items-center justify-center space-y-6">
+               <History size={64} className="text-navy-900" strokeWidth={0.5} />
+               <div className="text-center space-y-2">
+                  <p className="font-serif italic text-2xl text-navy-600">No {activeTab}s Issued Yet</p>
+                  <p className="text-navy-700 text-xs max-w-sm">Generating premium financial records ensures your artisan business remains meticulously organised and professional.</p>
+               </div>
+            </div>
          )}
       </div>
     </div>

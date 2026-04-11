@@ -6,7 +6,6 @@ import { useSettings } from '../contexts/SettingsContext';
 export const WhatsAppFAB = () => {
   const { settings } = useSettings();
   
-  // Clean phone number for WhatsApp API (strip everything except digits)
   const fallbackNumber = '27830000000';
   const whatsappNumber = settings.business_phone 
     ? settings.business_phone.replace(/\D/g, '') 
@@ -23,12 +22,10 @@ export const WhatsAppFAB = () => {
       rel="noopener noreferrer"
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
-      className="fixed bottom-8 right-8 z-[100] w-16 h-16 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-2xl hover:bg-[#20ba59] transition-colors"
+      className="fixed bottom-6 right-6 z-[100] w-[52px] h-[52px] bg-[#c9a46a] text-white rounded-full flex items-center justify-center transition-transform hover:scale-105"
     >
-      <MessageCircle size={32} fill="currentColor" />
-      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full animate-bounce">
+      <MessageCircle size={24} fill="white" />
+      <span className="absolute -top-1 -right-1 bg-[#ff3b30] text-white text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
         1
       </span>
     </motion.a>

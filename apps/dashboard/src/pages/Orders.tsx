@@ -23,7 +23,7 @@ export const Orders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
+  const [activeTab, setActiveTab] = useState<'new' | 'processed'>('new');
 
   useEffect(() => {
     fetchOrders();
@@ -47,14 +47,14 @@ export const Orders = () => {
   const updateStatus = async (id: string, status: OrderStatus) => {
     // If transitioning to completed, atomize the update via RPC to decrement inventory
     if (status === 'completed') {
-       if (!window.confirm("Marking this complete will permanently deduct the materials from inventory. Proceed?")) return;
+       if (!window.confirm("Fulfilling this order will permanently decrement artisan materials. Proceed?")) return;
        const { error } = await supabase.rpc('mark_order_completed', { target_order_id: id });
        if (error) {
-         toast.error('Failed to trigger fulfillment synchronization');
+         toast.error('Fulfillment synchronization failed');
          return;
        }
        setOrders(orders.map(o => o.id === id ? { ...o, status } : o));
-       toast.success("Order fulfilled and inventory decremented.");
+       toast.success("Artisan piece fulfilled. Inventory synced.");
        return;
     }
 
@@ -64,10 +64,10 @@ export const Orders = () => {
       .eq('id', id);
 
     if (error) {
-      toast.error('Failed to update status');
+      toast.error('Status update failed');
     } else {
       setOrders(orders.map(o => o.id === id ? { ...o, status } : o));
-      toast.success(`Order status updated to ${status}`);
+      toast.success(`Inquiry status updated to ${status}`);
     }
   };
 
@@ -77,146 +77,140 @@ export const Orders = () => {
       o.customer_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       o.id.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = statusFilter === 'all' || o.status === statusFilter;
+    const isNew = o.status === 'new';
+    const matchesTab = activeTab === 'new' ? isNew : !isNew;
     
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesTab;
   });
 
   return (
     <div className="space-y-12">
-      <header className="flex justify-between items-center">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-1">
           <h1 className="text-3xl font-serif text-white tracking-tight">Order Management</h1>
-          <p className="text-charcoal-500 text-sm">Track artisan orders and customer inquiries.</p>
+          <p className="text-navy-500 text-sm font-light italic">Orchestrating the lifecycle of handcrafted excellence.</p>
         </div>
-        <div className="bg-charcoal-800 border border-charcoal-700/50 rounded-lg px-6 py-3 text-xs font-bold uppercase tracking-widest text-gold-500 shadow-xl">
-           {orders.filter(o => o.status === 'new').length} New Inquiries
+        <div className="bg-gold-500/10 border border-gold-500/20 rounded-[4px] px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-gold-500">
+           {orders.filter(o => o.status === 'new').length} Inbound Inquiries
         </div>
       </header>
 
-      {/* Toolbar */}
-      <div className="flex gap-4 items-center">
-        <div className="relative flex-1 max-w-md">
-           <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-charcoal-500" />
-           <input 
-             type="text" 
-             placeholder="Search customer, email or order ID..." 
-             className="input-base pl-12"
-             value={searchTerm}
-             onChange={(e) => setSearchTerm(e.target.value)}
-           />
-        </div>
-        <div className="flex gap-2">
-           <div className="bg-charcoal-800 border border-charcoal-700/50 rounded-lg p-1.5 flex gap-1">
-              {['all', 'new', 'contacted', 'in_progress', 'completed', 'cancelled'].map(s => (
-                <button
-                  key={s}
-                  onClick={() => setStatusFilter(s as any)}
-                  className={`px-4 py-1.5 rounded-md text-[9px] font-bold uppercase tracking-widest transition-all ${
-                    statusFilter === s ? 'bg-gold-500 text-charcoal-950' : 'text-charcoal-500 hover:text-white'
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
-           </div>
-        </div>
+      {/* Segmented Control & Search */}
+      <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
+         <div className="flex bg-white/5 p-1 rounded-[6px] w-full md:w-auto">
+            <button 
+              onClick={() => setActiveTab('new')}
+              className={cn(
+                "flex-1 md:flex-none px-8 py-2.5 rounded-[4px] text-[10px] font-bold uppercase tracking-widest transition-all",
+                activeTab === 'new' ? "bg-gold-500 text-navy-950 shadow-md" : "text-navy-500 hover:text-white"
+              )}
+            >
+               Inbound Inquiries
+            </button>
+            <button 
+              onClick={() => setActiveTab('processed')}
+              className={cn(
+                "flex-1 md:flex-none px-8 py-2.5 rounded-[4px] text-[10px] font-bold uppercase tracking-widest transition-all",
+                activeTab === 'processed' ? "bg-gold-500 text-navy-950 shadow-md" : "text-navy-500 hover:text-white"
+              )}
+            >
+               Artisan Pipeline
+            </button>
+         </div>
+
+         <div className="relative w-full md:w-96">
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-navy-600" />
+            <input 
+              type="text" 
+              placeholder="Filter by customer, email or ID..." 
+              className="input-base pl-12 py-2.5"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+         </div>
       </div>
 
-      {/* Table */}
-      <div className="dashboard-card p-0 overflow-hidden border-none shadow-2xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-charcoal-950/50 text-[10px] uppercase font-bold tracking-[0.2em] text-charcoal-500 border-b border-charcoal-800">
-                <th className="px-8 py-5">Customer & Details</th>
-                <th className="px-8 py-5">Value</th>
-                <th className="px-8 py-5">Date Received</th>
-                <th className="px-8 py-5">Current Status</th>
-                <th className="px-8 py-5 text-right">Progress Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-charcoal-800">
-              {loading ? (
-                [1,2,3].map(i => (
-                  <tr key={i} className="animate-pulse">
-                    <td colSpan={5} className="px-8 py-8 h-20 bg-charcoal-900/50" />
-                  </tr>
-                ))
-              ) : filteredOrders.length > 0 ? (
-                filteredOrders.map((o) => {
-                  const total = o.items?.reduce((sum, item) => sum + (item.unit_price_snapshot * item.quantity), 0) || 0;
-                  return (
-                    <tr key={o.id} className="group hover:bg-charcoal-800/30 transition-colors">
-                      <td className="px-8 py-6">
-                        <div className="space-y-4">
-                           <div className="space-y-1">
-                             <p className="text-sm font-semibold text-white group-hover:text-gold-400 transition-colors">{o.customer_name}</p>
-                             <p className="text-[10px] text-charcoal-500 uppercase tracking-widest leading-none">Order ID: {o.id.slice(0,8)}</p>
+      {/* Orders List */}
+      <div className="grid grid-cols-1 gap-6">
+         {loading ? (
+            [1,2,3].map(i => <div key={i} className="h-32 bg-navy-900/40 animate-pulse rounded-[6px]" />)
+         ) : filteredOrders.length > 0 ? (
+            filteredOrders.map((o) => {
+               const total = o.items?.reduce((sum, item) => sum + (item.unit_price_snapshot * item.quantity), 0) || 0;
+               return (
+                  <div key={o.id} className="dashboard-card group hover:border-white/10 transition-all">
+                     <div className="flex flex-col lg:flex-row gap-8 items-start lg:items-center">
+                        <div className="flex-1 space-y-4">
+                           <div className="flex items-center gap-4">
+                              <h3 className="text-xl font-serif text-white">{o.customer_name}</h3>
+                              <span className={cn(
+                                 "px-3 py-1 rounded-[4px] text-[9px] font-bold uppercase tracking-widest border",
+                                 getOrderStatusColor(o.status).replace('rounded-full', 'rounded-[4px]')
+                              )}>
+                                 {getOrderStatusLabel(o.status)}
+                              </span>
                            </div>
-                           <div className="flex gap-4 text-[10px] uppercase font-bold text-charcoal-600 tracking-widest">
-                              <span className="flex items-center gap-1"><Mail size={12}/> {o.customer_email}</span>
-                              {o.customer_phone && <span className="flex items-center gap-1"><Phone size={12}/> {o.customer_phone}</span>}
+                           <div className="flex flex-wrap gap-6 text-[10px] uppercase font-bold text-navy-500 tracking-[0.15em]">
+                              <span className="flex items-center gap-2"><Mail size={12} className="text-gold-500/60" /> {o.customer_email}</span>
+                              {o.customer_phone && <span className="flex items-center gap-2"><Phone size={12} className="text-gold-500/60" /> {o.customer_phone}</span>}
+                              <span className="flex items-center gap-2 text-navy-600"><Clock size={12} /> {formatDate(o.created_at)}</span>
                            </div>
                         </div>
-                      </td>
-                      <td className="px-8 py-6">
-                        <span className="text-sm font-bold text-white tracking-wide">{formatCurrency(total)}</span>
-                        <p className="text-[10px] text-charcoal-600 mt-1 uppercase font-bold">{o.items?.length || 0} Piece(s)</p>
-                      </td>
-                      <td className="px-8 py-6">
-                        <div className="flex items-center gap-2 text-xs font-medium text-cream-100/60 font-inter">
-                           <Clock size={14} className="text-charcoal-500" />
-                           {formatDate(o.created_at)}
+
+                        <div className="lg:w-48 space-y-1">
+                           <p className="text-[10px] font-bold uppercase tracking-widest text-navy-600">Investment Value</p>
+                           <p className="text-xl font-bold text-white tracking-tight">{formatCurrency(total)}</p>
+                           <p className="text-[9px] text-navy-600 uppercase font-bold tracking-widest">{o.items?.length || 0} Piece(s) Specified</p>
                         </div>
-                      </td>
-                      <td className="px-8 py-6">
-                        <span className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border ${getOrderStatusColor(o.status)}`}>
-                          {getOrderStatusLabel(o.status)}
-                        </span>
-                      </td>
-                      <td className="px-8 py-6 text-right">
-                        <div className="flex justify-end gap-3 items-center">
-                           <select 
-                             className={`bg-charcoal-900 border border-charcoal-750 text-[10px] font-bold uppercase tracking-widest text-charcoal-400 rounded px-3 py-1.5 focus:outline-none focus:border-gold-500 ${o.status !== 'completed' ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
-                             value={o.status}
-                             disabled={o.status === 'completed'}
-                             onChange={(e) => updateStatus(o.id, e.target.value as OrderStatus)}
-                           >
-                             <option value="new">New</option>
-                             <option value="contacted">Contacted</option>
-                             <option value="in_progress">Processing</option>
-                             <option value="completed">Completed</option>
-                             <option value="cancelled">Cancelled</option>
-                           </select>
+
+                        <div className="flex gap-3 w-full lg:w-auto">
+                           {o.status === 'new' ? (
+                              <button 
+                                onClick={() => navigate(`/invoices/new?orderId=${o.id}&type=quotation`)}
+                                className="btn-dashboard-primary flex-1 lg:flex-none flex items-center justify-center gap-3"
+                              >
+                                 <FileText size={16} /> Issue Quotation
+                              </button>
+                           ) : (
+                              <select 
+                                className="input-base py-2.5 px-4 text-[10px] font-bold uppercase tracking-widest text-white/60 w-full lg:w-44"
+                                value={o.status}
+                                disabled={o.status === 'completed'}
+                                onChange={(e) => updateStatus(o.id, e.target.value as OrderStatus)}
+                              >
+                                 <option value="contacted">Contacted</option>
+                                 <option value="in_progress">Artisan Build</option>
+                                 <option value="completed">Delivered</option>
+                                 <option value="cancelled">Cancelled</option>
+                              </select>
+                           )}
                            
-                            {/* Quick Actions */}
                            <button 
-                             onClick={() => navigate(`/invoices/new?orderId=${o.id}`)}
-                             className="p-2 bg-charcoal-800 rounded-lg text-gold-500 hover:bg-gold-500 hover:text-charcoal-950 transition-all shadow-lg"
-                             title="Issue Invoice"
+                             onClick={() => navigate(`/invoices/new?orderId=${o.id}&type=invoice`)}
+                             disabled={o.status === 'new'}
+                             className="p-3 bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed rounded-[4px] text-white hover:text-gold-500 hover:bg-white/10 transition-all shadow-sm"
+                             title="Issue Final Invoice"
                            >
-                              <FileText size={16} />
+                              <ShieldCheck size={18} />
                            </button>
                            
-                           <button className="p-2 bg-charcoal-800 rounded-lg text-charcoal-500 hover:text-white transition-colors">
-                              <Eye size={16} />
+                           <button className="p-3 bg-white/5 rounded-[4px] text-white/40 hover:text-white transition-colors">
+                              <Eye size={18} />
                            </button>
                         </div>
-                      </td>
-                    </tr>
-                  )
-                })
-              ) : (
-                <tr>
-                  <td colSpan={5} className="px-8 py-20 text-center text-charcoal-500 font-serif italic text-xl">
-                    No active orders matching these criteria.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                     </div>
+                  </div>
+               )
+            })
+         ) : (
+            <div className="py-40 flex flex-col items-center justify-center space-y-6">
+               <History size={64} className="text-navy-900" strokeWidth={0.5} />
+               <div className="text-center space-y-2">
+                  <p className="font-serif italic text-2xl text-navy-600">No Orders in this Repository</p>
+                  <p className="text-navy-700 text-xs max-w-sm">When artisan inquiries arrive from the storefront, they will be categorised here for meticulous relationship management.</p>
+               </div>
+            </div>
+         )}
       </div>
     </div>
   );

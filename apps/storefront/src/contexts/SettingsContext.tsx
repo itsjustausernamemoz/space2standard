@@ -21,9 +21,9 @@ interface SettingsContextType {
 const defaultSettings: SettingsData = {
   business_name: 'Space2Standard',
   business_logo_url: '',
-  business_address: 'Namibia',
+  business_address: '',
   business_phone: '',
-  business_email: 'hello@space2standard.com',
+  business_email: '',
   business_url: '',
   vat_rate: '15',
   footer_tagline: 'A premium Namibian artisan brand crafting bespoke furniture and architectural installations. Blending traditional craftsmanship with modern precision to perfection.',

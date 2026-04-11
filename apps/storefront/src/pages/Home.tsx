@@ -1,11 +1,9 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ChevronRight, CheckCircle2, Star } from 'lucide-react';
-import { Button } from '../components/ui/Button';
-import { Card } from '../components/ui/Card';
+import { ChevronRight, CheckCircle2, Star } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { ProductCard } from '../components/ui/ProductCard';
+import { ScrollReveal } from '../components/ScrollReveal';
 
 export const Home = () => {
   const [featuredProducts, setFeaturedProducts] = React.useState<any[]>([]);
@@ -14,14 +12,12 @@ export const Home = () => {
 
   React.useEffect(() => {
     async function fetchData() {
-      // 1. Fetch featured products (limit to 3)
       const { data: pData } = await supabase
         .from('products')
         .select(`*, images:product_images(*), product_reviews(*)`)
         .eq('is_published', true)
         .limit(3);
 
-      // 2. Fetch Global VAT Settings
       const { data: sData } = await supabase.from('settings').select('*');
       const vRate = sData?.find(s => s.key === 'vat_rate')?.value;
 
@@ -33,166 +29,137 @@ export const Home = () => {
   }, []);
 
   return (
-    <div className="flex flex-col bg-navy-950">
+    <div className="flex flex-col bg-[#060b18]">
       {/* Hero Section */}
-      <section className="relative min-h-screen py-20 flex items-center justify-center overflow-hidden border-b border-navy-800">
-        {/* Background Image with Overlay */}
-        <div className="absolute inset-0 z-0">
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden border-b border-white/5">
+        <div className="absolute inset-0 z-0 opacity-40">
           <img 
             src="/images/hero_lux.png" 
             alt="Artisan Carpentry Workshop" 
-            className="w-full h-full object-cover opacity-60 scale-105"
+            className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-navy-950/80 via-navy-950/40 to-navy-950" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#060b18]/80 via-transparent to-[#060b18]" />
         </div>
 
-        <div className="relative z-10 text-center max-w-5xl mx-auto px-6 space-y-12 pt-20">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            className="space-y-6"
-          >
-            <span className="section-label text-gold-500">Excellence in Craftsmanship</span>
-            <h1 className="text-5xl sm:text-7xl md:text-9xl font-serif text-navy-300 tracking-tight leading-none break-words">
-              Space<span className="text-gold-500 italic">2</span>Standard
-            </h1>
-            <p className="text-base sm:text-lg md:text-2xl font-light uppercase tracking-[0.4em] text-navy-400 max-w-3xl mx-auto break-words">
-              Bespoke furniture crafted to your vision. <br className="hidden md:inline" /> Built to last generations.
-            </p>
-          </motion.div>
-
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8, duration: 1 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-8"
-          >
-            <Link to="/order">
-              <Button size="xl" variant="primary" className="bg-gold-600 hover:bg-gold-500 text-navy-950 rounded-xl px-12 py-4 shadow-lg shadow-gold-600/10 transition-all font-bold tracking-widest uppercase text-xs">
-                Order a Piece
-              </Button>
-            </Link>
-            <Link to="/products">
-              <Button size="xl" variant="outline" className="border-gold-500/30 text-gold-500 hover:bg-gold-500/10 rounded-xl px-12 py-4 transition-all font-bold tracking-widest uppercase text-xs backdrop-blur-sm">
-                Explore Collection
-              </Button>
-            </Link>
-          </motion.div>
+        <div className="relative z-10 text-center max-w-5xl mx-auto px-6 pt-32">
+          <ScrollReveal>
+            <div className="space-y-8">
+              <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">Excellence in Craftsmanship</span>
+              <h1 className="text-[56px] sm:text-[72px] md:text-[96px] font-serif text-white tracking-[-0.03em] leading-[1.05]">
+                Space<span className="text-[#c9a46a]">2</span>Standard
+              </h1>
+              <p className="text-[17px] md:text-[20px] font-light text-[#a0a8b8] max-w-2xl mx-auto leading-[1.8]">
+                Bespoke furniture crafted to your vision. <br className="hidden md:inline" /> 
+                Built to last generations with artisan precision.
+              </p>
+              <div className="pt-10 flex flex-col sm:flex-row items-center justify-center gap-6">
+                <Link to="/products">
+                  <button className="px-10 py-4 bg-[#c9a46a] text-[#060b18] rounded-[4px] text-[11px] font-bold uppercase tracking-[0.15em] transition-all hover:bg-white">
+                    Order a Piece
+                  </button>
+                </Link>
+                <Link to="/products">
+                  <button className="px-10 py-4 border border-white text-white rounded-[4px] text-[11px] font-bold uppercase tracking-[0.15em] transition-all hover:bg-white hover:text-[#060b18]">
+                    Explore Collection
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </ScrollReveal>
         </div>
-
-        <motion.div 
-          animate={{ y: [0, 15, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-12 left-1/2 -translate-x-1/2 opacity-40"
-        >
-          <div className="w-[1px] h-24 bg-gradient-to-b from-transparent via-gold-500 to-transparent" />
-        </motion.div>
       </section>
 
       {/* Featured Products */}
-      <section className="py-40 px-6 container mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-24">
-          <div className="space-y-6">
-            <span className="section-label text-gold-500">Our Masterpieces</span>
-            <h2 className="text-4xl sm:text-5xl md:text-7xl font-serif text-navy-300 tracking-tight leading-tight italic break-words">Featured <br/> Collection</h2>
+      <section className="py-[160px] px-6 container mx-auto">
+        <ScrollReveal>
+          <div className="flex flex-col md:flex-row justify-between items-end gap-12 mb-32">
+            <div className="space-y-6 text-center md:text-left">
+              <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">Our Masterpieces</span>
+              <h2 className="text-[48px] md:text-[64px] font-serif text-white tracking-tight leading-tight">Featured Collection</h2>
+            </div>
+            <Link to="/products" className="group flex items-center gap-3 text-[#c9a46a] uppercase text-[11px] font-bold tracking-[0.2em] border-b border-[#c9a46a]/20 hover:border-[#c9a46a] transition-all pb-2">
+              Browse All <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
           </div>
-          <Link to="/products" className="group flex items-center gap-3 text-gold-500 uppercase text-xs font-bold tracking-[0.2em] pb-2 border-b border-gold-500/20 hover:border-gold-500 transition-all">
-            Browse All <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
+        </ScrollReveal>
 
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {[1,2,3].map(i => (
-              <div key={i} className="aspect-[4/5] bg-navy-900 animate-pulse rounded-2xl" />
+              <div key={i} className="aspect-square bg-white/[0.03] animate-pulse rounded-[6px]" />
             ))}
           </div>
         ) : featuredProducts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {featuredProducts.map((product, idx) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-              >
-                <div className="p-1 rounded-[22px] bg-gradient-to-b from-gold-500/20 to-transparent">
-                  <ProductCard product={product} vatRate={vatRate} />
-                </div>
-              </motion.div>
+              <ProductCard key={product.id} product={product} vatRate={vatRate} />
             ))}
           </div>
         ) : (
           <div className="text-center py-20 grayscale opacity-40">
-             <p className="text-navy-500 italic font-light">High-quality product photography coming soon from our artisans in Windhoek.</p>
+             <p className="text-[#a0a8b8] italic font-light">High-quality product photography coming soon from our artisans in Windhoek.</p>
           </div>
         )}
       </section>
 
       {/* Trust / Process Section */}
-      <section className="py-40 bg-navy-900 border-y border-navy-800 text-cream-100 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-1/3 h-full bg-gold-500/5 -skew-x-12 translate-x-1/2" />
-        
-        <div className="container mx-auto px-6 grid md:grid-cols-2 gap-24 items-center">
-          <motion.div 
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="space-y-12"
-          >
-            <div className="space-y-6">
-              <span className="section-label text-gold-500">The Artisan Way</span>
-              <h2 className="text-4xl sm:text-5xl md:text-7xl font-serif text-navy-300 tracking-tight leading-tight break-words">From Tree <br/> to Table</h2>
-              <p className="text-base md:text-lg font-light leading-relaxed text-navy-400 break-words">
-                At Space2Standard, we don't just build furniture; we curate masterpieces. 
-                Our process combines ancient woodworking techniques with modern precision to 
-                create pieces that are as functional as they are beautiful.
-              </p>
-            </div>
-
-            <div className="space-y-8">
-              {[
-                { title: 'Sustainably Sourced', desc: 'We only use premium hardwoods from certified sustainable forests.' },
-                { title: 'Hand-Rubbed Finishes', desc: 'Natural oils and waxes that age gracefully over decades.' },
-                { title: 'Bespoke Engineering', desc: 'Intricate joinery that removes the need for visible fasteners.' },
-              ].map((item, idx) => (
-                <div key={idx} className="flex gap-6 items-start">
-                  <div className="w-12 h-12 rounded-2xl bg-navy-800 border border-gold-500/20 flex items-center justify-center shrink-0">
-                    <CheckCircle2 className="text-gold-500" size={20} />
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-serif text-navy-300 tracking-wide">{item.title}</h3>
-                    <p className="text-sm font-light text-navy-500 leading-relaxed italic">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-
-          <div className="relative">
-            <div className="aspect-square bg-gold-500/10 border border-gold-500/20 rounded-2xl rotate-3 absolute inset-0 translate-x-4 translate-y-4" />
-            <div className="aspect-square relative rounded-2xl overflow-hidden glass border-gold-500/30 shadow-2xl">
-              <div className="absolute inset-0 bg-gradient-to-tr from-navy-950/40 to-transparent z-10" />
-              <img 
-                src="https://images.unsplash.com/photo-1581429035334-080b4334313f?q=80&w=2670&auto=format&fit=crop" 
-                alt="Wood grain texture" 
-                className="w-full h-full object-cover grayscale opacity-60"
-              />
-              <div className="absolute bottom-12 left-12 z-20 space-y-4">
-                <div className="flex gap-1 text-gold-500">
-                  {[1,2,3,4,5].map(i => <Star key={i} size={16} fill="currentColor" />)}
-                </div>
-                <p className="text-2xl font-serif italic text-navy-300 leading-tight">
-                  "Exceeded all my expectations. <br/> A true heirloom."
-                </p>
-                <p className="text-xs uppercase tracking-widest text-gold-500 font-bold">
-                  — Marc J. Kapstadt
+      <section className="py-[160px] bg-[#060b18] border-y border-white/5 relative overflow-hidden">
+        <div className="container mx-auto px-6 grid lg:grid-cols-2 gap-32 items-center">
+          <ScrollReveal>
+            <div className="space-y-16">
+              <div className="space-y-8">
+                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">The Artisan Way</span>
+                <h2 className="text-[48px] md:text-[64px] font-serif text-white tracking-tight leading-tight">From Tree <br/> to Table</h2>
+                <p className="text-[17px] font-light leading-[1.8] text-[#a0a8b8] max-w-xl">
+                  At Space2Standard, we don't just build furniture; we curate masterpieces. 
+                  Our process combines ancient woodworking techniques with modern precision to 
+                  create pieces that are as functional as they are beautiful.
                 </p>
               </div>
+
+              <div className="space-y-12">
+                {[
+                  { title: 'Sustainably Sourced', desc: 'We only use premium hardwoods from Namibian forests.' },
+                  { title: 'Hand-Rubbed Finishes', desc: 'Natural oils and waxes that age gracefully over decades.' },
+                  { title: 'Bespoke Engineering', desc: 'Intricate joinery that removes the need for visible fasteners.' },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex gap-8 items-start">
+                    <div className="w-10 h-10 rounded-full border border-[#c9a46a]/20 flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="text-[#c9a46a]" size={16} />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="text-[18px] font-serif text-white tracking-wide">{item.title}</h3>
+                      <p className="text-[13px] font-light text-[#a0a8b8] leading-relaxed italic">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          </ScrollReveal>
+
+          <ScrollReveal delay={0.2}>
+            <div className="relative">
+              <div className="aspect-square relative rounded-[6px] overflow-hidden border border-white/10 group">
+                <div className="absolute inset-0 bg-gradient-to-tr from-[#060b18]/60 to-transparent z-10" />
+                <img 
+                  src="https://images.unsplash.com/photo-1581429035334-080b4334313f?q=80&w=2670&auto=format&fit=crop" 
+                  alt="Wood grain texture" 
+                  className="w-full h-full object-cover grayscale opacity-60 transition-transform duration-[2s] group-hover:scale-110"
+                />
+                <div className="absolute bottom-12 left-12 z-20 space-y-6">
+                  <div className="flex gap-1 text-[#c9a46a]">
+                    {[1,2,3,4,5].map(i => <Star key={i} size={14} fill="currentColor" />)}
+                  </div>
+                  <p className="text-2xl font-serif italic text-white leading-tight">
+                    "Exceeded all my expectations. <br/> A true heirloom."
+                  </p>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-[#c9a46a] font-bold">
+                    — Marc J. Kapstadt
+                  </p>
+                </div>
+              </div>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
     </div>

@@ -1,11 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import type { Product } from '@shared/types';
 import { formatCurrency, calcDiscount } from '@shared/utils';
-import { Card } from './Card';
-import { Badge } from './Badge';
-import { Button } from './Button';
-import { ArrowRight, Star } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -25,83 +22,84 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, vatRate = 0 }
   const hasDiscount = discountedPrice < product.price;
   const primaryImage = product.images?.find(img => img.is_primary)?.storage_url || '/images/placeholder.jpg';
 
-  const approvedReviews = product.product_reviews?.filter(r => r.is_approved) || [];
-  const avgRating = approvedReviews.length > 0
-    ? approvedReviews.reduce((sum, r) => sum + r.rating, 0) / approvedReviews.length
-    : 0;
-
   return (
-    <Card className="group flex flex-col h-full bg-cream-100/50 hover:bg-white transition-all cursor-pointer">
-      <Link to={`/products/${product.id}`} className="block relative aspect-[4/5] overflow-hidden rounded-t-lg -mx-8 -mt-8 mb-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      whileHover={{ y: -4, borderColor: 'rgba(201,164,106,0.4)' }}
+      transition={{ duration: 0.2 }}
+      className="group relative flex flex-col h-full bg-transparent border-[0.5px] border-white/8 rounded-[6px] transition-colors duration-200"
+    >
+      {/* Image Container */}
+      <Link to={`/products/${product.id}`} className="block relative aspect-square overflow-hidden rounded-t-[6px]">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0d1220] to-[#1a1830] z-0" />
         <img 
           src={primaryImage} 
           alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          className="relative z-10 w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
         />
         
-        {hasDiscount && (
-          <Badge variant="gold" className="absolute top-4 left-4 z-10">
-            Sale
-          </Badge>
-        )}
+        {/* Badges */}
+        <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
+          {hasDiscount && (
+            <span className="bg-[#c9a46a] text-[#060b18] px-2 py-1 rounded-[3px] text-[9px] font-bold uppercase tracking-[0.1em]">
+              Sale
+            </span>
+          )}
+        </div>
         
-        {product.stock_quantity <= 3 && product.stock_quantity > 0 && (
-          <Badge variant="walnut" className="absolute top-4 right-4 z-10">
-            Only {product.stock_quantity} left
-          </Badge>
-        )}
+        <div className="absolute top-4 right-4 z-20">
+          {product.stock_quantity <= 3 && product.stock_quantity > 0 && (
+            <span className="bg-white/10 text-white border-[0.5px] border-white/20 px-2 py-1 rounded-[3px] text-[9px] font-bold uppercase tracking-[0.1em]">
+              Only {product.stock_quantity} left
+            </span>
+          )}
+        </div>
 
         {product.stock_quantity === 0 && (
-          <div className="absolute inset-0 bg-navy-900/60 flex items-center justify-center z-10">
-            <Badge variant="charcoal" className="px-4 py-2">Out of Stock</Badge>
+          <div className="absolute inset-0 bg-[#060b18]/60 flex items-center justify-center z-30">
+            <span className="bg-white/10 text-white border-[0.5px] border-white/20 px-3 py-1 rounded-[3px] text-[9px] font-bold uppercase tracking-[0.1em]">Out of Stock</span>
           </div>
         )}
       </Link>
 
-      <div className="flex-1 space-y-4">
+      {/* Content Block */}
+      <div className="flex-1 flex flex-col p-[16px_18px_20px] space-y-4">
         <div className="space-y-1">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold-500">
-            {product.category || 'Luxury Collection'}
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">
+            {product.category || (product as any).category_rel?.name || 'Luxury Collection'}
           </p>
-          <div className="flex justify-between items-start gap-2">
-            <h3 className="text-xl font-serif text-navy-950 group-hover:text-gold-600 transition-colors line-clamp-2">
-              {product.name}
-            </h3>
-            {approvedReviews.length > 0 && (
-              <div className="flex items-center gap-1 shrink-0 pt-1">
-                <Star className="text-gold-500 fill-gold-500" size={12} strokeWidth={1} />
-                <span className="text-[10px] font-bold text-navy-600">{avgRating.toFixed(1)}</span>
-                <span className="text-[10px] text-navy-400">({approvedReviews.length})</span>
-              </div>
-            )}
-          </div>
+          <h3 className="text-[18px] font-serif font-normal text-white leading-[1.3] line-clamp-2">
+            {product.name}
+          </h3>
         </div>
 
-        <div className="space-y-1">
+        <div className="mt-auto space-y-2">
           <div className="flex items-baseline gap-3">
-            <span className="text-lg font-bold text-navy-800">
+            <span className="text-[16px] font-medium text-white">
               {formatCurrency(displayPrice)}
             </span>
             {hasDiscount && (
-              <span className="text-sm text-navy-400 line-through opacity-60">
+              <span className="text-[13px] text-[#6a7080] line-through">
                 {formatCurrency(originalPriceInclVat)}
               </span>
             )}
           </div>
           {vatRate > 0 && (
-            <p className="text-[9px] text-navy-400 font-light italic">Incl. {vatRate}% VAT</p>
+            <p className="text-[11px] text-[#4a5060] font-normal">Incl. {vatRate}% VAT</p>
           )}
         </div>
       </div>
 
-      <div className="pt-6 mt-auto">
-        <Link to={`/products/${product.id}`}>
-          <Button variant="outline" className="w-full group/btn" size="sm">
+      <div className="px-[18px] pb-[20px]">
+        <Link to={`/products/${product.id}`} className="block">
+          <button className="w-full py-[11px] border-[0.5px] border-white/20 rounded-[4px] text-[10px] font-medium uppercase tracking-[0.12em] text-white transition-all duration-150 group-hover:border-[#c9a46a]/60 group-hover:text-[#c9a46a]">
             View Details
-            <ArrowRight size={14} className="ml-2 group-hover/btn:translate-x-1 transition-transform" />
-          </Button>
+          </button>
         </Link>
       </div>
-    </Card>
+    </motion.div>
   );
 };
+

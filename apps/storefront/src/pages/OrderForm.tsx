@@ -3,13 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useCart } from '../contexts/CartContext';
 import { useStorefrontAuth } from '../contexts/StorefrontAuthContext';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Card } from '../components/ui/Card';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { CheckCircle2, Package, Truck, PhoneCall, ShoppingBag } from 'lucide-react';
 import { calcDiscount, formatCurrency } from '@shared/utils';
+import { ScrollReveal } from '../components/ScrollReveal';
 
 export const OrderForm = () => {
   const navigate = useNavigate();
@@ -99,226 +97,239 @@ export const OrderForm = () => {
 
   if (submitted) {
     return (
-      <div className="pt-60 pb-40 px-6 container mx-auto text-center bg-navy-950 min-h-screen">
-        <motion.div 
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="max-w-2xl mx-auto space-y-12"
-        >
-          <div className="w-24 h-24 bg-gold-500/10 rounded-full flex items-center justify-center mx-auto shadow-inner border border-gold-500/20">
-            <CheckCircle2 className="text-gold-500" size={48} strokeWidth={1} />
+      <div className="pt-[160px] pb-40 px-6 container mx-auto text-center bg-[#060b18] min-h-screen">
+        <ScrollReveal>
+          <div className="max-w-2xl mx-auto space-y-12">
+            <div className="w-20 h-20 bg-[#c9a46a]/10 rounded-full flex items-center justify-center mx-auto border border-[#c9a46a]/20">
+              <CheckCircle2 className="text-[#c9a46a]" size={40} strokeWidth={1} />
+            </div>
+            <div className="space-y-8">
+              <h1 className="text-[56px] font-serif text-white tracking-tight">Order Received</h1>
+              <p className="text-[17px] text-[#a0a8b8] leading-[1.8] font-light italic">
+                Our workshop in Windhoek will contact you within 24 hours to discuss materiality and bespoke specifications.
+              </p>
+            </div>
+            <div className="pt-12">
+              <button 
+                onClick={() => navigate('/products')} 
+                className="px-12 py-4 border border-[#c9a46a] text-[#c9a46a] rounded-[4px] text-[11px] font-bold uppercase tracking-[0.2em] transition-all hover:bg-[#c9a46a] hover:text-[#060b18]"
+              >
+                Return to Collection
+              </button>
+            </div>
           </div>
-          <div className="space-y-6">
-            <h1 className="text-5xl font-serif text-white tracking-tight">Order Received</h1>
-            <p className="text-navy-400 text-lg p-6 bg-navy-900 border border-navy-800 rounded-2xl mx-auto shadow-2xl">
-              Our business in Windhoek will contact you within 24 hours to discuss the materiality and dimensions.
-            </p>
-          </div>
-          <div className="gold-divider" />
-          <Button onClick={() => navigate('/products')} variant="outline" className="px-12 py-4 rounded-xl border-gold-500/30 text-gold-500 hover:bg-gold-500/10 transition-all">
-            Return to Collection
-          </Button>
-        </motion.div>
+        </ScrollReveal>
       </div>
     );
   }
 
   if (items.length === 0) {
     return (
-      <div className="pt-60 pb-40 px-6 container mx-auto text-center bg-navy-950 min-h-screen">
-        <motion.div 
-           initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-           className="flex flex-col items-center gap-6"
-        >
-           <ShoppingBag size={64} className="text-gold-500/30" strokeWidth={1} />
-           <p className="font-serif text-3xl text-white">Your cart is empty.</p>
-           <Button onClick={() => navigate('/products')} variant="primary" className="bg-gold-600 hover:bg-gold-500 text-white rounded-xl py-4 px-8 mt-4">
-              Browse Collection
-           </Button>
-        </motion.div>
+      <div className="pt-[160px] pb-40 px-6 container mx-auto text-center bg-[#060b18] min-h-screen">
+        <ScrollReveal>
+          <div className="flex flex-col items-center gap-8">
+             <ShoppingBag size={64} className="text-white/10" strokeWidth={1} />
+             <p className="font-serif text-[32px] text-white">Your cart is empty.</p>
+             <button 
+                onClick={() => navigate('/products')} 
+                className="px-10 py-4 bg-[#c9a46a] text-[#060b18] rounded-[4px] text-[11px] font-bold uppercase tracking-[0.2em] transition-all hover:bg-white"
+             >
+                Browse Collection
+             </button>
+          </div>
+        </ScrollReveal>
       </div>
     );
   }
 
   return (
-    <div className="pt-40 pb-32 min-h-screen bg-navy-950">
-      <div className="container mx-auto px-6 max-w-6xl">
-        <header className="mb-24 space-y-6 text-center max-w-3xl mx-auto">
-          <span className="section-label">Artisan Checkout</span>
-          <h1 className="text-6xl font-serif text-white tracking-tight leading-none">Complete Order</h1>
-          <p className="text-lg font-light text-navy-400 leading-relaxed italic">
-            Each piece is handcrafted in Windhoek. No payment is required now — 
-            we will contact you to finalise the bespoke specifications.
-          </p>
+    <div className="pt-[56px] min-h-screen bg-[#060b18]">
+      <div className="container mx-auto px-6 max-w-7xl">
+        <header className="py-[120px] text-center max-w-3xl mx-auto">
+          <ScrollReveal>
+            <div className="space-y-8">
+              <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">Artisan Checkout</span>
+              <h1 className="text-[48px] md:text-[64px] font-serif text-white tracking-tight leading-tight">Complete Order</h1>
+              <p className="text-[17px] font-light text-[#a0a8b8] leading-[1.8] italic">
+                Each piece is handcrafted in Namibia. No payment is required now — 
+                we will contact you to finalise the bespoke specifications.
+              </p>
+            </div>
+          </ScrollReveal>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-24 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-24 items-start pb-40">
           <div className="lg:col-span-7">
-            <Card variant="solid" className="bg-navy-900 border-navy-800 p-12 rounded-2xl shadow-2xl">
-              {user ? (
+            <ScrollReveal delay={0.1}>
+              <div className="bg-[#060b18] border border-white/10 p-12 rounded-[6px] space-y-16">
                 <div className="space-y-10">
-                  <div className="bg-navy-950 p-8 rounded-xl border border-navy-800 space-y-4">
-                    <h3 className="text-white font-serif text-3xl mb-6">Dispatch Details</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="text-navy-500 uppercase tracking-widest font-bold text-[10px]">Client</div>
-                      <div className="text-white">{profile?.full_name || 'Unspecified'}</div>
+                  <div className="space-y-8">
+                    <h3 className="text-white font-serif text-[24px]">Dispatch Details</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 text-[14px]">
+                      <div className="space-y-2">
+                        <p className="text-[#c9a46a] uppercase tracking-widest font-bold text-[10px]">Client</p>
+                        <p className="text-white font-serif text-[18px]">{formData.customer_name || 'Unspecified'}</p>
+                      </div>
                       
-                      <div className="text-navy-500 uppercase tracking-widest font-bold text-[10px]">Contact</div>
-                      <div className="text-white">{user.email}<br/>{profile?.phone}</div>
-                      
-                      <div className="text-navy-500 uppercase tracking-widest font-bold text-[10px]">Destination</div>
-                      <div className="text-white">{profile?.delivery_address || <span className="text-error italic">Please update your Account Settings</span>}</div>
+                      <div className="space-y-2">
+                        <p className="text-[#c9a46a] uppercase tracking-widest font-bold text-[10px]">Contact</p>
+                        <p className="text-white font-light text-[15px]">{formData.customer_email}<br/>{formData.customer_phone}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4 pt-8 border-t border-white/5">
+                      <p className="text-[#c9a46a] uppercase tracking-widest font-bold text-[10px]">Destination</p>
+                      <p className="text-white font-light text-[15px] leading-relaxed italic">{formData.delivery_address || <span className="text-red-500">Please provide a delivery address</span>}</p>
                     </div>
                   </div>
 
-                  <Input 
-                    label="Special Specifications or Notes (Optional)" 
-                    isTextArea 
-                    placeholder="Bespoke sizing, wood choice, or specific finish requirements..."
-                    className="bg-navy-950 border-navy-800 text-white h-32"
-                    value={formData.special_notes}
-                    onChange={e => setFormData({...formData, special_notes: e.target.value})}
-                  />
+                  {!user && (
+                    <div className="pt-10 border-t border-white/5 space-y-10">
+                      <div className="grid md:grid-cols-2 gap-10">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">Full Name</label>
+                          <input 
+                            required 
+                            className="input-apple"
+                            placeholder="Johannes Müller"
+                            value={formData.customer_name}
+                            onChange={e => setFormData({...formData, customer_name: e.target.value})}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">Email Address</label>
+                          <input 
+                            type="email" 
+                            required 
+                            className="input-apple"
+                            placeholder="johannes@example.com"
+                            value={formData.customer_email}
+                            onChange={e => setFormData({...formData, customer_email: e.target.value})}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">Phone Number</label>
+                          <input 
+                            type="tel"
+                            required 
+                            className="input-apple"
+                            placeholder="+264 81 123 4567"
+                            value={formData.customer_phone}
+                            onChange={e => setFormData({...formData, customer_phone: e.target.value})}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">Delivery Address / City</label>
+                          <input 
+                            required 
+                            className="input-apple"
+                            placeholder="E.g. Klein Windhoek, Windhoek"
+                            value={formData.delivery_address}
+                            onChange={e => setFormData({...formData, delivery_address: e.target.value})}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
-                  <Button size="xl" variant="primary" onClick={handleSubmit} className="w-full bg-gold-600 hover:bg-gold-500 text-navy-950 rounded-xl py-6 font-bold tracking-widest uppercase transition-all shadow-lg" isLoading={loading}>
-                    Dispatch Final Inquiry
-                  </Button>
+                  <div className="space-y-2 pt-8">
+                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">Special Notes (Optional)</label>
+                    <textarea 
+                      rows={4}
+                      className="input-apple resize-none"
+                      placeholder="Custom sizing, wood type, or finish requirements..."
+                      value={formData.special_notes}
+                      onChange={e => setFormData({...formData, special_notes: e.target.value})}
+                    />
+                  </div>
+
+                  <button 
+                    onClick={handleSubmit} 
+                    disabled={loading}
+                    className="btn-apple-cta w-full py-5 shadow-lg"
+                  >
+                    {loading ? 'Processing...' : 'Dispatch Final Inquiry'}
+                  </button>
                   
-                  <p className="text-[10px] text-center uppercase tracking-widest text-navy-600 font-bold">
-                    Secure Encryption &bull; Premium Artisan Consultation
+                  <p className="text-[10px] text-center uppercase tracking-[0.2em] text-[#a0a8b8] opacity-50 font-bold">
+                    Secure Processing &bull; Bespoke Digital Contract
                   </p>
                 </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-10">
-                  <div className="grid md:grid-cols-2 gap-10">
-                    <Input 
-                      label="Full Name" 
-                      required 
-                      placeholder="e.g. Johannes Müller"
-                      className="bg-navy-950 border-navy-800 text-white"
-                      value={formData.customer_name}
-                      onChange={e => setFormData({...formData, customer_name: e.target.value})}
-                    />
-                    <Input 
-                      label="Email Address" 
-                      type="email" 
-                      required 
-                      placeholder="johannes@example.com"
-                      className="bg-navy-950 border-navy-800 text-white"
-                      value={formData.customer_email}
-                      onChange={e => setFormData({...formData, customer_email: e.target.value})}
-                    />
-                  </div>
-                  
-                  <div className="grid md:grid-cols-2 gap-10">
-                    <Input 
-                      label="Phone Number" 
-                      required 
-                      placeholder="+264..."
-                      className="bg-navy-950 border-navy-800 text-white"
-                      value={formData.customer_phone}
-                      onChange={e => setFormData({...formData, customer_phone: e.target.value})}
-                    />
-                    <Input 
-                      label="Delivery Address" 
-                      required 
-                      placeholder="Street, City, Windhoek, etc."
-                      className="bg-navy-950 border-navy-800 text-white"
-                      value={formData.delivery_address}
-                      onChange={e => setFormData({...formData, delivery_address: e.target.value})}
-                    />
-                  </div>
-
-                  <Input 
-                    label="Special Specifications or Notes (Optional)" 
-                    isTextArea 
-                    placeholder="Bespoke sizing, wood choice, or specific finish requirements..."
-                    className="bg-navy-950 border-navy-800 text-white h-32"
-                    value={formData.special_notes}
-                    onChange={e => setFormData({...formData, special_notes: e.target.value})}
-                  />
-
-                  <Button size="xl" variant="primary" className="w-full bg-gold-600 hover:bg-gold-500 text-navy-950 rounded-xl py-6 font-bold tracking-widest uppercase transition-all shadow-lg" isLoading={loading}>
-                    Dispatch Final Inquiry
-                  </Button>
-                  
-                  <p className="text-[10px] text-center uppercase tracking-widest text-navy-600 font-bold">
-                    Secure Encryption &bull; Premium Artisan Consultation
-                  </p>
-                </form>
-              )}
-            </Card>
+              </div>
+            </ScrollReveal>
           </div>
 
-          <div className="lg:col-span-5 space-y-12">
-            <Card className="bg-navy-900 border-gold-500/20 text-cream-100 rounded-2xl p-8 shadow-2xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-4 opacity-5">
-                 <ShoppingBag size={80} strokeWidth={1} />
-              </div>
-              <div className="space-y-8 relative z-10">
-                <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-gold-500">Cart Summary</h3>
+          <div className="lg:col-span-5 space-y-16">
+            <ScrollReveal delay={0.2}>
+              <div className="bg-white/[0.02] border border-white/10 p-10 rounded-[6px] space-y-12">
+                <h3 className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#c9a46a]">Cart Summary</h3>
                 
-                <div className="space-y-6 max-h-[300px] overflow-y-auto pr-4 scrollbar-hide">
+                <div className="space-y-8 max-h-[400px] overflow-y-auto pr-4 scrollbar-hide">
                   {items.map(item => (
-                    <div key={item.product.id} className="flex gap-4 items-center">
-                      <img 
-                        src={item.product.images?.[0]?.storage_url || '/images/placeholder.jpg'} 
-                        className="w-16 h-16 rounded-xl object-cover border border-gold-500/20" 
-                        alt=""
-                      />
-                      <div className="space-y-1 flex-1">
-                        <p className="text-sm font-bold text-white leading-tight">{item.product.name}</p>
-                        <p className="text-[10px] uppercase text-navy-500 tracking-widest">Qty: {item.quantity}</p>
+                    <div key={item.product.id} className="flex gap-6 items-center">
+                      <div className="w-16 h-20 bg-[#0d1220] border border-white/5 rounded-[4px] overflow-hidden">
+                        <img 
+                          src={item.product.images?.[0]?.storage_url || '/images/placeholder.jpg'} 
+                          className="w-full h-full object-cover opacity-80" 
+                          alt=""
+                        />
                       </div>
-                      <div className="text-sm font-bold text-gold-500">
+                      <div className="flex-1 space-y-1">
+                        <p className="text-[14px] font-bold text-white leading-tight">{item.product.name}</p>
+                        <p className="text-[10px] uppercase text-[#a0a8b8] tracking-[0.2em]">Qty: {item.quantity}</p>
+                      </div>
+                      <div className="text-[14px] font-serif text-white">
                          {formatCurrency(calcDiscount(item.product.price, item.product.discount_type, item.product.discount_value) * item.quantity)}
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="pt-6 border-t border-navy-800 space-y-4">
-                  <div className="flex justify-between text-xs text-navy-400">
-                     <span className="uppercase font-bold tracking-widest">Subtotal</span>
+                <div className="pt-8 border-t border-white/5 space-y-4">
+                  <div className="flex justify-between text-[12px] text-[#a0a8b8]">
+                     <span className="uppercase font-bold tracking-[0.2em]">Subtotal</span>
                      <span>{formatCurrency(cartTotal)}</span>
                   </div>
                   {vatRate > 0 && (
-                     <div className="flex justify-between text-xs text-navy-400">
-                        <span className="uppercase font-bold tracking-widest">VAT ({vatRate}%)</span>
+                     <div className="flex justify-between text-[12px] text-[#a0a8b8]">
+                        <span className="uppercase font-bold tracking-[0.2em]">VAT ({vatRate}%)</span>
                         <span>{formatCurrency(cartTotal * (vatRate/100))}</span>
                      </div>
                   )}
-                  <div className="flex justify-between text-lg font-serif pt-4 border-t border-navy-800/50">
-                     <span className="text-gold-500">Total Estimate</span>
-                     <span className="text-white tracking-widest">
+                  <div className="flex justify-between text-[20px] font-serif pt-6 border-t border-white/10">
+                     <span className="text-[#c9a46a]">Total Estimate</span>
+                     <span className="text-white tracking-tight">
                         {formatCurrency(totalInclVat)}
                      </span>
                   </div>
                 </div>
               </div>
-            </Card>
+            </ScrollReveal>
 
-            <div className="space-y-10">
-               <h3 className="section-label">Business Assurance</h3>
-               {[
-                 { icon: <Package size={20} />, title: "Artisan Packing", desc: "Expertly protected for nationwide shipping within Namibia." },
-                 { icon: <PhoneCall size={20} />, title: "Consultation", desc: "We contact you to verify dimensions and finishing details." },
-                 { icon: <Truck size={20} />, title: "Windhoek Delivery", desc: "Professional business-to-home installation included." },
-               ].map((item, idx) => (
-                 <div key={idx} className="flex gap-6 group">
-                   <div className="w-14 h-14 bg-navy-900 border border-navy-800 rounded-2xl flex items-center justify-center shrink-0 text-gold-500 transition-all group-hover:bg-gold-500/10 group-hover:border-gold-500/30">
-                     {item.icon}
+            <ScrollReveal delay={0.3}>
+              <div className="space-y-12">
+                 <h3 className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#c9a46a]">Assurance</h3>
+                 {[
+                   { icon: <Package size={16} />, title: "Artisan Packing", desc: "Expertly protected for nationwide shipping within Namibia." },
+                   { icon: <PhoneCall size={16} />, title: "Consultation", desc: "We contact you to verify dimensions and finishing details." },
+                   { icon: <Truck size={16} />, title: "Personal Delivery", desc: "Professional business-to-home installation included." },
+                 ].map((item, idx) => (
+                   <div key={idx} className="flex gap-8 group">
+                     <div className="w-12 h-12 border border-white/5 rounded-full flex items-center justify-center shrink-0 text-[#c9a46a] transition-all group-hover:border-[#c9a46a]/30">
+                       {item.icon}
+                     </div>
+                     <div className="space-y-1">
+                       <h4 className="text-[12px] font-bold uppercase tracking-[0.2em] text-white">{item.title}</h4>
+                       <p className="text-[13px] font-light text-[#a0a8b8] leading-relaxed italic">{item.desc}</p>
+                     </div>
                    </div>
-                   <div className="space-y-1">
-                     <h4 className="text-sm font-bold uppercase tracking-widest text-white">{item.title}</h4>
-                     <p className="text-xs font-light text-navy-500 leading-relaxed italic">{item.desc}</p>
-                   </div>
-                 </div>
-               ))}
-            </div>
+                 ))}
+              </div>
+            </ScrollReveal>
           </div>
         </div>
       </div>
     </div>
   );
 };
+

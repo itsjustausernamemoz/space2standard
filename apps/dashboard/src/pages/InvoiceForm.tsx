@@ -200,18 +200,18 @@ export const InvoiceForm = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
         <div className="lg:col-span-8 space-y-8">
            <div className="dashboard-card space-y-10">
-              <div className="flex justify-between items-center border-b border-navy-800 pb-6">
-                 <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-white">Project Specification</h3>
+              <div className="flex justify-between items-center border-b border-[#ffffff0a] pb-6">
+                 <h3 className="text-[11px] font-bold uppercase tracking-[0.3em] text-white">Project Specification</h3>
                  <button onClick={addLineItem} className="text-[10px] font-bold uppercase tracking-widest text-gold-500 hover:text-white flex items-center gap-2 transition-colors">
                     <Plus size={14} /> Add Piece
                  </button>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-4">
                  {lineItems.map((item, idx) => (
-                   <div key={idx} className="grid grid-cols-12 gap-4 items-end bg-navy-950/40 p-6 rounded-2xl border border-navy-800/50 group hover:border-gold-500/20 transition-all">
+                   <div key={idx} className="grid grid-cols-12 gap-4 items-end bg-white/[0.02] p-6 rounded-[6px] border border-[#ffffff0a] group hover:border-[#c9a46a20] transition-all">
                       <div className="col-span-12 md:col-span-5 space-y-2">
-                         <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1">Piece Description</label>
+                         <label className="text-[9px] font-bold uppercase tracking-widest text-navy-600 ml-1">Piece Description</label>
                          <input 
                            className="input-base" 
                            value={item.product_name} 
@@ -220,7 +220,7 @@ export const InvoiceForm = () => {
                          />
                       </div>
                       <div className="col-span-4 md:col-span-1 space-y-2">
-                         <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1">Qty</label>
+                         <label className="text-[9px] font-bold uppercase tracking-widest text-navy-600 ml-1">Qty</label>
                          <input 
                            type="number" 
                            className="input-base text-center" 
@@ -229,7 +229,7 @@ export const InvoiceForm = () => {
                          />
                       </div>
                       <div className="col-span-8 md:col-span-2 space-y-2">
-                         <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1">Unit Price</label>
+                         <label className="text-[9px] font-bold uppercase tracking-widest text-navy-600 ml-1">Unit Rate</label>
                          <input 
                            type="number" 
                            className="input-base" 
@@ -239,25 +239,25 @@ export const InvoiceForm = () => {
                          />
                       </div>
                       <div className="col-span-10 md:col-span-3 space-y-2">
-                         <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1">Total (N$)</label>
-                         <div className="h-[46px] flex items-center px-4 bg-navy-950 rounded-xl text-xs font-bold text-white border border-navy-800 shadow-inner">
+                         <label className="text-[9px] font-bold uppercase tracking-widest text-navy-600 ml-1">Total (N$)</label>
+                         <div className="h-[46px] flex items-center px-4 bg-navy-black/40 rounded-[4px] text-xs font-bold text-white border border-[#ffffff0a] shadow-inner">
                             {formatCurrency(item.total || 0)}
                          </div>
                       </div>
                       <div className="col-span-2 md:col-span-1 flex justify-center pb-1">
-                         <button onClick={() => removeLineItem(idx)} className="p-3 text-navy-600 hover:text-error hover:bg-error/10 rounded-xl transition-all">
-                            <Trash2 size={18} />
+                         <button onClick={() => removeLineItem(idx)} className="p-3 text-navy-700 hover:text-[#ef4444] hover:bg-[#ef4444]/5 rounded-[4px] transition-all">
+                            <Trash2 size={16} />
                          </button>
                       </div>
                    </div>
                  ))}
                  
                  {lineItems.length === 0 && (
-                   <div className="h-48 border-2 border-navy-800 border-dashed rounded-2xl flex flex-col items-center justify-center gap-4 text-navy-600 italic">
-                      <div className="w-12 h-12 rounded-full bg-navy-900 flex items-center justify-center">
-                        <Plus size={24} />
+                   <div className="h-48 border border-dashed border-[#ffffff1a] rounded-[6px] flex flex-col items-center justify-center gap-4 text-navy-700 italic">
+                      <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
+                        <Plus size={24} className="opacity-40" />
                       </div>
-                      <p className="text-xs">No pieces added to this specification yet.</p>
+                      <p className="text-[10px] uppercase font-bold tracking-widest">No pieces specified for this record</p>
                    </div>
                  )}
               </div>
@@ -266,60 +266,60 @@ export const InvoiceForm = () => {
 
         <div className="lg:col-span-4 space-y-8">
            <div className="dashboard-card space-y-10">
-              <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-white flex items-center gap-2">
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.3em] text-white flex items-center gap-3">
                  <Calculator size={16} className="text-gold-500" /> Artisan Summary
               </h3>
               
-              <div className="space-y-6">
+              <div className="space-y-8">
                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1">Document Format</label>
+                    <label className="text-[9px] font-bold uppercase tracking-widest text-navy-600 ml-1">Document Format</label>
                     <select 
-                      className="input-base" 
+                      className="input-base py-3" 
                       value={formData.type} 
                       onChange={e => setFormData({...formData, type: e.target.value as any})}
                     >
-                      <option value="invoice">Commercial Invoice</option>
+                      <option value="invoice">Commercial Tax Invoice</option>
                       <option value="quotation">Project Quotation</option>
                     </select>
                  </div>
 
                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1">Parent Order Reference</label>
-                    <div className="input-base bg-navy-950/50 text-navy-500 flex items-center gap-2">
-                       < ShieldCheck size={14} />
-                       <span className="text-xs font-mono">{formData.order_id || 'STANDALONE RECORD'}</span>
+                    <label className="text-[9px] font-bold uppercase tracking-widest text-navy-600 ml-1">Inquiry Reference</label>
+                    <div className="input-base bg-white/5 text-navy-600 flex items-center gap-3 border-dashed">
+                       <ShieldCheck size={14} className="opacity-40" />
+                       <span className="text-[11px] font-mono tracking-tighter">{formData.order_id || 'STANDALONE TRANSACTION'}</span>
                     </div>
                  </div>
 
                  <div className="gold-divider !my-10" />
 
                  <div className="space-y-5">
-                    <div className="flex justify-between text-xs">
-                       <span className="text-navy-500 uppercase tracking-widest font-bold">Subtotal</span>
+                    <div className="flex justify-between text-[11px]">
+                       <span className="text-navy-700 uppercase tracking-widest font-bold">Base Valuation</span>
                        <span className="text-white font-bold">{formatCurrency(subtotal)}</span>
                     </div>
-                    <div className="flex justify-between items-center text-xs">
-                       <span className="text-navy-500 uppercase tracking-widest font-bold">Special Discount</span>
+                    <div className="flex justify-between items-center text-[11px]">
+                       <span className="text-navy-700 uppercase tracking-widest font-bold">Special Adjustment</span>
                        <div className="relative">
                           <input 
                             type="number" 
-                            className="w-32 text-right bg-navy-950 border border-navy-800 rounded-lg px-3 py-1.5 text-xs font-bold text-error focus:outline-none focus:border-error transition-all" 
+                            className="w-32 text-right bg-white/5 border border-[#ffffff1a] rounded-[4px] px-3 py-1.5 text-[11px] font-bold text-[#ef4444] focus:outline-none focus:border-[#ef444450] transition-all" 
                             value={formData.discount_total} 
                             onChange={e => setFormData({...formData, discount_total: parseFloat(e.target.value) || 0})}
                           />
-                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-navy-600">N$</span>
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-navy-800">N$</span>
                        </div>
                     </div>
-                    <div className="flex justify-between text-xs">
-                       <span className="text-navy-500 uppercase tracking-widest font-bold">Namibian VAT ({formData.vat_rate}%)</span>
-                       <span className="text-white font-bold">{formatCurrency(vatAmount)}</span>
+                    <div className="flex justify-between text-[11px]">
+                       <span className="text-navy-700 uppercase tracking-widest font-bold">Namibian VAT ({formData.vat_rate}%)</span>
+                       <span className="text-white/60 font-medium">{formatCurrency(vatAmount)}</span>
                     </div>
                     
-                    <div className="pt-8 mt-4 border-t border-navy-800">
+                    <div className="pt-10 mt-6 border-t border-[#ffffff0a]">
                        <div className="flex justify-between items-end">
                           <div className="space-y-1">
-                             <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold-500">Grand Total</span>
-                             <p className="text-[8px] text-navy-600 uppercase font-bold tracking-widest">Payable in N$</p>
+                             <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-gold-500">Grand Total</span>
+                             <p className="text-[8px] text-navy-800 uppercase font-bold tracking-[0.2em]">{formData.type === 'invoice' ? 'Payable Amount' : 'Projected Cost'}</p>
                           </div>
                           <span className="text-3xl font-serif text-white tracking-widest">{formatCurrency(grandTotal)}</span>
                        </div>
@@ -327,10 +327,10 @@ export const InvoiceForm = () => {
                  </div>
               </div>
               
-              <div className="p-6 bg-gold-500/5 rounded-2xl border border-gold-500/10 flex gap-4">
-                 <FileText className="text-gold-500 shrink-0" size={22} strokeWidth={1.5} />
-                 <p className="text-[10px] font-light text-navy-400 leading-relaxed italic">
-                    Finalising this record will permanently archive the specifications in the Artisan Ledger for future PDF generation.
+              <div className="p-6 bg-[#c9a46a08] rounded-[6px] border border-[#c9a46a1a] flex gap-4">
+                 <FileText className="text-gold-500 shrink-0 opacity-60" size={20} strokeWidth={1.5} />
+                 <p className="text-[10px] font-light text-navy-600 leading-relaxed italic">
+                    Finalising this record will permanently archive the specifications in the Artisan Ledger for high-fidelity PDF generation.
                  </p>
               </div>
            </div>

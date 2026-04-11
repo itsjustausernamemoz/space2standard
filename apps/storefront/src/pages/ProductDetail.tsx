@@ -3,13 +3,12 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import type { Product } from '@shared/types';
 import { formatCurrency, calcDiscount } from '@shared/utils';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Truck, ShieldCheck, Hammer, Star } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useStorefrontAuth } from '../contexts/StorefrontAuthContext';
 import { toast } from 'react-hot-toast';
+import { ScrollReveal } from '../components/ScrollReveal';
 
 export const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,7 +33,6 @@ export const ProductDetail = () => {
 
   useEffect(() => {
     async function fetchData() {
-      // 1. Fetch Product
       const { data: pData, error } = await supabase
         .from('products')
         .select(`*, images:product_images(*), product_reviews(*)`)
@@ -49,7 +47,6 @@ export const ProductDetail = () => {
         setProduct(pData);
       }
 
-      // 2. Fetch Global settings
       const { data: sData } = await supabase.from('settings').select('*');
       const vRate = sData?.find(s => s.key === 'vat_rate')?.value;
       if (vRate) setVatRate(parseFloat(vRate));
@@ -61,8 +58,8 @@ export const ProductDetail = () => {
 
   if (loading) {
     return (
-      <div className="pt-40 pb-32 flex items-center justify-center min-h-screen bg-navy-950">
-        <div className="w-16 h-16 border-4 border-gold-500 border-t-transparent rounded-full animate-spin" />
+      <div className="flex items-center justify-center min-h-screen bg-[#060b18]">
+        <div className="w-8 h-8 border-[0.5px] border-[#c9a46a] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -77,7 +74,6 @@ export const ProductDetail = () => {
   
   const displayPrice = vatRate > 0 ? discountedPrice * (1 + vatRate / 100) : discountedPrice;
   const originalPriceInclVat = vatRate > 0 ? product.price * (1 + vatRate / 100) : product.price;
-
   const hasDiscount = discountedPrice < product.price;
 
   const images = product.images && product.images.length > 0 
@@ -97,7 +93,6 @@ export const ProductDetail = () => {
     }
     setSubmittingReview(true);
     
-    // Guests are given an anonymous pseudonym
     const submitName = user ? (reviewName.trim() || 'Anonymous User') : 'Anonymous Guest';
     const submitComment = user ? (reviewComment.trim() || null) : null;
 
@@ -108,7 +103,7 @@ export const ProductDetail = () => {
         customer_name: submitName,
         rating: reviewRating,
         comment: submitComment,
-        is_approved: true // Immediate feedback permitted
+        is_approved: true 
       })
       .select()
       .single();
@@ -130,47 +125,51 @@ export const ProductDetail = () => {
   };
 
   return (
-    <div className="pt-40 pb-32 min-h-screen bg-navy-950">
+    <div className="pt-[56px] min-h-screen bg-[#060b18]">
       <div className="container mx-auto px-6">
-        <Link to="/products" className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-gold-500 hover:text-white transition-colors mb-12">
-          <ChevronLeft size={16} />
-          Back to Artisan Collection
-        </Link>
+        <header className="py-12">
+          <Link to="/products" className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#c9a46a] hover:text-white transition-colors">
+            <ChevronLeft size={14} />
+            Artisan Collection
+          </Link>
+        </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-24">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-start">
           {/* Image Gallery */}
           <div className="space-y-8">
-            <div className="aspect-[4/5] relative rounded-2xl overflow-hidden bg-navy-900 border border-gold-500/10 shadow-2xl">
-              <AnimatePresence mode="wait">
-                <motion.img
-                  key={images[activeImageIndex].id}
-                  src={images[activeImageIndex].storage_url}
-                  alt={product.name}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="w-full h-full object-cover"
-                />
-              </AnimatePresence>
-              
-              {images.length > 1 && (
-                <>
-                  <button 
-                    onClick={() => setActiveImageIndex(prev => (prev > 0 ? prev - 1 : images.length - 1))}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-navy-950/20 backdrop-blur-md rounded-full text-white hover:bg-navy-950/60 transition-all border border-white/10"
-                  >
-                    <ChevronLeft size={24} />
-                  </button>
-                  <button 
-                    onClick={() => setActiveImageIndex(prev => (prev < images.length - 1 ? prev + 1 : 0))}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-navy-950/20 backdrop-blur-md rounded-full text-white hover:bg-navy-950/60 transition-all border border-white/10"
-                  >
-                    <ChevronRight size={24} />
-                  </button>
-                </>
-              )}
-            </div>
+            <ScrollReveal>
+              <div className="aspect-[4/5] relative rounded-[6px] overflow-hidden bg-[#0d1220] border border-white/5">
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={images[activeImageIndex].id}
+                    src={images[activeImageIndex].storage_url}
+                    alt={product.name}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.8 }}
+                    className="w-full h-full object-cover"
+                  />
+                </AnimatePresence>
+                
+                {images.length > 1 && (
+                  <>
+                    <button 
+                      onClick={() => setActiveImageIndex(prev => (prev > 0 ? prev - 1 : images.length - 1))}
+                      className="absolute left-6 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-[#060b18]/40 backdrop-blur-md rounded-full text-white border border-white/10 hover:bg-white hover:text-[#060b18] transition-all"
+                    >
+                      <ChevronLeft size={20} />
+                    </button>
+                    <button 
+                      onClick={() => setActiveImageIndex(prev => (prev < images.length - 1 ? prev + 1 : 0))}
+                      className="absolute right-6 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-[#060b18]/40 backdrop-blur-md rounded-full text-white border border-white/10 hover:bg-white hover:text-[#060b18] transition-all"
+                    >
+                      <ChevronRight size={20} />
+                    </button>
+                  </>
+                )}
+              </div>
+            </ScrollReveal>
 
             {images.length > 1 && (
               <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
@@ -178,8 +177,8 @@ export const ProductDetail = () => {
                   <button
                     key={img.id}
                     onClick={() => setActiveImageIndex(idx)}
-                    className={`shrink-0 w-24 aspect-square rounded-xl overflow-hidden border-2 transition-all ${
-                      activeImageIndex === idx ? 'border-gold-500 scale-105 shadow-lg' : 'border-transparent opacity-40 hover:opacity-100'
+                    className={`shrink-0 w-20 aspect-square rounded-[4px] overflow-hidden border transition-all ${
+                      activeImageIndex === idx ? 'border-[#c9a46a]' : 'border-transparent opacity-40'
                     }`}
                   >
                     <img src={img.storage_url} alt={`${product.name} thumbnail ${idx}`} className="w-full h-full object-cover" />
@@ -190,145 +189,138 @@ export const ProductDetail = () => {
           </div>
 
           {/* Product Details */}
-          <div className="space-y-12">
-            <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <span className="section-label mb-0">{product.category || 'Luxury Collection'}</span>
-                {product.stock_quantity <= 3 && product.stock_quantity > 0 && (
-                  <Badge variant="walnut" className="bg-gold-500/10 text-gold-500 border-gold-500/30">Limited Stock: {product.stock_quantity} pieces</Badge>
-                )}
-                {product.stock_quantity === 0 && <Badge variant="charcoal">Custom Request Only</Badge>}
-              </div>
-
-              <h1 className="text-5xl md:text-7xl font-serif text-white tracking-tight leading-none">
-                {product.name}
-              </h1>
-
-              {approvedReviews.length > 0 && (
-                <div className="flex items-center gap-3">
-                  <div className="flex gap-1">
-                     {[...Array(5)].map((_, i) => (
-                       <Star 
-                         key={i} 
-                         size={14} 
-                         className={i < Math.round(avgRating) ? "text-gold-500 fill-gold-500" : "text-navy-800"} 
-                       />
-                     ))}
-                  </div>
-                  <span className="text-xs font-bold text-navy-400">{avgRating.toFixed(1)} / 5</span>
-                  <span className="text-xs text-navy-600">({approvedReviews.length} Reviews)</span>
-                </div>
-              )}
-
-              <div className="space-y-2 border-b border-gold-500/10 pb-8">
-                <div className="flex items-baseline gap-6">
-                  <span className="text-4xl font-bold text-white">
-                    {formatCurrency(displayPrice)}
-                  </span>
-                  {hasDiscount && (
-                    <span className="text-xl text-navy-500 line-through">
-                      {formatCurrency(originalPriceInclVat)}
-                    </span>
+          <div className="space-y-16">
+            <ScrollReveal delay={0.1}>
+              <div className="space-y-8">
+                <div className="flex items-center gap-4">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">{product.category || 'Luxury Collection'}</span>
+                  {product.stock_quantity <= 3 && product.stock_quantity > 0 && (
+                    <span className="px-3 py-1 bg-[#c9a46a]/10 text-[#c9a46a] text-[10px] font-bold uppercase tracking-widest rounded-full border border-[#c9a46a]/20">Limited: {product.stock_quantity} left</span>
                   )}
                 </div>
-                {vatRate > 0 && (
-                   <p className="text-xs text-navy-400 font-light italic">Prices are inclusive of {vatRate}% Namibian VAT.</p>
-                )}
-              </div>
-            </div>
 
-            <p className="text-lg font-light text-cream-100/80 leading-relaxed italic max-w-xl">
-              {product.description || 'A timeless addition to any space, meticulously crafted from the finest materials.'}
-            </p>
+                <h1 className="text-[48px] md:text-[64px] font-serif text-white tracking-tight leading-[1.1]">
+                  {product.name}
+                </h1>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-t border-gold-500/10 pt-12">
-              <div className="space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-widest text-gold-500 flex items-center gap-2">
-                  <Hammer size={16} strokeWidth={1.5} /> Materiality
-                </h3>
-                <p className="text-sm font-light text-navy-400 leading-relaxed">
-                  {product.materials || 'Sustainably sourced premium hardwood, traditional oil rub finish, artisan joinery.'}
+                <div className="space-y-4">
+                  <div className="flex items-baseline gap-6">
+                    <span className="text-[32px] font-light text-white tracking-tight">
+                      {formatCurrency(displayPrice)}
+                    </span>
+                    {hasDiscount && (
+                      <span className="text-xl text-[#a0a8b8] line-through font-light opacity-50">
+                        {formatCurrency(originalPriceInclVat)}
+                      </span>
+                    )}
+                  </div>
+                  {vatRate > 0 && (
+                     <p className="text-[12px] text-[#a0a8b8] font-light italic">Inc. {vatRate}% Namibian VAT.</p>
+                  )}
+                </div>
+
+                <p className="text-[17px] font-light text-[#a0a8b8] leading-[1.8] italic max-w-xl">
+                  {product.description || 'A timeless addition to any space, meticulously crafted from the finest materials.'}
                 </p>
               </div>
-              <div className="space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-widest text-gold-500">Specifications</h3>
-                <p className="text-sm font-light text-navy-400 leading-relaxed">
-                  {product.dimensions || 'Approx. 220cm (L) x 100cm (W) x 75cm (H). Bespoke sizing available on request.'}
-                </p>
-              </div>
-            </div>
+            </ScrollReveal>
 
-            <div className="space-y-8 pt-8">
-               <Button onClick={() => addToCart(product)} size="xl" variant="primary" className="w-full bg-gold-600 hover:bg-gold-500 text-white rounded-xl py-6">
-                 Add to Cart
-               </Button>
-               
-               <div className="flex flex-col gap-5 text-[10px] uppercase tracking-[0.2em] font-bold text-navy-500">
-                  <div className="flex items-center gap-3">
-                    <Truck size={14} className="text-gold-500" strokeWidth={2} />
+            <ScrollReveal delay={0.2}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-y border-white/5 py-12">
+                <div className="space-y-4">
+                  <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#c9a46a] flex items-center gap-3">
+                    <Hammer size={14} /> Materiality
+                  </h3>
+                  <p className="text-[14px] font-light text-[#a0a8b8] leading-relaxed">
+                    {product.materials || 'Sustainably sourced premium hardwood, traditional oil rub finish, artisan joinery.'}
+                  </p>
+                </div>
+                <div className="space-y-4">
+                  <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">Specifications</h3>
+                  <p className="text-[14px] font-light text-[#a0a8b8] leading-relaxed">
+                    {product.dimensions || 'Approx. 220cm (L) x 100cm (W) x 75cm (H). Bespoke sizing available.'}
+                  </p>
+                </div>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal delay={0.3}>
+              <div className="space-y-12">
+                <button 
+                  onClick={() => addToCart(product)} 
+                  className="w-full py-5 bg-[#c9a46a] text-[#060b18] rounded-[4px] text-[12px] font-bold uppercase tracking-[0.2em] transition-all hover:bg-white"
+                >
+                  Add to Cart
+                </button>
+                
+                <div className="flex flex-col gap-6 text-[10px] uppercase tracking-[0.25em] font-bold text-[#a0a8b8] opacity-60">
+                  <div className="flex items-center gap-4">
+                    <Truck size={14} className="text-[#c9a46a]" />
                     White-glove nationwide delivery in Namibia
                   </div>
-                  <div className="flex items-center gap-3">
-                    <ShieldCheck size={14} className="text-gold-500" strokeWidth={2} />
-                    Lifetime business craftsmanship guarantee
+                  <div className="flex items-center gap-4">
+                    <ShieldCheck size={14} className="text-[#c9a46a]" />
+                    Lifetime craftsmanship guarantee
                   </div>
-               </div>
-            </div>
+                </div>
+              </div>
+            </ScrollReveal>
           </div>
         </div>
 
         {/* Reviews Section */}
-        <div className="mt-40 border-t border-navy-800 pt-32">
-           <div className="max-w-4xl mx-auto space-y-24">
-              
-              <div className="text-center space-y-4">
-                 <h2 className="text-4xl font-serif text-white">Client Feedback</h2>
-                 <p className="text-lg font-light text-navy-400 italic">Insights from spaces graced by the {product.name}.</p>
-                 
-                 {approvedReviews.length > 0 && (
-                    <div className="flex justify-center items-center gap-4 mt-8">
-                      <div className="flex gap-1">
-                         {[...Array(5)].map((_, i) => (
-                           <Star 
-                             key={i} 
-                             size={24} 
-                             className={i < Math.round(avgRating) ? "text-gold-500 fill-gold-500" : "text-navy-800"} 
-                           />
-                         ))}
-                      </div>
-                      <span className="text-2xl font-bold text-white">{avgRating.toFixed(1)}</span>
-                      <span className="text-sm font-light text-navy-500">({approvedReviews.length} Verified Reviews)</span>
+        <section className="mt-[160px] border-t border-white/5 pt-[120px] pb-[160px]">
+          <ScrollReveal>
+            <div className="max-w-5xl mx-auto">
+              <div className="text-center space-y-8 mb-24">
+                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">Client Feedback</span>
+                <h2 className="text-[40px] md:text-[56px] font-serif text-white tracking-tight">Insights</h2>
+                
+                {approvedReviews.length > 0 && (
+                  <div className="flex justify-center items-center gap-4">
+                    <div className="flex gap-1 text-[#c9a46a]">
+                       {[...Array(5)].map((_, i) => (
+                         <Star 
+                           key={i} 
+                           size={16} 
+                           className={i < Math.round(avgRating) ? "fill-current" : "opacity-20"} 
+                         />
+                       ))}
                     </div>
-                 )}
+                    <span className="text-[18px] font-serif text-white">{avgRating.toFixed(1)}</span>
+                    <span className="text-[12px] font-light text-[#a0a8b8]">({approvedReviews.length} Reviews)</span>
+                  </div>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-start">
                  {/* Testimonial List */}
-                 <div className="space-y-8">
-                    <h3 className="section-label mb-8">Recent Reviews</h3>
+                 <div className="space-y-12">
                     {approvedReviews.length === 0 ? (
-                      <p className="text-sm text-navy-500 italic p-8 bg-navy-900 border border-navy-800 rounded-2xl text-center">There are no reviews for this piece yet. Be the first to share your experience.</p>
+                      <div className="p-12 border border-white/5 rounded-[6px] text-center italic text-[#a0a8b8] font-light">
+                        No reviews yet. Be the first to grace this piece.
+                      </div>
                     ) : (
-                      <div className="space-y-6 max-h-[600px] overflow-y-auto pr-4 scrollbar-hide">
+                      <div className="space-y-12">
                          {approvedReviews.map((review) => (
-                            <div key={review.id} className="p-6 bg-navy-900 border border-navy-800 rounded-2xl space-y-4">
-                               <div className="flex justify-between items-start">
+                            <div key={review.id} className="space-y-4 pb-12 border-b border-white/5 last:border-0">
+                               <div className="flex justify-between items-center">
                                   <div className="space-y-1">
-                                    <p className="text-sm font-bold text-white">{review.customer_name}</p>
-                                    <p className="text-[10px] uppercase tracking-widest text-navy-500">{new Date(review.created_at).toLocaleDateString()}</p>
+                                    <p className="text-[14px] font-bold text-white uppercase tracking-widest">{review.customer_name}</p>
+                                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#a0a8b8]">{new Date(review.created_at).toLocaleDateString()}</p>
                                   </div>
-                                  <div className="flex gap-0.5">
+                                  <div className="flex gap-0.5 text-[#c9a46a]">
                                     {[...Array(5)].map((_, i) => (
                                       <Star 
                                         key={i} 
                                         size={10} 
-                                        className={i < review.rating ? "text-gold-500 fill-gold-500" : "text-navy-800"} 
+                                        className={i < review.rating ? "fill-current" : "opacity-20"} 
                                       />
                                     ))}
                                   </div>
                                </div>
                                {review.comment && (
-                                 <p className="text-sm text-navy-400 leading-relaxed italic">"{review.comment}"</p>
+                                 <p className="text-[15px] text-[#a0a8b8] leading-[1.8] italic font-light">"{review.comment}"</p>
                                )}
                             </div>
                          ))}
@@ -337,36 +329,38 @@ export const ProductDetail = () => {
                  </div>
 
                  {/* Submission Form */}
-                 <div className="space-y-8">
-                    <h3 className="section-label mb-8">{user ? 'Leave a Review' : 'Rate this Piece'}</h3>
-                    <form onSubmit={handleReviewSubmit} className="space-y-6 p-8 border border-gold-500/10 rounded-2xl bg-navy-900/50 backdrop-blur-sm">
+                 <div className="p-12 border border-white/10 rounded-[6px] bg-white/[0.02]">
+                    <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#c9a46a] mb-12">
+                      {user ? 'Leave a Review' : 'Rate this Piece'}
+                    </h3>
+                    <form onSubmit={handleReviewSubmit} className="space-y-10">
                        {user && (
                          <div className="space-y-2">
-                           <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1">Your Name</label>
+                           <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a0a8b8]">Your Name</label>
                            <input 
                              type="text" 
                              required
-                             className="w-full bg-navy-950 border border-navy-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-gold-500 transition-colors"
-                             placeholder="How should we address you?"
+                             className="input-apple"
+                             placeholder="Johannes Müller"
                              value={reviewName}
                              onChange={(e) => setReviewName(e.target.value)}
                            />
                          </div>
                        )}
 
-                       <div className="space-y-2">
-                         <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1">Overall Rating</label>
-                         <div className="flex gap-2">
+                       <div className="space-y-4">
+                         <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a0a8b8]">Overall Rating</label>
+                         <div className="flex gap-3">
                            {[1, 2, 3, 4, 5].map((star) => (
                              <button
                                key={star}
                                type="button"
                                onClick={() => setReviewRating(star)}
-                               className="p-2 hover:scale-110 transition-transform focus:outline-none"
+                               className="transition-transform hover:scale-110 focus:outline-none"
                              >
                                <Star 
                                  size={24} 
-                                 className={star <= reviewRating ? "text-gold-500 fill-gold-500 drop-shadow-[0_0_10px_rgba(193,155,58,0.5)]" : "text-navy-800"} 
+                                 className={star <= reviewRating ? "text-[#c9a46a] fill-current" : "text-white/10"} 
                                />
                              </button>
                            ))}
@@ -375,33 +369,35 @@ export const ProductDetail = () => {
 
                        {user ? (
                          <div className="space-y-2">
-                           <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1">Your Experience (Optional)</label>
+                           <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a0a8b8]">Your Experience</label>
                            <textarea 
-                             className="w-full bg-navy-950 border border-navy-800 text-white rounded-xl px-4 py-3 h-32 resize-none focus:outline-none focus:border-gold-500 transition-colors"
-                             placeholder="Share your thoughts on the craftsmanship and materiality..."
+                             className="input-apple h-32 resize-none"
+                             placeholder="Share your thoughts on craftsmanship..."
                              value={reviewComment}
                              onChange={(e) => setReviewComment(e.target.value)}
                            />
                          </div>
                        ) : (
-                         <p className="text-xs text-navy-500 italic px-2">
-                           You are rating as a Guest. To write a detailed review, please <Link to="/auth" className="text-gold-500 hover:underline">sign in</Link>.
+                         <p className="text-[12px] text-[#a0a8b8] italic font-light">
+                           Login to write a detailed review. Guests can only submit ratings.
                          </p>
                        )}
 
-                       <Button 
+                       <button 
                          type="submit" 
                          disabled={submittingReview} 
-                         className="w-full bg-gold-600 hover:bg-gold-500 text-navy-950 font-bold py-4 rounded-xl"
+                         className="btn-apple-cta w-full py-4 shadow-sm"
                        >
-                         {submittingReview ? 'Submitting...' : user ? 'Post Review' : 'Submit Rating'}
-                       </Button>
+                         {submittingReview ? 'Submitting...' : 'Submit Feedback'}
+                       </button>
                     </form>
                  </div>
               </div>
-           </div>
-        </div>
+            </div>
+          </ScrollReveal>
+        </section>
       </div>
     </div>
   );
 };
+

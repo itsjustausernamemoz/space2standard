@@ -16,6 +16,7 @@ import { InvoiceForm } from './pages/InvoiceForm';
 import { Inventory } from './pages/Inventory';
 import { Settings } from './pages/Settings';
 import { Messages } from './pages/Messages';
+import { Clients } from './pages/Clients';
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -77,6 +78,7 @@ function App() {
               <Route path="/gallery" element={<Layout><Gallery /></Layout>} />
               <Route path="/categories" element={<Layout><Categories /></Layout>} />
               <Route path="/products" element={<Layout><Products /></Layout>} />
+              <Route path="/clients" element={<Layout><Clients /></Layout>} />
               <Route path="/products/new" element={<Layout><ProductForm /></Layout>} />
               <Route path="/products/:id/edit" element={<Layout><ProductForm /></Layout>} />
               <Route path="/orders" element={<Layout><Orders /></Layout>} />
