@@ -153,6 +153,7 @@ create policy "Admin full access order items"
 create table if not exists documents (
   id              uuid primary key default gen_random_uuid(),
   order_id        uuid references orders(id) on delete set null,
+  client_id       uuid references clients(id) on delete set null,
   type            text check (type in ('invoice', 'quotation')) not null,
   line_items      jsonb not null default '[]',
   subtotal        numeric(10,2) not null,

@@ -20,26 +20,51 @@ export const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 10;
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    const timer = setTimeout(() => {
+      fetchProducts(0, searchTerm);
+      setCurrentPage(0);
+    }, 500);
 
-  async function fetchProducts() {
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const fetchProducts = async (page: number, search: string) => {
     setLoading(true);
-    const { data, error } = await supabase
+    const from = page * itemsPerPage;
+    const to = from + itemsPerPage - 1;
+
+    let query = supabase
       .from('products')
-      .select('*, images:product_images(*), category_rel:categories(name)')
-      .order('created_at', { ascending: false });
+      .select('*, images:product_images(*), category_rel:categories(name)', { count: 'exact' });
+
+    if (search) {
+      // Use or() for multiple field search in Supabase
+      query = query.or(`name.ilike.%${search}%, category.ilike.%${search}%`);
+    }
+
+    const { data, count, error } = await query
+      .order('created_at', { ascending: false })
+      .range(from, to);
 
     if (error) {
-      toast.error('Failed to fetch products');
+      toast.error('Failed to fetch artisanal pieces');
       console.error(error);
     } else {
       setProducts(data || []);
+      setTotalItems(count || 0);
     }
     setLoading(false);
-  }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    fetchProducts(newPage, searchTerm);
+  };
 
   const toggleVisibility = async (product: Product) => {
     const { error } = await supabase
@@ -48,34 +73,28 @@ export const Products = () => {
       .eq('id', product.id);
 
     if (error) {
-       toast.error('Failed to update visibility');
+      toast.error('Failed to update visibility');
     } else {
-       setProducts(products.map(p => p.id === product.id ? { ...p, is_published: !product.is_published } : p));
-       toast.success(`${product.name} ${!product.is_published ? 'published' : 'hidden'}`);
+      toast.success(product.is_published ? 'Piece archived' : 'Piece published');
+      fetchProducts(currentPage, searchTerm);
     }
   };
 
   const deleteProduct = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this product? This action cannot be undone.')) return;
-
+    if (!window.confirm('Are you sure you want to discard this artisanal piece?')) return;
+    
     const { error } = await supabase
       .from('products')
       .delete()
       .eq('id', id);
 
     if (error) {
-      toast.error('Failed to delete product');
+      toast.error('Failed to remove piece');
     } else {
-      setProducts(products.filter(p => p.id !== id));
-      toast.success('Product deleted successfully');
+      toast.success('Piece removed from collection');
+      fetchProducts(currentPage, searchTerm);
     }
   };
-
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.category_rel?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.category?.toLowerCase().includes(searchTerm.toLowerCase()) // Fallback for old data
-  );
 
   return (
     <div className="space-y-12">
@@ -105,7 +124,7 @@ export const Products = () => {
            />
         </div>
         <div className="bg-charcoal-800 border border-charcoal-700/50 rounded-lg px-4 py-2 text-xs font-bold uppercase tracking-widest text-charcoal-400">
-           {filteredProducts.length} Total Pieces
+           {totalItems} Total Pieces
         </div>
       </div>
 
@@ -130,8 +149,8 @@ export const Products = () => {
                     <td colSpan={6} className="px-8 py-8 h-20 bg-charcoal-900/50" />
                   </tr>
                 ))
-              ) : filteredProducts.length > 0 ? (
-                filteredProducts.map((p) => {
+              ) : products.length > 0 ? (
+                products.map((p) => {
                   const primaryImage = p.images?.find(img => img.is_primary)?.storage_url || '/images/placeholder.jpg';
                   return (
                     <tr key={p.id} className="group hover:bg-charcoal-800/30 transition-colors">
@@ -188,7 +207,7 @@ export const Products = () => {
               ) : (
                 <tr>
                   <td colSpan={6} className="px-8 py-20 text-center text-charcoal-500 font-serif italic text-xl">
-                    No products found matching your search.
+                    No products found in this repository.
                   </td>
                 </tr>
               )}
@@ -198,10 +217,22 @@ export const Products = () => {
         
         {/* Pagination Placeholder */}
         <div className="bg-charcoal-950/50 px-8 py-4 border-t border-charcoal-800 flex justify-between items-center text-[10px] uppercase font-bold tracking-widest text-charcoal-600">
-           <span>Showing {filteredProducts.length} of {products.length} products</span>
+           <span>Showing page {currentPage + 1} of {Math.ceil(totalItems / itemsPerPage)} ({totalItems} total)</span>
            <div className="flex gap-4">
-              <button className="flex items-center gap-1 opacity-50"><ChevronLeft size={14}/> Previous</button>
-              <button className="flex items-center gap-1">Next <ChevronRight size={14}/></button>
+              <button 
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 0 || loading}
+                className="flex items-center gap-1 disabled:opacity-30 disabled:cursor-not-allowed hover:text-white transition-colors"
+              >
+                <ChevronLeft size={14}/> Previous
+              </button>
+              <button 
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={(currentPage + 1) * itemsPerPage >= totalItems || loading}
+                className="flex items-center gap-1 disabled:opacity-30 disabled:cursor-not-allowed hover:text-white transition-colors"
+              >
+                Next <ChevronRight size={14}/>
+              </button>
            </div>
         </div>
       </div>

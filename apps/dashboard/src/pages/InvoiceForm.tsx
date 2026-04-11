@@ -23,11 +23,15 @@ export const InvoiceForm = () => {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   
+  const [clients, setClients] = useState<any[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
+  
   const [formData, setFormData] = useState({
     type: (searchParams.get('type') as 'invoice' | 'quotation') || 'invoice',
     order_id: orderId || '',
     vat_rate: 15,
-    discount_total: 0
+    discount_total: 0,
+    client_id: ''
   });
 
   const [lineItems, setLineItems] = useState<any[]>([]);
@@ -42,6 +46,10 @@ export const InvoiceForm = () => {
       if (vat) {
         setFormData(prev => ({ ...prev, vat_rate: parseFloat(vat) }));
       }
+
+      // 2. Fetch Clients for selection
+      const { data: clientList } = await supabase.from('clients').select('id, full_name, email');
+      setClients(clientList || []);
 
       if (isEdit && id) {
         await fetchInvoice(id);
@@ -71,14 +79,16 @@ export const InvoiceForm = () => {
         type: data.type,
         order_id: data.order_id || '',
         vat_rate: data.vat_rate,
-        discount_total: data.discount_total || 0
+        discount_total: data.discount_total || 0,
+        client_id: data.client_id || ''
       });
       setLineItems(data.line_items || []);
+      setSelectedClientId(data.client_id || '');
     }
   }
 
   async function fetchOrderDetails(oid: string) {
-    const { data, error } = await supabase
+    const { data: orderData, error } = await supabase
       .from('orders')
       .select(`*, items:order_items(*)`)
       .eq('id', oid)
@@ -86,8 +96,9 @@ export const InvoiceForm = () => {
 
     if (error) {
       toast.error('Failed to load order details');
-    } else if (data) {
-      const items = (data.items || []).map((item: any) => ({
+    } else if (orderData) {
+      // 1. Map order items correctly
+      const items = (orderData.items || []).map((item: any) => ({
         product_id: item.product_id,
         product_name: item.product_name_snapshot,
         quantity: item.quantity,
@@ -97,6 +108,23 @@ export const InvoiceForm = () => {
       }));
       setLineItems(items);
       setFormData(prev => ({ ...prev, order_id: oid }));
+      
+      // 2. Identify and link the artisan client automatically
+      // Use email matching because the client must exist in the ledger (via DB trigger)
+      const { data: clientRecord } = await supabase
+        .from('clients')
+        .select('id, full_name')
+        .eq('email', orderData.customer_email)
+        .single();
+
+      if (clientRecord) {
+        setSelectedClientId(clientRecord.id);
+        setFormData(prev => ({ ...prev, client_id: clientRecord.id }));
+        toast.success(`Automatically linked to: ${clientRecord.full_name}`);
+      } else {
+        toast.error('Corresponding artisan client not found in portfolio');
+      }
+      
       toast.success('Inquiry pieces imported successfully');
     }
   }
@@ -114,14 +142,14 @@ export const InvoiceForm = () => {
     newItems[index] = { ...newItems[index], [field]: value };
     
     if (field === 'quantity' || field === 'unit_price') {
-      newItems[index].total = newItems[index].quantity * newItems[index].unit_price;
+      newItems[index].total = (newItems[index].quantity || 0) * (newItems[index].unit_price || 0);
     }
     
     setLineItems(newItems);
   };
 
   // Calculations
-  const subtotal = lineItems.reduce((sum, item) => sum + (item.total || 0), 0);
+  const subtotal = lineItems.reduce((sum: number, item: any) => sum + (item.total || 0), 0);
   const vatAmount = (subtotal - formData.discount_total) * (formData.vat_rate / 100);
   const grandTotal = subtotal - formData.discount_total + vatAmount;
 
@@ -136,6 +164,7 @@ export const InvoiceForm = () => {
 
     const payload = {
       ...formData,
+      client_id: selectedClientId || null,
       line_items: lineItems,
       subtotal,
       vat_amount: vatAmount,
@@ -155,6 +184,20 @@ export const InvoiceForm = () => {
           .from('documents')
           .insert(payload);
         if (error) throw error;
+        
+        // --- ORDER PIPELINE STATUS LOGIC ---
+        if (formData.order_id) {
+          let newStatus = '';
+          if (formData.type === 'quotation') {
+             newStatus = 'pending';
+          } else if (formData.type === 'invoice') {
+             newStatus = 'completed';
+          }
+          
+          if (newStatus) {
+            await supabase.from('orders').update({ status: newStatus }).eq('id', formData.order_id);
+          }
+        }
       }
 
       toast.success(isEdit ? 'Ledger record updated' : 'Professional document issued');
@@ -208,7 +251,7 @@ export const InvoiceForm = () => {
               </div>
 
               <div className="space-y-4">
-                 {lineItems.map((item, idx) => (
+                 {lineItems.map((item: any, idx: number) => (
                    <div key={idx} className="grid grid-cols-12 gap-4 items-end bg-white/[0.02] p-6 rounded-[6px] border border-[#ffffff0a] group hover:border-[#c9a46a20] transition-all">
                       <div className="col-span-12 md:col-span-5 space-y-2">
                          <label className="text-[9px] font-bold uppercase tracking-widest text-navy-600 ml-1">Piece Description</label>
@@ -219,11 +262,11 @@ export const InvoiceForm = () => {
                            placeholder="e.g. Handcrafted Oak Mirror Frame..."
                          />
                       </div>
-                      <div className="col-span-4 md:col-span-1 space-y-2">
+                      <div className="col-span-4 md:col-span-2 space-y-2">
                          <label className="text-[9px] font-bold uppercase tracking-widest text-navy-600 ml-1">Qty</label>
                          <input 
                            type="number" 
-                           className="input-base text-center" 
+                           className="input-base text-center pr-3" 
                            value={item.quantity} 
                            onChange={e => updateLineItem(idx, 'quantity', parseInt(e.target.value))} 
                          />
@@ -238,7 +281,7 @@ export const InvoiceForm = () => {
                            onChange={e => updateLineItem(idx, 'unit_price', parseFloat(e.target.value))} 
                          />
                       </div>
-                      <div className="col-span-10 md:col-span-3 space-y-2">
+                      <div className="col-span-10 md:col-span-2 space-y-2">
                          <label className="text-[9px] font-bold uppercase tracking-widest text-navy-600 ml-1">Total (N$)</label>
                          <div className="h-[46px] flex items-center px-4 bg-navy-black/40 rounded-[4px] text-xs font-bold text-white border border-[#ffffff0a] shadow-inner">
                             {formatCurrency(item.total || 0)}
@@ -271,6 +314,20 @@ export const InvoiceForm = () => {
               </h3>
               
               <div className="space-y-8">
+                 <div className="space-y-2">
+                    <label className="text-[9px] font-bold uppercase tracking-widest text-navy-600 ml-1">Artisan Client</label>
+                    <select 
+                      className="input-base py-3" 
+                      value={selectedClientId}
+                      onChange={e => setSelectedClientId(e.target.value)}
+                    >
+                       <option value="">Select a Client...</option>
+                       {clients.map(c => (
+                         <option key={c.id} value={c.id}>{c.full_name} ({c.email})</option>
+                       ))}
+                    </select>
+                 </div>
+
                  <div className="space-y-2">
                     <label className="text-[9px] font-bold uppercase tracking-widest text-navy-600 ml-1">Document Format</label>
                     <select 

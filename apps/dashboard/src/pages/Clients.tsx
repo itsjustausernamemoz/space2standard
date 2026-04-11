@@ -10,10 +10,14 @@ import {
   ExternalLink,
   History,
   TrendingUp,
-  CreditCard
+  CreditCard,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { formatCurrency, formatDate } from '@shared/utils';
 import { toast } from 'react-hot-toast';
+import { motion } from 'framer-motion';
 
 interface Client {
   id: string;
@@ -29,52 +33,83 @@ export const Clients = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 6;
+  
+  // Registration Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newClient, setNewClient] = useState({
+    full_name: '',
+    email: '',
+    phone: '',
+    address: ''
+  });
 
   useEffect(() => {
-    fetchClients();
-  }, []);
+    const timer = setTimeout(() => {
+      fetchClients(0, searchTerm);
+      setCurrentPage(0);
+    }, 500);
 
-  async function fetchClients() {
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  async function fetchClients(page: number, search: string) {
     setLoading(true);
-    
-    // 1. Fetch clients
-    const { data: clientsData, error: clientsError } = await supabase
-      .from('clients')
-      .select('*')
-      .order('full_name');
+    const from = page * itemsPerPage;
+    const to = from + itemsPerPage - 1;
 
-    if (clientsError) {
-      if (clientsError.code === '42P01') {
+    let query = supabase
+      .from('clients')
+      .select('*', { count: 'exact' });
+
+    if (search) {
+      query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
+    }
+
+    const { data, count, error } = await query
+      .order('full_name')
+      .range(from, to);
+
+    if (error) {
+      if (error.code === '42P01') {
          await syncClientsFromOrders();
          return;
       }
-      toast.error('Failed to fetch clients');
+      toast.error('Failed to fetch client portfolio');
       setLoading(false);
       return;
     }
 
-    // 2. Fetch all invoices to calculate revenue
-    const { data: docs } = await supabase
-      .from('documents')
-      .select('grand_total, orders!inner(customer_email)')
-      .eq('type', 'invoice');
-
-    const revenueMap: Record<string, number> = {};
-    docs?.forEach(doc => {
-      const email = doc.orders?.customer_email;
-      if (email) {
-        revenueMap[email] = (revenueMap[email] || 0) + (doc.grand_total || 0);
-      }
-    });
-
-    const clientsWithRevenue = (clientsData || []).map(c => ({
-      ...c,
-      total_revenue: revenueMap[c.email] || 0
-    }));
-
-    setClients(clientsWithRevenue);
+    setClients(data || []);
+    setTotalItems(count || 0);
     setLoading(false);
   }
+
+  const handleRegisterClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newClient.full_name || !newClient.email) {
+      toast.error('Identity and Communication channels are required');
+      return;
+    }
+
+    const { error } = await supabase.from('clients').insert([newClient]);
+    
+    if (error) {
+      toast.error(error.message || 'Error registering artisan client');
+    } else {
+      toast.success('Artisan client registered in portfolio');
+      setIsModalOpen(false);
+      setNewClient({ full_name: '', email: '', phone: '', address: '' });
+      fetchClients(currentPage, searchTerm);
+    }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    fetchClients(newPage, searchTerm);
+  };
 
   async function syncClientsFromOrders() {
     toast.loading('Initialising artisan client ledger...');
@@ -82,9 +117,9 @@ export const Clients = () => {
     
     if (orders && orders.length > 0) {
       // Deduplicate by email
-      const uniqueClients = Array.from(new Map(orders.map(o => [o.customer_email, o])).values());
+      const uniqueClients = Array.from(new Map(orders.map((o: any) => [o.customer_email, o])).values());
       
-      const clientPayloads = uniqueClients.map(o => ({
+      const clientPayloads = uniqueClients.map((o: any) => ({
         full_name: o.customer_name,
         email: o.customer_email,
         phone: o.customer_phone,
@@ -95,7 +130,7 @@ export const Clients = () => {
       if (error) {
         console.error('Sync error:', error);
       } else {
-        fetchClients();
+        fetchClients(0, '');
       }
     } else {
       setClients([]);
@@ -104,12 +139,6 @@ export const Clients = () => {
     toast.dismiss();
   }
 
-  const filteredClients = clients.filter(c => 
-    c.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (c.phone && c.phone.includes(searchTerm))
-  );
-
   return (
     <div className="space-y-12">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -117,7 +146,10 @@ export const Clients = () => {
           <h1 className="text-3xl font-serif text-white tracking-tight">Client Portfolio</h1>
           <p className="text-navy-500 text-sm italic font-light">Managing relationships and artisan specifications.</p>
         </div>
-        <button className="btn-dashboard-primary flex items-center gap-2">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="btn-dashboard-primary flex items-center gap-2"
+        >
            <Plus size={18} />
            Register Client
         </button>
@@ -131,7 +163,7 @@ export const Clients = () => {
             </div>
             <div>
                <p className="text-[10px] font-bold uppercase tracking-widest text-navy-600 mb-1">Active Accounts</p>
-               <h4 className="text-xl font-bold text-white">{clients.length}</h4>
+               <h4 className="text-xl font-bold text-white">{totalItems}</h4>
             </div>
          </div>
          <div className="dashboard-card bg-navy-900 border-[#ffffff0a] flex gap-5 items-center">
@@ -149,10 +181,73 @@ export const Clients = () => {
             </div>
             <div>
                <p className="text-[10px] font-bold uppercase tracking-widest text-navy-600 mb-1">Portfolio Valuation</p>
-               <h4 className="text-xl font-bold text-white">{formatCurrency(clients.reduce((s, c) => s + (c.total_revenue || 0), 0))}</h4>
+               <h4 className="text-xl font-bold text-white">Calculated In Ledger</h4>
             </div>
          </div>
       </div>
+
+      {/* Add Client Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-black/80 backdrop-blur-sm">
+           <motion.div 
+             initial={{ opacity: 0, scale: 0.95 }}
+             animate={{ opacity: 1, scale: 1 }}
+             className="dashboard-card max-w-lg w-full space-y-8"
+           >
+              <div className="flex justify-between items-center">
+                 <h2 className="text-xl font-serif text-white uppercase tracking-widest">Register Artisan Client</h2>
+                 <button onClick={() => setIsModalOpen(false)} className="text-navy-500 hover:text-white transition-colors">
+                    <Plus size={24} className="rotate-45" />
+                 </button>
+              </div>
+
+              <form onSubmit={handleRegisterClient} className="space-y-6">
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-navy-600">Full Legal Name</label>
+                    <input 
+                      className="input-base" 
+                      placeholder="e.g. Alexander Sterling" 
+                      value={newClient.full_name}
+                      onChange={e => setNewClient({...newClient, full_name: e.target.value})}
+                    />
+                 </div>
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-navy-600">Email Specification</label>
+                    <input 
+                      type="email"
+                      className="input-base" 
+                      placeholder="alexander@standard.com" 
+                      value={newClient.email}
+                      onChange={e => setNewClient({...newClient, email: e.target.value})}
+                    />
+                 </div>
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-bold uppercase tracking-widest text-navy-600">Contact Number</label>
+                       <input 
+                         className="input-base" 
+                         placeholder="+264 81..." 
+                         value={newClient.phone}
+                         onChange={e => setNewClient({...newClient, phone: e.target.value})}
+                       />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-bold uppercase tracking-widest text-navy-600">Location</label>
+                       <input 
+                         className="input-base" 
+                         placeholder="Windhoek, Namibia" 
+                         value={newClient.address}
+                         onChange={e => setNewClient({...newClient, address: e.target.value})}
+                       />
+                    </div>
+                 </div>
+                 <button type="submit" className="btn-dashboard-primary w-full py-4 tracking-[0.2em] font-bold">
+                    Add to Portfolio
+                 </button>
+              </form>
+           </motion.div>
+        </div>
+      )}
 
       {/* Toolbar */}
       <div className="flex gap-4 items-center">
@@ -174,8 +269,8 @@ export const Clients = () => {
           [1,2,3,4].map(i => (
              <div key={i} className="h-48 bg-navy-900/40 animate-pulse rounded-[6px]" />
           ))
-        ) : filteredClients.length > 0 ? (
-          filteredClients.map((client) => (
+        ) : clients.length > 0 ? (
+          clients.map((client) => (
             <div key={client.id} className="dashboard-card group hover:border-[#c9a46a40] transition-all p-8 relative overflow-hidden">
                {/* Background Accent */}
                <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
@@ -237,6 +332,29 @@ export const Clients = () => {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalItems > itemsPerPage && (
+        <div className="flex justify-between items-center bg-white/[0.02] border border-[#ffffff0a] px-8 py-4 rounded-[6px] text-[10px] font-bold uppercase tracking-widest text-navy-600">
+           <span>Portfolio page {currentPage + 1} of {Math.ceil(totalItems / itemsPerPage)} ({totalItems} records)</span>
+           <div className="flex gap-6">
+              <button 
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 0 || loading}
+                className="flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed hover:text-white transition-colors"
+              >
+                <ChevronLeft size={14}/> Previous
+              </button>
+              <button 
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={(currentPage + 1) * itemsPerPage >= totalItems || loading}
+                className="flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed hover:text-white transition-colors"
+              >
+                Next <ChevronRight size={14}/>
+              </button>
+           </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -8,113 +8,129 @@ import {
   formatDate
 } from '@shared/utils';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
+import { cn } from '@/lib/utils';
 import { 
   Search, 
   Eye, 
   Mail, 
   Phone, 
   Clock,
-  FileText
+  FileText,
+  ShieldCheck,
+  History,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
 
 export const Orders = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'new' | 'processed'>('new');
+  const [activeTab, setActiveTab] = useState<'new' | 'pending' | 'completed'>('new');
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 8;
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    const timer = setTimeout(() => {
+      fetchOrders(0, searchTerm, activeTab);
+      setCurrentPage(0);
+    }, 500);
 
-  async function fetchOrders() {
+    return () => clearTimeout(timer);
+  }, [searchTerm, activeTab]);
+
+  const fetchOrders = async (page: number, search: string, tab: string) => {
     setLoading(true);
-    const { data, error } = await supabase
+    const from = page * itemsPerPage;
+    const to = from + itemsPerPage - 1;
+
+    let query = supabase
       .from('orders')
-      .select(`*, items:order_items(*)`)
-      .order('created_at', { ascending: false });
+      .select(`*, items:order_items(*)`, { count: 'exact' });
+
+    // Filter by Tab (New vs Pending vs Completed)
+    query = query.eq('status', tab);
+
+    if (search) {
+      query = query.or(`customer_name.ilike.%${search}%,customer_email.ilike.%${search}%,order_number.ilike.%${search}%,id.ilike.%${search}%`);
+    }
+
+    const { data, count, error } = await query
+      .order('created_at', { ascending: false })
+      .range(from, to);
 
     if (error) {
-      toast.error('Failed to fetch orders');
+      toast.error('Failed to fetch artisanal inquiries');
     } else {
       setOrders(data || []);
+      setTotalItems(count || 0);
     }
     setLoading(false);
-  }
+  };
 
-  const updateStatus = async (id: string, status: OrderStatus) => {
-    // If transitioning to completed, atomize the update via RPC to decrement inventory
-    if (status === 'completed') {
-       if (!window.confirm("Fulfilling this order will permanently decrement artisan materials. Proceed?")) return;
-       const { error } = await supabase.rpc('mark_order_completed', { target_order_id: id });
-       if (error) {
-         toast.error('Fulfillment synchronization failed');
-         return;
-       }
-       setOrders(orders.map(o => o.id === id ? { ...o, status } : o));
-       toast.success("Artisan piece fulfilled. Inventory synced.");
-       return;
-    }
-
+  const updateStatus = async (orderId: string, status: OrderStatus) => {
     const { error } = await supabase
       .from('orders')
       .update({ status })
-      .eq('id', id);
+      .eq('id', orderId);
 
     if (error) {
-      toast.error('Status update failed');
+      toast.error('Failed to update artisan status');
     } else {
-      setOrders(orders.map(o => o.id === id ? { ...o, status } : o));
-      toast.success(`Inquiry status updated to ${status}`);
+      toast.success('Status reconciled in registry');
+      fetchOrders(currentPage, searchTerm, activeTab);
     }
   };
 
-  const filteredOrders = orders.filter(o => {
-    const matchesSearch = 
-      o.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      o.customer_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      o.id.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const isNew = o.status === 'new';
-    const matchesTab = activeTab === 'new' ? isNew : !isNew;
-    
-    return matchesSearch && matchesTab;
-  });
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    fetchOrders(newPage, searchTerm, activeTab);
+  };
 
   return (
     <div className="space-y-12">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-1">
-          <h1 className="text-3xl font-serif text-white tracking-tight">Order Management</h1>
+          <h1 className="text-3xl font-serif text-white tracking-tight">Artisan Pipeline</h1>
           <p className="text-navy-500 text-sm font-light italic">Orchestrating the lifecycle of handcrafted excellence.</p>
         </div>
         <div className="bg-gold-500/10 border border-gold-500/20 rounded-[4px] px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-gold-500">
-           {orders.filter(o => o.status === 'new').length} Inbound Inquiries
+           {totalItems} Handcrafted Pieces in {activeTab}
         </div>
       </header>
 
-      {/* Segmented Control & Search */}
+      {/* Pipeline Navigation & Search */}
       <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
-         <div className="flex bg-white/5 p-1 rounded-[6px] w-full md:w-auto">
+         <div className="flex bg-white/5 p-1 rounded-[6px] w-full md:w-auto overflow-x-auto">
             <button 
               onClick={() => setActiveTab('new')}
               className={cn(
-                "flex-1 md:flex-none px-8 py-2.5 rounded-[4px] text-[10px] font-bold uppercase tracking-widest transition-all",
+                "flex-1 md:flex-none px-6 py-2.5 rounded-[4px] text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap",
                 activeTab === 'new' ? "bg-gold-500 text-navy-950 shadow-md" : "text-navy-500 hover:text-white"
               )}
             >
-               Inbound Inquiries
+               New Orders
             </button>
             <button 
-              onClick={() => setActiveTab('processed')}
+              onClick={() => setActiveTab('pending')}
               className={cn(
-                "flex-1 md:flex-none px-8 py-2.5 rounded-[4px] text-[10px] font-bold uppercase tracking-widest transition-all",
-                activeTab === 'processed' ? "bg-gold-500 text-navy-950 shadow-md" : "text-navy-500 hover:text-white"
+                "flex-1 md:flex-none px-6 py-2.5 rounded-[4px] text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap",
+                activeTab === 'pending' ? "bg-gold-500 text-navy-950 shadow-md" : "text-navy-500 hover:text-white"
               )}
             >
-               Artisan Pipeline
+               Pending Orders
+            </button>
+            <button 
+              onClick={() => setActiveTab('completed')}
+              className={cn(
+                "flex-1 md:flex-none px-6 py-2.5 rounded-[4px] text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap",
+                activeTab === 'completed' ? "bg-gold-500 text-navy-950 shadow-md" : "text-navy-500 hover:text-white"
+              )}
+            >
+               Completed Orders
             </button>
          </div>
 
@@ -122,7 +138,7 @@ export const Orders = () => {
             <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-navy-600" />
             <input 
               type="text" 
-              placeholder="Filter by customer, email or ID..." 
+              placeholder="Filter by customer, ID or order #..." 
               className="input-base pl-12 py-2.5"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -133,10 +149,10 @@ export const Orders = () => {
       {/* Orders List */}
       <div className="grid grid-cols-1 gap-6">
          {loading ? (
-            [1,2,3].map(i => <div key={i} className="h-32 bg-navy-900/40 animate-pulse rounded-[6px]" />)
-         ) : filteredOrders.length > 0 ? (
-            filteredOrders.map((o) => {
-               const total = o.items?.reduce((sum, item) => sum + (item.unit_price_snapshot * item.quantity), 0) || 0;
+            [1,2,3].map((i: number) => <div key={i} className="h-32 bg-navy-900/40 animate-pulse rounded-[6px]" />)
+         ) : orders.length > 0 ? (
+            orders.map((o: Order) => {
+               const total = o.items?.reduce((sum: number, item: any) => sum + (item.unit_price_snapshot * item.quantity), 0) || 0;
                return (
                   <div key={o.id} className="dashboard-card group hover:border-white/10 transition-all">
                      <div className="flex flex-col lg:flex-row gap-8 items-start lg:items-center">
@@ -149,6 +165,11 @@ export const Orders = () => {
                               )}>
                                  {getOrderStatusLabel(o.status)}
                               </span>
+                              {o.order_number && (
+                                <span className="text-[10px] font-mono text-gold-500/60 bg-gold-500/5 px-2 py-1 rounded-[4px] border border-gold-500/10">
+                                   {o.order_number}
+                                </span>
+                              )}
                            </div>
                            <div className="flex flex-wrap gap-6 text-[10px] uppercase font-bold text-navy-500 tracking-[0.15em]">
                               <span className="flex items-center gap-2"><Mail size={12} className="text-gold-500/60" /> {o.customer_email}</span>
@@ -158,7 +179,7 @@ export const Orders = () => {
                         </div>
 
                         <div className="lg:w-48 space-y-1">
-                           <p className="text-[10px] font-bold uppercase tracking-widest text-navy-600">Investment Value</p>
+                           <p className="text-[10px] font-bold uppercase tracking-widest text-navy-600">{activeTab === 'completed' ? 'Final Realised Value' : 'Investment Value'}</p>
                            <p className="text-xl font-bold text-white tracking-tight">{formatCurrency(total)}</p>
                            <p className="text-[9px] text-navy-600 uppercase font-bold tracking-widest">{o.items?.length || 0} Piece(s) Specified</p>
                         </div>
@@ -171,27 +192,25 @@ export const Orders = () => {
                               >
                                  <FileText size={16} /> Issue Quotation
                               </button>
-                           ) : (
-                              <select 
-                                className="input-base py-2.5 px-4 text-[10px] font-bold uppercase tracking-widest text-white/60 w-full lg:w-44"
-                                value={o.status}
-                                disabled={o.status === 'completed'}
-                                onChange={(e) => updateStatus(o.id, e.target.value as OrderStatus)}
+                           ) : o.status === 'pending' ? (
+                              <button 
+                                onClick={() => navigate(`/invoices/new?orderId=${o.id}&type=invoice`)}
+                                className="btn-dashboard-primary flex-1 lg:flex-none flex items-center justify-center gap-3 bg-success border-success hover:bg-success/80"
                               >
-                                 <option value="contacted">Contacted</option>
-                                 <option value="in_progress">Artisan Build</option>
-                                 <option value="completed">Delivered</option>
-                                 <option value="cancelled">Cancelled</option>
-                              </select>
+                                 <ShieldCheck size={16} /> Finalise Invoice
+                              </button>
+                           ) : (
+                              <div className="flex items-center gap-3 px-6 py-2.5 bg-white/5 rounded-[4px] text-[9px] font-bold uppercase tracking-widest text-success border border-success/20">
+                                 <ShieldCheck size={14} /> Reconciled
+                              </div>
                            )}
                            
                            <button 
-                             onClick={() => navigate(`/invoices/new?orderId=${o.id}&type=invoice`)}
-                             disabled={o.status === 'new'}
-                             className="p-3 bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed rounded-[4px] text-white hover:text-gold-500 hover:bg-white/10 transition-all shadow-sm"
-                             title="Issue Final Invoice"
+                             onClick={() => navigate(`/invoices?orderId=${o.id}`)}
+                             className="p-3 bg-white/5 rounded-[4px] text-white hover:text-gold-500 hover:bg-white/10 transition-all shadow-sm"
+                             title="View Documents"
                            >
-                              <ShieldCheck size={18} />
+                              <FileText size={18} />
                            </button>
                            
                            <button className="p-3 bg-white/5 rounded-[4px] text-white/40 hover:text-white transition-colors">
@@ -212,6 +231,29 @@ export const Orders = () => {
             </div>
          )}
       </div>
+
+      {/* Pagination */}
+      {totalItems > itemsPerPage && (
+        <div className="flex justify-between items-center bg-white/[0.02] border border-[#ffffff0a] px-8 py-4 rounded-[6px] text-[10px] font-bold uppercase tracking-widest text-navy-600">
+           <span>Displaying page {currentPage + 1} of {Math.ceil(totalItems / itemsPerPage)} ({totalItems} total)</span>
+           <div className="flex gap-6">
+              <button 
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 0 || loading}
+                className="flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed hover:text-white transition-colors"
+              >
+                <ChevronLeft size={14}/> Previous
+              </button>
+              <button 
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={(currentPage + 1) * itemsPerPage >= totalItems || loading}
+                className="flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed hover:text-white transition-colors"
+              >
+                Next <ChevronRight size={14}/>
+              </button>
+           </div>
+        </div>
+      )}
     </div>
   );
 };

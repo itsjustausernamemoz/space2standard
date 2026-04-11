@@ -58,6 +58,7 @@ export function calcGrandTotal(
 export function getOrderStatusLabel(status: OrderStatus): string {
   const labels: Record<OrderStatus, string> = {
     new: 'New',
+    pending: 'Pending Invoice',
     contacted: 'Contacted',
     in_progress: 'In Progress',
     completed: 'Completed',
@@ -72,6 +73,7 @@ export function getOrderStatusLabel(status: OrderStatus): string {
 export function getOrderStatusColor(status: OrderStatus): string {
   const colors: Record<OrderStatus, string> = {
     new: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+    pending: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
     contacted: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
     in_progress: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
     completed: 'bg-green-500/20 text-green-300 border-green-500/30',

@@ -9,10 +9,15 @@ import {
   Mail, 
   Search, 
   History,
-  FileCheck
+  FileCheck,
+  ShieldCheck,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { PDFDownloadLink, Document as PDFDoc, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
+import { cn } from '@/lib/utils';
 
 // Register fonts for PDF (Using premium sans-serif)
 Font.register({
@@ -227,18 +232,35 @@ export const Invoices = () => {
   const [businessInfo, setBusinessInfo] = useState({});
   const [timeframe, setTimeframe] = useState('all');
   const [activeTab, setActiveTab] = useState<'invoice' | 'quotation'>('invoice');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 6;
 
   useEffect(() => {
-    fetchData(timeframe);
-  }, []);
+    const timer = setTimeout(() => {
+      fetchData(0, searchTerm, activeTab, timeframe);
+      setCurrentPage(0);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm, activeTab, timeframe]);
 
-  async function fetchData(selectedTimeframe = 'all') {
+  async function fetchData(page: number, search: string, tab: string, selectedTimeframe = 'all') {
     setLoading(true);
+    const from = page * itemsPerPage;
+    const to = from + itemsPerPage - 1;
 
     let query = supabase
       .from('documents')
-      .select('*, orders(*)')
-      .order('created_at', { ascending: false });
+      .select('*, orders!inner(*)', { count: 'exact' });
+
+    // Server-side filtering by tab type
+    query = query.eq('type', tab);
+
+    if (search) {
+       // Search in document id or associated order customer name
+       query = query.or(`id.ilike.%${search}%, orders.customer_name.ilike.%${search}%`);
+    }
 
     if (selectedTimeframe !== 'all') {
       const now = new Date();
@@ -256,16 +278,27 @@ export const Invoices = () => {
       }
     }
 
-    const { data: docs } = await query;
+    const { data: docs, count, error } = await query
+      .order('created_at', { ascending: false })
+      .range(from, to);
+
     const { data: settings } = await supabase.from('settings').select('*');
     const info = settings?.reduce((acc: Record<string, any>, s: any) => ({ ...acc, [s.key]: s.value }), {}) || {};
     
-    setDocuments(docs || []);
+    if (error) {
+      toast.error('Failed to reconcile the ledger');
+    } else {
+      setDocuments(docs || []);
+      setTotalItems(count || 0);
+    }
     setBusinessInfo(info);
     setLoading(false);
   }
 
-  const filteredDocs = documents.filter(d => d.type === activeTab);
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    fetchData(newPage, searchTerm, activeTab, timeframe);
+  };
 
   return (
     <div className="space-y-12">
@@ -309,14 +342,20 @@ export const Invoices = () => {
          <div className="flex gap-4 w-full md:w-auto">
             <div className="relative flex-1 md:w-64">
                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-navy-600" />
-               <input type="text" placeholder="Search ref..." className="input-base pl-12 py-2.5" />
+               <input 
+                 type="text" 
+                 placeholder="Search ref or client..." 
+                 className="input-base pl-12 py-2.5" 
+                 value={searchTerm}
+                 onChange={(e) => setSearchTerm(e.target.value)}
+               />
             </div>
             <select 
               className="input-base py-2.5 text-[10px] font-bold uppercase tracking-widest text-white/40 w-full md:w-32"
               value={timeframe}
               onChange={(e) => {
                  setTimeframe(e.target.value);
-                 fetchData(e.target.value);
+                 // fetchData handled by useEffect
               }}
             >
               <option value="all">All Time</option>
@@ -330,8 +369,8 @@ export const Invoices = () => {
       <div className="grid grid-cols-1 gap-4">
          {loading ? (
             [1,2,3].map(i => <div key={i} className="h-24 bg-navy-900/40 animate-pulse rounded-[6px]" />)
-         ) : filteredDocs.length > 0 ? (
-            filteredDocs.map((doc) => (
+         ) : documents.length > 0 ? (
+            documents.map((doc) => (
                <div key={doc.id} className="dashboard-card py-6 px-8 group hover:border-gold-500/10 transition-all">
                   <div className="flex flex-col lg:flex-row gap-8 items-start lg:items-center">
                      <div className="flex items-center gap-6 flex-1">
@@ -343,7 +382,7 @@ export const Invoices = () => {
                         </div>
                         <div className="space-y-1">
                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-navy-600 leading-none">
-                              S2S-{doc.id.slice(0, 4).toUpperCase()}
+                              {doc.orders?.order_number || `S2S-${doc.id.slice(0, 4).toUpperCase()}`}
                            </p>
                            <h3 className="text-lg font-serif text-white">{doc.orders?.customer_name || 'Individual Client'}</h3>
                         </div>
@@ -361,6 +400,15 @@ export const Invoices = () => {
                      </div>
 
                      <div className="flex gap-2 w-full lg:w-auto">
+                        {doc.type === 'quotation' && (
+                           <button 
+                             onClick={() => navigate(`/invoices/new?type=invoice&orderId=${doc.order_id}`)}
+                             className="flex items-center gap-2 px-4 py-2.5 bg-success/10 hover:bg-success/20 border border-success/20 rounded-[4px] text-[9px] font-bold uppercase tracking-[0.2em] text-success transition-all"
+                           >
+                              <ShieldCheck size={14} /> Issue Invoice
+                           </button>
+                        )}
+
                         <PDFDownloadLink 
                           document={<InvoicePDF doc={doc} businessInfo={businessInfo} order={doc.orders} />} 
                           fileName={`${doc.type}_${doc.id.slice(0,8)}.pdf`}
@@ -378,9 +426,6 @@ export const Invoices = () => {
                         >
                            <FileText size={18} />
                         </button>
-                        <button className="flex-1 lg:flex-none p-3 bg-white/5 rounded-[4px] text-white/40 hover:text-accent-light transition-all">
-                           <Mail size={18} />
-                        </button>
                      </div>
                   </div>
                </div>
@@ -395,6 +440,29 @@ export const Invoices = () => {
             </div>
          )}
       </div>
+
+      {/* Pagination */}
+      {totalItems > itemsPerPage && (
+        <div className="flex justify-between items-center bg-white/[0.02] border border-[#ffffff0a] px-8 py-3 rounded-[6px] text-[10px] font-bold uppercase tracking-widest text-navy-600">
+           <span>Ledger page {currentPage + 1} of {Math.ceil(totalItems / itemsPerPage)} ({totalItems} records)</span>
+           <div className="flex gap-6">
+              <button 
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 0 || loading}
+                className="flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed hover:text-white transition-colors"
+              >
+                <ChevronLeft size={14}/> Previous
+              </button>
+              <button 
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={(currentPage + 1) * itemsPerPage >= totalItems || loading}
+                className="flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed hover:text-white transition-colors"
+              >
+                Next <ChevronRight size={14}/>
+              </button>
+           </div>
+        </div>
+      )}
     </div>
   );
 };

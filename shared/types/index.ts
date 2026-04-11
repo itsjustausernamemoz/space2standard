@@ -61,6 +61,7 @@ export interface Order {
   customer_email: string;
   customer_phone: string | null;
   delivery_address: string | null;
+  order_number: string | null;
   special_notes: string | null;
   status: OrderStatus;
   created_at: string;
@@ -70,6 +71,7 @@ export interface Order {
 
 export type OrderStatus =
   | 'new'
+  | 'pending'
   | 'contacted'
   | 'in_progress'
   | 'completed'

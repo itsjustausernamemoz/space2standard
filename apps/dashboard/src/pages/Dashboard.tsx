@@ -7,7 +7,10 @@ import {
   Users, 
   Package, 
   ArrowUpRight, 
-  ArrowDownRight 
+  ArrowDownRight,
+  FileText,
+  Download,
+  Calendar
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { 
@@ -22,15 +25,19 @@ import {
   Area
 } from 'recharts';
 import { formatCurrency } from '@shared/utils';
-import { subDays, startOfDay } from 'date-fns';
+import { subDays } from 'date-fns';
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import { FinanceReport } from '@/components/FinanceReport';
 
 export const Dashboard = () => {
   const [stats, setStats] = useState({
     totalRevenue: 0,
     inventoryValue: 0,
     totalOrders: 0,
-    activeProducts: 0
+    activeProducts: 0,
+    ordersCount: { new: 0, pending: 0, completed: 0 }
   });
+  const [timeframe, setTimeframe] = useState('Last 7 Days (Real-time)');
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,50 +47,54 @@ export const Dashboard = () => {
       try {
         const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
 
-        // 1. Parallelize all core metrics
+        // 1. Parallelize core metrics and summary data
         const [
-          allRecentOrders,
+          recentOrdersRes,
           activeProducts,
           orderCountRes,
           productCountRes,
-          lifetimeRevenueRes
+          lifetimeRevenueRes,
+          newOrdersRes,
+          pendingOrdersRes,
+          completedOrdersRes
         ] = await Promise.all([
-          // Fetch orders from last 30 days for KPIs and Trends
           supabase
             .from('orders')
-            .select('id, status, created_at, customer_name, items:order_items(unit_price_snapshot, quantity)')
+            .select('status, created_at, items:order_items(unit_price_snapshot, quantity)')
             .gte('created_at', thirtyDaysAgo)
             .neq('status', 'cancelled'),
           
-          // Fetch inventory value components
           supabase
             .from('products')
             .select('price, stock_quantity')
             .eq('is_published', true),
           
-          // Total counts (head only for performance)
           supabase.from('orders').select('*', { count: 'exact', head: true }),
           supabase.from('products').select('*', { count: 'exact', head: true }).eq('is_published', true),
           
-          // Lifetime revenue query (optimized)
           supabase
             .from('orders')
             .select('items:order_items(unit_price_snapshot, quantity)')
-            .eq('status', 'completed')
+            .eq('status', 'completed'),
+            
+          supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'new'),
+          supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+          supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'completed')
         ]);
 
-        const allOrders = allRecentOrders.data || [];
+        const { data: recentActivityData } = await supabase
+          .from('orders')
+          .select('id, customer_name, created_at')
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        const allOrders = recentOrdersRes.data || [];
         const lifetimeOrders = lifetimeRevenueRes.data || [];
         
         const calcOrderTotal = (o: any) => o.items?.reduce((sum: number, i: any) => sum + (i.unit_price_snapshot * i.quantity), 0) || 0;
-        
-        // Calculate lifetime revenue
-        const lifetimeCollected = lifetimeOrders.reduce((acc, o) => acc + calcOrderTotal(o), 0) || 0;
+        const lifetimeCollected = lifetimeOrders.reduce((acc: number, o: any) => acc + calcOrderTotal(o), 0) || 0;
+        const invValue = activeProducts.data?.reduce((acc: number, p: any) => acc + (p.price * (p.stock_quantity || 0)), 0) || 0;
 
-        // Inventory Value Calculation
-        const invValue = activeProducts.data?.reduce((acc, p) => acc + (p.price * (p.stock_quantity || 0)), 0) || 0;
-
-        // 7-day Trend Data calculation
         const last7Days = Array.from({ length: 7 }, (_, i) => {
           const d = new Date();
           d.setDate(d.getDate() - i);
@@ -91,11 +102,11 @@ export const Dashboard = () => {
         }).reverse();
 
         const chartData = last7Days.map(date => {
-          const dayOrders = allOrders.filter(o => o.created_at.startsWith(date));
+          const dayOrders = allOrders.filter((o: any) => o.created_at.startsWith(date));
           return {
             name: new Date(date).toLocaleDateString('en-NA', { weekday: 'short' }),
-            expected: dayOrders.reduce((sum, o) => sum + calcOrderTotal(o), 0),
-            collected: dayOrders.filter(o => o.status === 'completed').reduce((sum, o) => sum + calcOrderTotal(o), 0)
+            expected: dayOrders.reduce((sum: number, o: any) => sum + calcOrderTotal(o), 0),
+            collected: dayOrders.filter((o: any) => o.status === 'completed').reduce((sum: number, o: any) => sum + calcOrderTotal(o), 0)
           };
         });
 
@@ -103,13 +114,18 @@ export const Dashboard = () => {
           totalRevenue: lifetimeCollected,
           inventoryValue: invValue,
           totalOrders: orderCountRes.count || 0,
-          activeProducts: productCountRes.count || 0
+          activeProducts: productCountRes.count || 0,
+          ordersCount: {
+            new: newOrdersRes.count || 0,
+            pending: pendingOrdersRes.count || 0,
+            completed: completedOrdersRes.count || 0
+          }
         });
         setRevenueData(chartData);
-        setRecentActivity(allOrders.slice(0, 5)); // Reuse allOrders for recent activity
+        setRecentActivity(recentActivityData || []);
       } catch (err) {
         console.error('Dashboard Fetch Error:', err);
-        toast.error('Failed to load some artisan metrics. Still manifesting the overview.');
+        toast.error('Metrics manifesting...');
       } finally {
         setLoading(false);
       }
@@ -121,7 +137,6 @@ export const Dashboard = () => {
     const date = new Date(dateStr);
     const now = new Date();
     const diffInMins = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
     if (diffInMins < 1) return 'Just now';
     if (diffInMins < 60) return `${diffInMins} minutes ago`;
     if (diffInMins < 1440) return `${Math.floor(diffInMins/60)} hrs ago`;
@@ -131,8 +146,8 @@ export const Dashboard = () => {
   const statCards = [
     { label: 'Collected Revenue', value: formatCurrency(stats.totalRevenue), icon: <TrendingUp size={20}/>, color: 'text-success', trend: '+12.5%' },
     { label: 'Inventory Value', value: formatCurrency(stats.inventoryValue), icon: <ArrowUpRight size={20}/>, color: 'text-gold-500', trend: 'Active' },
-    { label: 'Artisan Orders', value: stats.totalOrders.toString(), icon: <ShoppingCart size={20}/>, color: 'text-blue-400', trend: '+5.2%' },
-    { label: 'Active Collection', value: stats.activeProducts.toString(), icon: <Package size={20}/>, color: 'text-purple-400', trend: '+3' },
+    { label: 'New Artisan Orders', value: stats.ordersCount.new.toString(), icon: <ShoppingCart size={20}/>, color: 'text-blue-400', trend: 'New' },
+    { label: 'Pending Collections', value: stats.ordersCount.pending.toString(), icon: <Package size={20}/>, color: 'text-purple-400', trend: 'Quoted' },
   ];
 
   if (loading) {
@@ -150,13 +165,38 @@ export const Dashboard = () => {
       transition={{ duration: 0.4, ease: 'easeOut' }}
       className="space-y-12"
     >
-      <header className="flex justify-between items-end">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-1">
           <h1 className="text-3xl font-serif text-white tracking-tight">Executive Overview</h1>
           <p className="text-navy-400 text-sm italic">Live performance metrics for your artisan business.</p>
         </div>
-        <div className="bg-navy-900 border border-navy-800 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-[0.2em] text-navy-400">
-          Last 7 Days (Real-time)
+        
+        <div className="flex gap-4 w-full md:w-auto">
+           <div className="flex items-center gap-3 bg-navy-900 border border-navy-800 px-4 py-2 rounded-lg">
+              <Calendar size={14} className="text-gold-500" />
+              <select 
+                className="bg-transparent text-[10px] font-bold uppercase tracking-[0.2em] text-navy-400 focus:outline-none"
+                value={timeframe}
+                onChange={(e) => setTimeframe(e.target.value)}
+              >
+                <option value="Last 7 Days (Real-time)">Last 7 Days</option>
+                <option value="Last 30 Days">Last 30 Days</option>
+                <option value="Year-to-Date">Year-to-Date</option>
+              </select>
+           </div>
+
+           <PDFDownloadLink 
+             document={<FinanceReport stats={stats} timeframe={timeframe} />} 
+             fileName={`Artisan_Ledger_Report_${new Date().toISOString().split('T')[0]}.pdf`}
+             className="flex items-center gap-3 bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/20 px-6 py-2 rounded-lg text-[10px] font-bold uppercase tracking-[0.2em] text-gold-500 transition-all"
+           >
+             {({ loading }) => (
+               <>
+                 <Download size={14} />
+                 {loading ? 'Preparing Ledger...' : 'Generate High-Fidelity Report'}
+               </>
+             )}
+           </PDFDownloadLink>
         </div>
       </header>
 
@@ -247,7 +287,7 @@ export const Dashboard = () => {
             <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
           </div>
           <div className="space-y-8 flex-1">
-             {recentActivity.length > 0 ? recentActivity.map((order) => (
+             {recentActivity.length > 0 ? recentActivity.map((order: any) => (
                <div key={order.id} className="flex gap-4 items-start group">
                  <div className="w-1.5 h-1.5 rounded-full bg-gold-500 mt-1.5 shrink-0 shadow-[0_0_8px_rgba(193,155,58,0.4)] group-hover:scale-125 transition-transform"/>
                  <div className="space-y-1">
