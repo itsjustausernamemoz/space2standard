@@ -42,12 +42,19 @@ export const Dashboard = () => {
   const [timeframe, setTimeframe] = useState('Last 7 Days (Real-time)');
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [detailedLedger, setDetailedLedger] = useState<any[]>([]);
+  const [inventoryList, setInventoryList] = useState<any[]>([]);
+  const [allOrdersList, setAllOrdersList] = useState<any[]>([]);
+  const [businessInfo, setBusinessInfo] = useState<any>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
+        setLoading(true);
+        let startDate = subDays(new Date(), 30).toISOString();
+        if (timeframe === 'Last 7 Days (Real-time)') startDate = subDays(new Date(), 7).toISOString();
+        if (timeframe === 'Year-to-Date') startDate = new Date(new Date().getFullYear(), 0, 1).toISOString();
 
         // 1. Parallelize core metrics and summary data
         const [
@@ -60,12 +67,16 @@ export const Dashboard = () => {
           pendingOrdersRes,
           completedOrdersRes,
           topClientsRes,
-          topProductsRes
+          topProductsRes,
+          detailedLedgerRes,
+          allInventoryRes,
+          allOrdersRes,
+          settingsRes
         ] = await Promise.all([
           supabase
             .from('orders')
             .select('status, created_at, items:order_items(unit_price_snapshot, quantity)')
-            .gte('created_at', thirtyDaysAgo)
+            .gte('created_at', startDate)
             .neq('status', 'cancelled'),
           
           supabase
@@ -76,10 +87,7 @@ export const Dashboard = () => {
           supabase.from('orders').select('*', { count: 'exact', head: true }),
           supabase.from('products').select('*', { count: 'exact', head: true }).eq('is_published', true),
           
-          supabase
-            .from('orders')
-            .select('items:order_items(unit_price_snapshot, quantity)')
-            .eq('status', 'completed'),
+          supabase.from('documents').select('grand_total').eq('type', 'invoice').eq('is_paid', true),
             
           supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'new'),
           supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
@@ -92,12 +100,35 @@ export const Dashboard = () => {
             .order('total_revenue', { ascending: false })
             .limit(5),
             
-          // Additional data for Top Products (last 90 days for better statistics)
+          // Additional data for Top Products
           supabase
             .from('order_items')
             .select('product_name_snapshot, quantity, unit_price_snapshot')
             .order('quantity', { ascending: false })
-            .limit(100)
+            .limit(100),
+
+          // Detailed Ledger for PDF
+          supabase
+            .from('documents')
+            .select('id, type, is_paid, grand_total, created_at, orders(customer_name)')
+            .gte('created_at', startDate)
+            .order('created_at', { ascending: false }),
+
+          // Full Inventory for PDF
+          supabase
+            .from('products')
+            .select('name, stock_quantity, price')
+            .order('name'),
+
+          // Full Order List for PDF
+          supabase
+            .from('orders')
+            .select('id, customer_name, status, created_at, total_amount')
+            .gte('created_at', startDate)
+            .order('created_at', { ascending: false }),
+
+          // Business Settings
+          supabase.from('settings').select('*')
         ]);
 
         const { data: recentActivityData } = await supabase
@@ -107,10 +138,10 @@ export const Dashboard = () => {
           .limit(5);
 
         const allOrders = recentOrdersRes.data || [];
-        const lifetimeOrders = lifetimeRevenueRes.data || [];
+        const lifetimeInvoices = lifetimeRevenueRes.data || [];
         
         const calcOrderTotal = (o: any) => o.items?.reduce((sum: number, i: any) => sum + (i.unit_price_snapshot * i.quantity), 0) || 0;
-        const lifetimeCollected = lifetimeOrders.reduce((acc: number, o: any) => acc + calcOrderTotal(o), 0) || 0;
+        const lifetimeCollected = lifetimeInvoices.reduce((acc: number, d: any) => acc + (d.grand_total || 0), 0) || 0;
         const invValue = activeProducts.data?.reduce((acc: number, p: any) => acc + (p.price * (p.stock_quantity || 0)), 0) || 0;
 
         const last7Days = Array.from({ length: 7 }, (_, i) => {
@@ -119,12 +150,14 @@ export const Dashboard = () => {
           return d.toISOString().split('T')[0];
         }).reverse();
 
+        const ledgerData = detailedLedgerRes.data || [];
+        
         const chartData = last7Days.map(date => {
-          const dayOrders = allOrders.filter((o: any) => o.created_at.startsWith(date));
+          const dayDocs = ledgerData.filter((d: any) => d.created_at && d.created_at.startsWith(date));
           return {
             name: new Date(date).toLocaleDateString('en-NA', { weekday: 'short' }),
-            expected: dayOrders.reduce((sum: number, o: any) => sum + calcOrderTotal(o), 0),
-            collected: dayOrders.filter((o: any) => o.status === 'completed').reduce((sum: number, o: any) => sum + calcOrderTotal(o), 0)
+            expected: dayDocs.reduce((sum: number, d: any) => sum + (d.grand_total || 0), 0),
+            collected: dayDocs.filter((d: any) => d.is_paid).reduce((sum: number, d: any) => sum + (d.grand_total || 0), 0)
           };
         });
 
@@ -155,6 +188,15 @@ export const Dashboard = () => {
           topProducts,
           topClients: (topClientsRes as any).data || []
         });
+        setDetailedLedger(detailedLedgerRes.data || []);
+        setInventoryList(allInventoryRes.data || []);
+        setAllOrdersList(allOrdersRes.data || []);
+        
+        if (settingsRes.data) {
+          const settingsMap = settingsRes.data.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {});
+          setBusinessInfo(settingsMap);
+        }
+
         setRevenueData(chartData);
         setRecentActivity(recentActivityData || []);
       } catch (err) {
@@ -165,7 +207,7 @@ export const Dashboard = () => {
       }
     }
     fetchData();
-  }, []);
+  }, [timeframe]);
 
   const formatTimeAgo = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -219,8 +261,20 @@ export const Dashboard = () => {
               </select>
            </div>
 
-           <PDFDownloadLink 
-             document={<FinanceReport stats={stats} timeframe={timeframe} recentActivity={recentActivity} />} 
+           {!loading && (
+             <PDFDownloadLink 
+               key={`report-${detailedLedger.length}-${stats.totalRevenue}-${timeframe}`}
+               document={
+                 <FinanceReport 
+                   stats={stats} 
+                   timeframe={timeframe} 
+                   recentActivity={recentActivity} 
+                   detailedLedger={detailedLedger}
+                   inventoryList={inventoryList}
+                   allOrdersList={allOrdersList}
+                   businessInfo={businessInfo}
+                 />
+               } 
              fileName={`Artisan_Ledger_Report_${new Date().toISOString().split('T')[0]}.pdf`}
              className="flex items-center gap-3 bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/20 px-6 py-2 rounded-lg text-[10px] font-bold uppercase tracking-[0.2em] text-gold-500 transition-all"
            >
@@ -231,6 +285,7 @@ export const Dashboard = () => {
                </>
              )}
            </PDFDownloadLink>
+           )}
         </div>
       </header>
 

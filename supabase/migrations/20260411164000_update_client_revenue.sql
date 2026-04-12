@@ -16,7 +16,7 @@ BEGIN
             SELECT COALESCE(SUM(grand_total), 0)
             FROM public.documents d
             JOIN public.orders o ON d.order_id = o.id
-            WHERE o.customer_email = client_email AND d.type = 'invoice'
+            WHERE o.customer_email = client_email AND d.type = 'invoice' AND d.is_paid = true
         )
         WHERE email = client_email;
     END IF;
@@ -25,10 +25,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger for when a new document is issued
+-- Trigger for when a document is issued or paid
 DROP TRIGGER IF EXISTS update_client_revenue_trigger ON public.documents;
 CREATE TRIGGER update_client_revenue_trigger
-AFTER INSERT OR UPDATE OF grand_total, type ON public.documents
+AFTER INSERT OR UPDATE OF grand_total, type, is_paid ON public.documents
 FOR EACH ROW
 EXECUTE FUNCTION public.update_client_revenue();
 

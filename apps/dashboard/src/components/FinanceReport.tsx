@@ -1,35 +1,50 @@
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet, Font } from '@react-pdf/renderer';
+import { Page, Text, View, Document, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import { formatCurrency, formatDate } from '@shared/utils';
 
-// Register premium fonts for the report
-Font.register({
-  family: 'Inter',
-  fonts: [
-    { src: 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2', fontWeight: 400 },
-    { src: 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYAZ9hiA.woff2', fontWeight: 700 }
-  ]
-});
-
+// Standard system fonts for stability
 const styles = StyleSheet.create({
-  page: { padding: 50, backgroundColor: '#ffffff', fontFamily: 'Inter' },
-  header: { marginBottom: 30, borderBottomWidth: 1, borderBottomColor: '#000000', paddingBottom: 15 },
-  title: { fontSize: 22, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 5 },
-  subtitle: { fontSize: 9, color: '#666666', textTransform: 'uppercase', letterSpacing: 1.5 },
+  page: { padding: 40, backgroundColor: '#ffffff', fontFamily: 'Helvetica', color: '#1a1a1a', fontSize: 9 },
+  header: { alignItems: 'center', marginBottom: 20 },
+  logo: { width: 120, height: 60, objectFit: 'contain', marginBottom: 10 },
+  studioName: { fontSize: 18, fontWeight: 700, color: '#c19b3a', letterSpacing: 1, textTransform: 'uppercase' },
+  studioDetails: { fontSize: 8, color: '#444', marginTop: 4, fontWeight: 700 },
+  divider: { height: 1, backgroundColor: '#c19b3a', marginVertical: 15, width: '100%' },
+  
+  docTitle: { fontSize: 20, fontWeight: 700, color: '#c19b3a', textAlign: 'center', textTransform: 'uppercase', marginBottom: 20, letterSpacing: 2 },
+  
   section: { marginBottom: 25 },
-  sectionTitle: { fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 12, borderBottomWidth: 1, borderBottomColor: '#eeeeee', paddingBottom: 4 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6, alignItems: 'center' },
-  label: { fontSize: 9, color: '#444444' },
-  value: { fontSize: 9, fontWeight: 700 },
-  footer: { position: 'absolute', bottom: 30, left: 50, right: 50, borderTopWidth: 1, borderTopColor: '#eeeeee', paddingTop: 10, flexDirection: 'row', justifyContent: 'space-between' },
-  footerText: { fontSize: 7, color: '#999999' },
+  sectionTitle: { fontSize: 10, fontWeight: 700, color: '#c19b3a', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 12, borderBottomWidth: 1, borderBottomColor: '#eeeeee', paddingBottom: 4 },
+  
   kpiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 15, marginBottom: 15 },
-  kpiBox: { width: '47%', padding: 12, backgroundColor: '#f9f9f9', borderRadius: 4, marginBottom: 8 },
-  tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#eeeeee', paddingBottom: 5, marginBottom: 8, backgroundColor: '#fafafa' },
-  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f5f5f5', paddingBottom: 6, paddingTop: 6, alignItems: 'center' },
-  col1: { width: '60%', fontSize: 9 },
-  col2: { width: '20%', fontSize: 9, textAlign: 'center' },
-  col3: { width: '20%', fontSize: 9, textAlign: 'right', fontWeight: 700 },
+  kpiBox: { width: '47%', padding: 12, backgroundColor: '#fffbeb', borderRadius: 4, marginBottom: 8 },
+  
+  tableHeader: { flexDirection: 'row', backgroundColor: '#c19b3a', paddingVertical: 8, paddingHorizontal: 4 },
+  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f5f5f5', paddingVertical: 8, paddingHorizontal: 4, alignItems: 'center' },
+  cellHeader: { color: '#ffffff', fontWeight: 700, fontSize: 8, textTransform: 'uppercase' },
+  
+  colName: { width: '50%', fontSize: 9 },
+  colStock: { width: '25%', fontSize: 9, textAlign: 'center' },
+  colVal: { width: '25%', fontSize: 9, textAlign: 'right', fontWeight: 700 },
+
+  orderColId: { width: '15%', fontSize: 8, color: '#888' },
+  orderColDate: { width: '15%', fontSize: 8 },
+  orderColClient: { width: '35%', fontSize: 8, fontWeight: 700 },
+  orderColStatus: { width: '15%', fontSize: 8, textAlign: 'center' },
+  orderColTotal: { width: '20%', fontSize: 8, textAlign: 'right', fontWeight: 700 },
+
+  ledgerRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f0f0f0', paddingVertical: 8, alignItems: 'center' },
+  refCol: { width: '15%', fontSize: 8, color: '#888', fontWeight: 700 },
+  dateCol: { width: '15%', fontSize: 8 },
+  clientCol: { width: '35%', fontSize: 8, fontWeight: 700 },
+  typeCol: { width: '15%', fontSize: 8, textAlign: 'center' },
+  statusCol: { width: '10%', fontSize: 7, textAlign: 'center' },
+  amountCol: { width: '10%', fontSize: 8, textAlign: 'right', fontWeight: 700 },
+
+  subtitle: { fontSize: 9, color: '#666', textTransform: 'uppercase' },
+  value: { fontSize: 9, fontWeight: 700 },
+  footer: { position: 'absolute', bottom: 30, left: 40, right: 40, textAlign: 'center', fontSize: 7, color: '#aaa', borderTop: '0.5pt solid #eee', paddingTop: 10 },
+  footerText: { marginBottom: 3 },
   badge: { fontSize: 7, fontWeight: 700, color: '#c19b3a', textTransform: 'uppercase' }
 });
 
@@ -43,17 +58,41 @@ interface ReportProps {
   };
   timeframe: string;
   recentActivity?: any[];
+  detailedLedger?: any[];
+  inventoryList?: any[];
+  allOrdersList?: any[];
+  businessInfo?: any;
 }
 
-export const FinanceReport: React.FC<ReportProps> = ({ stats, timeframe, recentActivity }) => (
+export const FinanceReport: React.FC<ReportProps> = ({ 
+  stats, 
+  timeframe, 
+  recentActivity, 
+  detailedLedger,
+  inventoryList,
+  allOrdersList,
+  businessInfo 
+}) => (
   <Document title="Artisan Executive Ledger">
     <Page size="A4" style={styles.page}>
+      {/* Synchronized Branded Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Artisan Ledger Report</Text>
-        <Text style={styles.subtitle}>Executive Financial & Operational Repository | {timeframe}</Text>
+        {businessInfo?.business_logo_url && (
+          <Image src={businessInfo.business_logo_url} style={styles.logo} />
+        )}
+        <Text style={styles.studioName}>{businessInfo?.business_name || 'Artisan Business'}</Text>
+        <Text style={styles.studioDetails}>
+          {businessInfo?.business_address || ''} | {businessInfo?.business_email} | {businessInfo?.business_phone}
+        </Text>
+        {businessInfo?.business_url && <Text style={styles.studioDetails}>{businessInfo.business_url}</Text>}
       </View>
 
-      <View style={styles.section}>
+      <View style={styles.divider} />
+      <Text style={styles.docTitle}>Executive Master Ledger</Text>
+      <Text style={{ textAlign: 'center', fontSize: 9, color: '#666', marginBottom: 20 }}>Reporting Cycle: {timeframe}</Text>
+
+      {/* Financial Nucleus */}
+      <View style={styles.section} wrap={false}>
         <Text style={styles.sectionTitle}>Financial performance nucleus</Text>
         <View style={styles.kpiGrid}>
           <View style={styles.kpiBox}>
@@ -75,56 +114,90 @@ export const FinanceReport: React.FC<ReportProps> = ({ stats, timeframe, recentA
         </View>
       </View>
 
+      {/* Artisanal Inventory Ledger */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Creative Performance (Bestsellers)</Text>
+        <Text style={styles.sectionTitle}>Artisanal Inventory Ledger</Text>
         <View style={styles.tableHeader}>
-          <Text style={[styles.col1, {fontWeight: 700, fontSize: 8, color: '#888'}]}>ARTISANAL PIECE</Text>
-          <Text style={[styles.col2, {fontWeight: 700, fontSize: 8, color: '#888'}]}>VOLUME</Text>
-          <Text style={[styles.col3, {fontWeight: 700, fontSize: 8, color: '#888'}]}>REVENUE</Text>
+          <Text style={[styles.cellHeader, styles.colName]}>PIECE DESCRIPTION</Text>
+          <Text style={[styles.cellHeader, styles.colStock]}>STOCK</Text>
+          <Text style={[styles.cellHeader, styles.colVal]}>VALUATION (N$)</Text>
         </View>
-        {(stats.topProducts || []).map((p, i) => (
-          <View key={i} style={styles.tableRow}>
-            <Text style={styles.col1}>{p.name}</Text>
-            <Text style={styles.col2}>{p.quantity}</Text>
-            <Text style={styles.col3}>{formatCurrency(p.revenue)}</Text>
+        {(inventoryList || []).map((p, i) => (
+          <View key={i} style={styles.tableRow} wrap={false}>
+            <Text style={styles.colName}>{p.name}</Text>
+            <Text style={styles.colStock}>{p.stock_quantity}</Text>
+            <Text style={styles.colVal}>{formatCurrency(p.price)}</Text>
           </View>
         ))}
-        {(!stats.topProducts || stats.topProducts.length === 0) && (
-          <Text style={{fontSize: 9, color: '#999', marginTop: 10, fontStyle: 'italic'}}>No specific product data attributed to this cycle.</Text>
+        {(!inventoryList || inventoryList.length === 0) && (
+          <Text style={{fontSize: 9, color: '#999', marginTop: 10, fontStyle: 'italic'}}>No inventory records detected in the studio repository.</Text>
         )}
       </View>
 
+      {/* Operational Order Flow */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Client Portfolio Leaders</Text>
+        <Text style={styles.sectionTitle}>Operational Order Flow</Text>
         <View style={styles.tableHeader}>
-          <Text style={[styles.col1, {fontWeight: 700, fontSize: 8, color: '#888'}]}>ARTISAN CLIENT</Text>
-          <Text style={[styles.col3, {width: '40%', fontWeight: 700, fontSize: 8, color: '#888'}]}>TOTAL LEDGER VALUE</Text>
+          <Text style={[styles.cellHeader, styles.orderColId]}>ORDER ID</Text>
+          <Text style={[styles.cellHeader, styles.orderColDate]}>DATE</Text>
+          <Text style={[styles.cellHeader, styles.orderColClient]}>ARTISAN CLIENT</Text>
+          <Text style={[styles.cellHeader, styles.orderColStatus]}>STATUS</Text>
+          <Text style={[styles.cellHeader, styles.orderColTotal]}>TOTAL VALUE</Text>
         </View>
-        {(stats.topClients || []).map((c, i) => (
-          <View key={i} style={styles.tableRow}>
-            <View style={styles.col1}>
-               <Text>{c.full_name}</Text>
-               <Text style={{fontSize: 7, color: '#888'}}>{c.email}</Text>
-            </View>
-            <Text style={[styles.col3, {width: '40%'}]}>{formatCurrency(c.total_revenue)}</Text>
+        {(allOrdersList || []).map((order, i) => (
+          <View key={i} style={styles.tableRow} wrap={false}>
+            <Text style={styles.orderColId}>#{order.id.slice(0, 8).toUpperCase()}</Text>
+            <Text style={styles.orderColDate}>{formatDate(order.created_at)}</Text>
+            <Text style={styles.orderColClient}>{order.customer_name}</Text>
+            <Text style={[styles.orderColStatus, {textTransform: 'uppercase', fontStyle: 'italic'}]}>{order.status}</Text>
+            <Text style={styles.orderColTotal}>{formatCurrency(order.total_amount)}</Text>
           </View>
         ))}
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Consolidated Activity Flow</Text>
-        {(recentActivity || []).map((act, i) => (
-          <View key={i} style={[styles.row, {marginBottom: 4}]}>
-            <Text style={styles.label}>Order intake from {act.customer_name}</Text>
-            <Text style={styles.badge}>{formatDate(act.created_at)}</Text>
+        {allOrdersList && allOrdersList.length > 0 && (
+          <View style={[styles.tableRow, { backgroundColor: '#fafafa', borderTopWidth: 1, borderTopColor: '#c19b3a' }]}>
+            <Text style={[styles.orderColId, { fontWeight: 700, color: '#1a1a1a' }]}>TOTAL</Text>
+            <Text style={styles.orderColDate}></Text>
+            <Text style={styles.orderColClient}></Text>
+            <Text style={styles.orderColStatus}></Text>
+            <Text style={styles.orderColTotal}>
+              {formatCurrency(allOrdersList.reduce((sum, o) => sum + (o.total_amount || 0), 0))}
+            </Text>
           </View>
-        ))}
-        {(!recentActivity || recentActivity.length === 0) && (
-          <Text style={{fontSize: 9, color: '#999', fontStyle: 'italic'}}>No recent operational shifts detected in this window.</Text>
+        )}
+        {(!allOrdersList || allOrdersList.length === 0) && (
+          <Text style={{fontSize: 9, color: '#999', marginTop: 10, fontStyle: 'italic'}}>No orders detected within the current reporting cycle.</Text>
         )}
       </View>
 
-      <View style={styles.footer}>
+      {/* Detailed Transactional Narrative (Documents) */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Detailed Transactional Narrative</Text>
+        <View style={styles.tableHeader}>
+          <Text style={[styles.cellHeader, styles.refCol]}>REF</Text>
+          <Text style={[styles.cellHeader, styles.dateCol]}>DATE</Text>
+          <Text style={[styles.cellHeader, styles.clientCol]}>CLIENT</Text>
+          <Text style={[styles.cellHeader, styles.typeCol]}>TYPE</Text>
+          <Text style={[styles.cellHeader, styles.statusCol]}>STATUS</Text>
+          <Text style={[styles.cellHeader, styles.amountCol]}>AMOUNT</Text>
+        </View>
+        {(detailedLedger || []).map((doc, i) => (
+          <View key={i} style={styles.ledgerRow} wrap={false}>
+            <Text style={styles.refCol}>S2S-{doc.id.slice(0, 4)}</Text>
+            <Text style={styles.dateCol}>{formatDate(doc.created_at)}</Text>
+            <Text style={styles.clientCol}>{doc.orders?.customer_name || 'Individual Client'}</Text>
+            <Text style={[styles.typeCol, {textTransform: 'uppercase'}]}>{doc.type}</Text>
+            <Text style={[styles.statusCol, {color: doc.is_paid ? '#10b981' : '#f59e0b', fontWeight: 700}]}>
+              {doc.is_paid ? 'PAID' : 'OPEN'}
+            </Text>
+            <Text style={styles.amountCol}>{formatCurrency(doc.grand_total)}</Text>
+          </View>
+        ))}
+        {(!detailedLedger || detailedLedger.length === 0) && (
+          <Text style={{fontSize: 9, color: '#999', marginTop: 10, fontStyle: 'italic'}}>No transactional records found in this cycle.</Text>
+        )}
+      </View>
+
+      <View style={styles.footer} fixed>
         <Text style={styles.footerText}>Space2Standard Executive Repository — Confidential Artisan Records</Text>
         <Text style={styles.footerText}>Certified on {formatDate(new Date().toISOString())}</Text>
       </View>

@@ -65,6 +65,18 @@
   .gold-divider {
     @apply h-px w-full bg-white/5 my-8;
   }
+
+  .apple-glass {
+    @apply bg-navy-950/40 backdrop-blur-3xl border-r border-[#ffffff0a];
+  }
+
+  .mail-item-active {
+    @apply bg-gold-500/10 border-l-[3px] border-gold-500 rounded-l-none;
+  }
+
+  .reading-pane {
+    @apply bg-navy-950/20 backdrop-blur-sm border-l border-[#ffffff0a];
+  }
 }
 
 /* Recharts styling */

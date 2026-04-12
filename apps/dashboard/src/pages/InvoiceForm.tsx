@@ -32,7 +32,8 @@ export const InvoiceForm = () => {
     order_id: orderId || '',
     vat_rate: 15,
     discount_total: 0,
-    client_id: ''
+    client_id: '',
+    payment_terms: ''
   });
 
   const [lineItems, setLineItems] = useState<any[]>([]);
@@ -51,6 +52,11 @@ export const InvoiceForm = () => {
       // 2. Fetch Clients for selection
       const { data: clientList } = await supabase.from('clients').select('id, full_name, email');
       setClients(clientList || []);
+
+      const terms = settings?.find(s => s.key === 'ledger_default_terms')?.value;
+      if (terms) {
+        setFormData(prev => ({ ...prev, payment_terms: terms }));
+      }
 
       if (isEdit && id) {
         await fetchInvoice(id);
@@ -83,7 +89,8 @@ export const InvoiceForm = () => {
         order_id: data.order_id || '',
         vat_rate: data.vat_rate,
         discount_total: data.discount_total || 0,
-        client_id: data.client_id || ''
+        client_id: data.client_id || '',
+        payment_terms: data.payment_terms || ''
       });
       setLineItems(data.line_items || []);
       setSelectedClientId(data.client_id || '');
@@ -195,7 +202,8 @@ export const InvoiceForm = () => {
       subtotal,
       vat_amount: vatAmount,
       grand_total: grandTotal,
-      order_id: formData.order_id || null
+      order_id: formData.order_id || null,
+      payment_terms: formData.payment_terms
     };
 
     try {

@@ -1,4 +1,6 @@
+import { serve } from 'https://deno.land/std@0.131.0/http/server.ts';
 import nodemailer from "npm:nodemailer@6.9.16";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,61 +14,114 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { to, subject, message, originalMessage } = await req.json();
-    
+    const { 
+      to, 
+      subject, 
+      message, 
+      recipientName, 
+      adminName, 
+      attachmentPath, 
+      documentType 
+    } = await req.json();
+
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Fetch Business Settings
+    const { data: settingsData } = await supabase.from('settings').select('*');
+    const settings = settingsData?.reduce((acc: any, s: any) => ({ ...acc, [s.key]: s.value }), {});
+
     const SMTP_HOST = Deno.env.get('SMTP_HOST') || 'mail.privateemail.com';
     const SMTP_PORT = parseInt(Deno.env.get('SMTP_PORT') || '465');
     const SMTP_USER = Deno.env.get('SMTP_USER');
     const SMTP_PASS = Deno.env.get('SMTP_PASS');
-    const BUSINESS_NAME = Deno.env.get('BUSINESS_NAME') || 'Space2Standard';
-
-    console.log(`[SMTP] Attempting delivery to: ${to} via ${SMTP_HOST}`);
 
     if (!SMTP_USER || !SMTP_PASS) {
-      return new Response(JSON.stringify({ error: "SMTP credentials (USER/PASS) are missing in Supabase Secrets." }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      throw new Error('SMTP credentials not configured.');
     }
 
     const transporter = nodemailer.createTransport({
       host: SMTP_HOST,
       port: SMTP_PORT,
       secure: SMTP_PORT === 465,
-      auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASS,
-      },
-      tls: {
-        rejectUnauthorized: false // Required for some segments of Namecheap infrastructure
-      },
-      connectionTimeout: 15000,
-      greetingTimeout: 15000,
-      socketTimeout: 30000,
-      debug: false,
-      logger: false
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+      tls: { rejectUnauthorized: false }
     });
 
-    const htmlBody = `
-      <div style="font-family: sans-serif; color: #0f172a; line-height: 1.5; padding: 20px;">
-        <h2 style="color: #c19b3a; border-bottom: 1px solid #c19b3a20; padding-bottom: 10px;">${BUSINESS_NAME} Artisan Response</h2>
-        <p style="margin-vertical: 20px; white-space: pre-wrap;">${message}</p>
-        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 13px; color: #64748b;">
-          <strong>Original Inquiry:</strong>
-          <p style="font-style: italic; border-left: 2px solid #e2e8f0; padding-left: 10px;">${originalMessage}</p>
+    const businessName = settings?.business_name || 'Space2Standard';
+    const businessAddress = settings?.business_address || 'Windhoek, Namibia';
+    const businessPhone = settings?.business_phone || '';
+    const businessEmail = settings?.business_email || SMTP_USER;
+
+    const attachments = [];
+
+    // Fetch and attach file from storage if path provided
+    if (attachmentPath) {
+      const { data: fileData, error: fileError } = await supabase.storage
+        .from('communications')
+        .download(attachmentPath);
+
+      if (fileError) {
+        console.error(`[SMTP ERROR] Attachment download failed: ${fileError.message}`);
+      } else {
+        const buffer = await fileData.arrayBuffer();
+        attachments.push({
+          filename: `${documentType || 'Document'}.pdf`,
+          content: new Uint8Array(buffer),
+          contentType: 'application/pdf'
+        });
+      }
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6; margin: 0; padding: 0; }
+          .container { max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #e2e8f0; border-radius: 8px; }
+          .header { text-align: center; border-bottom: 2px solid #c19b3a; padding-bottom: 20px; margin-bottom: 30px; }
+          .logo-text { font-size: 24px; font-weight: bold; color: #c19b3a; letter-spacing: 2px; text-transform: uppercase; }
+          .content { font-size: 16px; margin-bottom: 30px; }
+          .greeting { font-weight: bold; font-size: 18px; margin-bottom: 20px; }
+          .message { white-space: pre-wrap; }
+          .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; }
+          .signature { margin-bottom: 20px; }
+          .signature-name { font-weight: bold; color: #1e293b; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="logo-text">${businessName}</div>
+          </div>
+          <div class="content">
+            <div class="greeting">Dear ${recipientName || 'Valued Client'},</div>
+            <div class="message">${message}</div>
+            ${attachmentPath ? `<p style="margin-top: 30px; color: #64748b; font-size: 14px;"><strong>Note:</strong> A ${documentType || 'document'} has been attached to this email for your reference.</p>` : ''}
+          </div>
+          <div class="footer">
+            <div class="signature">
+              <p>Best regards,</p>
+              <p class="signature-name">${adminName || 'Artisan Admin'}</p>
+              <p>${businessName}</p>
+            </div>
+            <p>${businessAddress}<br/>${businessPhone}<br/>${businessEmail}</p>
+          </div>
         </div>
-      </div>
+      </body>
+      </html>
     `;
 
     await transporter.sendMail({
-      from: `"${BUSINESS_NAME}" <${SMTP_USER}>`,
+      from: `"${businessName}" <${SMTP_USER}>`,
       to: to,
-      replyTo: SMTP_USER,
       subject: subject,
-      html: htmlBody,
+      html: htmlContent,
+      attachments: attachments
     });
-
-    console.log(`[SMTP] Successfully sent to ${to}`);
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -74,18 +129,8 @@ Deno.serve(async (req) => {
     });
 
   } catch (error: any) {
-    console.error(`[SMTP ERROR] ${error.name}: ${error.message}`);
-    
-    // Categorize errors for the UI
-    let userFriendlyError = error.message;
-    if (error.code === 'EAUTH') userFriendlyError = "Authentication failed. Please verify your SMTP password.";
-    if (error.code === 'ECONNREFUSED') userFriendlyError = "Connection refused. Check SMTP host and port.";
-    if (error.code === 'ETIMEOUT') userFriendlyError = "Connection timed out. The SMTP server is not responding.";
-
-    return new Response(JSON.stringify({ 
-      error: userFriendlyError,
-      details: error.code || error.name 
-    }), {
+    console.error('[Email Error]', error);
+    return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });

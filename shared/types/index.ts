@@ -97,6 +97,8 @@ export interface Document {
   vat_rate: number;
   vat_amount: number;
   grand_total: number;
+  is_paid: boolean;
+  payment_terms: string | null;
   created_at: string;
   pdf_url: string | null;
 }

@@ -256,6 +256,16 @@ export const Settings = () => {
                   </div>
                </div>
 
+               <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-navy-500 ml-1">Global Payment Terms (Default)</label>
+                  <textarea 
+                    className="input-base min-h-[100px] resize-none" 
+                    value={settings.ledger_default_terms || ''} 
+                    placeholder="e.g. 50% deposit required. Final balance due upon delivery."
+                    onChange={e => handleUpdate('ledger_default_terms', e.target.value)}
+                  />
+               </div>
+
                <div className="gold-divider" />
 
                <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-white flex items-center gap-2">

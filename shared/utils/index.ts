@@ -4,10 +4,11 @@ import type { OrderStatus } from '../types';
  * Format a numeric amount as a Namibian currency string.
  */
 export function formatCurrency(
-  amount: number,
+  amount: number | null | undefined,
   _currency = 'NAD',
   _locale = 'en-NA'
 ): string {
+  if (amount === null || amount === undefined) return 'N$ 0.00';
   return `N$ ${amount.toLocaleString('en-ZA', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,

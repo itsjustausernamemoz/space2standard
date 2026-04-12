@@ -3,34 +3,31 @@ import { supabase } from '@/lib/supabase';
 import type { Document } from '@shared/types';
 import { formatCurrency, formatDate } from '@shared/utils';
 import { 
-  FileText, 
+  Edit2,
+  CheckCircle,
+  CreditCard,
   Plus, 
   Download, 
   Mail, 
   Search, 
   History,
   FileCheck,
+  FileText,
   ShieldCheck,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Share2,
+  Send,
+  X
 } from 'lucide-react';
-import { PDFDownloadLink, Document as PDFDoc, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
+import { PDFDownloadLink, Document as PDFDoc, Page, Text, View, StyleSheet, Font, Image, pdf } from '@react-pdf/renderer';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 
-// Register fonts for PDF (Using premium sans-serif)
-Font.register({
-  family: 'Inter',
-  fonts: [
-    { src: 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff' },
-    { src: 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuI6fAZ9hjp-Ek-_EeA.woff', fontWeight: 700 }
-  ]
-});
-
 // Safari Craft High-Fidelity Styles
 const styles = StyleSheet.create({
-  page: { padding: 40, fontFamily: 'Inter', backgroundColor: '#ffffff', color: '#1a1a1a', fontSize: 9 },
+  page: { padding: 40, fontFamily: 'Helvetica', backgroundColor: '#ffffff', color: '#1a1a1a', fontSize: 9 },
   header: { alignItems: 'center', marginBottom: 20 },
   logo: { width: 120, height: 60, objectFit: 'contain', marginBottom: 10 },
   studioName: { fontSize: 18, fontWeight: 700, color: '#c19b3a', letterSpacing: 1, textTransform: 'uppercase' },
@@ -86,7 +83,7 @@ const styles = StyleSheet.create({
   footer: { position: 'absolute', bottom: 30, left: 40, right: 40, textAlign: 'center', fontSize: 7, color: '#aaa', borderTop: '0.5pt solid #eee', paddingTop: 10 }
 });
 
-const formatN = (val: number) => `N$ ${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const formatN = (val: any) => `N$ ${Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 // PDF Component
 const InvoicePDF = ({ doc, businessInfo, order }: { doc: Document, businessInfo: any, order?: any }) => (
@@ -94,7 +91,12 @@ const InvoicePDF = ({ doc, businessInfo, order }: { doc: Document, businessInfo:
     <Page size="A4" style={styles.page}>
       {/* Header */}
       <View style={styles.header}>
-        {businessInfo.business_logo_url && <Image src={businessInfo.business_logo_url} style={styles.logo} />}
+        {businessInfo.business_logo_url && (
+          <Image 
+            src={businessInfo.business_logo_url} 
+            style={styles.logo} 
+          />
+        )}
         <Text style={styles.studioName}>{businessInfo.business_name || 'Space2Standard Business'}</Text>
         <Text style={styles.studioDetails}>
           {businessInfo.business_address || 'Windhoek, Namibia'} | {businessInfo.business_email} | {businessInfo.business_phone}
@@ -179,10 +181,9 @@ const InvoicePDF = ({ doc, businessInfo, order }: { doc: Document, businessInfo:
       {/* Footer Info */}
       <Text style={styles.sectionTitle}>Terms & Conditions</Text>
       <View>
-        <Text style={styles.termsText}>1. A 50% deposit ({formatN(doc.grand_total * 0.5)}) is required upon acceptance to confirm the order.</Text>
-        <Text style={styles.termsText}>2. The remaining balance is due after delivery of the product.</Text>
-        <Text style={styles.termsText}>3. Cancellations made less than 5 days after acceptance will forfeit the deposit.</Text>
-        <Text style={styles.termsText}>4. All prices are quoted in Namibian Dollars (N$).</Text>
+        {(doc.payment_terms || 'Payment is due within 7 days of invoice date.').split('\n').map((line: string, i: number) => (
+          <Text key={i} style={styles.termsText}>{line}</Text>
+        ))}
       </View>
 
       <Text style={styles.sectionTitle}>Banking Details</Text>
@@ -229,12 +230,16 @@ export const Invoices = () => {
   const navigate = useNavigate();
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [businessInfo, setBusinessInfo] = useState({});
+  const [businessInfo, setBusinessInfo] = useState<any>({});
   const [timeframe, setTimeframe] = useState('all');
   const [activeTab, setActiveTab] = useState<'invoice' | 'quotation'>('invoice');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
+  const [sharingDoc, setSharingDoc] = useState<any>(null);
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareNotes, setShareNotes] = useState('');
+  const [confirmingPaidDoc, setConfirmingPaidDoc] = useState<any>(null);
   const itemsPerPage = 6;
 
   useEffect(() => {
@@ -252,7 +257,7 @@ export const Invoices = () => {
 
     let query = supabase
       .from('documents')
-      .select('*, orders!inner(*)', { count: 'exact' });
+      .select('*, orders(*), clients(*)', { count: 'exact' });
 
     // Server-side filtering by tab type
     query = query.eq('type', tab);
@@ -298,6 +303,128 @@ export const Invoices = () => {
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
     fetchData(newPage, searchTerm, activeTab, timeframe);
+  };
+
+  const handleMarkAsPaid = async () => {
+    const doc = confirmingPaidDoc;
+    if (!doc) return;
+    
+    setConfirmingPaidDoc(null);
+    setLoading(true);
+    try {
+      // 1. Update Document Status
+      const { error: docError } = await supabase
+        .from('documents')
+        .update({ is_paid: true })
+        .eq('id', doc.id);
+      if (docError) throw docError;
+
+      // 2. Update Order Status
+      if (doc.order_id) {
+        await supabase.from('orders').update({ status: 'completed' }).eq('id', doc.order_id);
+      }
+
+      // 3. Inventory Deduction Transactional-style
+      const items = doc.line_items || [];
+      for (const item of items) {
+        if (item.product_id) {
+          const { data: prod } = await supabase
+            .from('products')
+            .select('stock_quantity')
+            .eq('id', item.product_id)
+            .single();
+          
+          if (prod) {
+            const newQty = Math.max(0, (prod.stock_quantity || 0) - (item.quantity || 0));
+            await supabase.from('products').update({ stock_quantity: newQty }).eq('id', item.product_id);
+          }
+        }
+      }
+
+      toast.success('Artisan Ledger reconciled. Payment tracked and stock adjusted.');
+      fetchData(currentPage, searchTerm, activeTab, timeframe);
+    } catch (err: any) {
+      toast.error(`Reconciliation failed: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!sharingDoc) return;
+    setIsSharing(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user?.id).single();
+      const { data: { session } } = await supabase.auth.getSession();
+
+      // 1. Generate PDF Blob on-the-fly (with safety wrap)
+      let pdfBlob;
+      try {
+        pdfBlob = await pdf(<InvoicePDF doc={sharingDoc} businessInfo={businessInfo} order={sharingDoc.orders} />).toBlob();
+      } catch (err) {
+        console.error('PDF Generation Error:', err);
+        throw new Error('Artisan ledger generation failed. Please check logo format or try again.');
+      }
+      
+      // 2. Upload to private communications bucket
+      const fileName = `${sharingDoc.type}_${sharingDoc.id}_${Date.now()}.pdf`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('communications')
+        .upload(fileName, pdfBlob, {
+          contentType: 'application/pdf',
+          upsert: true
+        });
+
+      if (uploadError) throw new Error(`Document upload failed: ${uploadError.message}`);
+
+      // 3. Dispatch Email with attachmentPath
+      const recipientEmail = sharingDoc.orders?.customer_email || sharingDoc.clients?.email;
+      const recipientName = sharingDoc.orders?.customer_name || sharingDoc.clients?.full_name;
+
+      if (!recipientEmail) throw new Error('Recipient identity is missing from the ledger record.');
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-reply`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({
+          to: recipientEmail,
+          recipientName: recipientName,
+          subject: `${sharingDoc.type === 'invoice' ? 'Tax Invoice' : 'Project Quotation'} from ${businessInfo.business_name || 'Space2Standard'}`,
+          message: shareNotes || `Please find your ${sharingDoc.type} attached for your bespoke project.`,
+          adminName: profile?.full_name || 'Admin',
+          attachmentPath: fileName,
+          documentType: sharingDoc.type === 'invoice' ? 'Tax Invoice' : 'Project Quotation'
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to dispatch document email');
+
+      // 4. Log Communication
+      await supabase.from('communication_logs').insert({
+        client_id: sharingDoc.client_id,
+        type: 'outbound',
+        sender_name: profile?.full_name || 'Admin',
+        sender_email: 'studio@space2standard.com',
+        recipient_email: recipientEmail,
+        subject: `${sharingDoc.type.toUpperCase()} SHARED: ${sharingDoc.id.slice(0,8)}`,
+        body: shareNotes || `Document shared via Artisan Ledger.`,
+        metadata: { document_id: sharingDoc.id, document_type: sharingDoc.type },
+        admin_id: user?.id
+      });
+
+      toast.success('Document shared with client.');
+      setSharingDoc(null);
+      setShareNotes('');
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsSharing(false);
+    }
   };
 
   return (
@@ -399,34 +526,60 @@ export const Invoices = () => {
                         </div>
                      </div>
 
-                     <div className="flex gap-2 w-full lg:w-auto">
-                        {doc.type === 'quotation' && (
-                           <button 
-                             onClick={() => navigate(`/invoices/new?type=invoice&orderId=${doc.order_id}&fromQuote=${doc.id}`)}
-                             className="flex items-center gap-2 px-4 py-2.5 bg-success/10 hover:bg-success/20 border border-success/20 rounded-[4px] text-[9px] font-bold uppercase tracking-[0.2em] text-success transition-all"
-                           >
-                              <ShieldCheck size={14} /> Issue Invoice
-                           </button>
-                        )}
-
-                        <PDFDownloadLink 
-                          document={<InvoicePDF doc={doc} businessInfo={businessInfo} order={doc.orders} />} 
-                          fileName={`${doc.type}_${doc.id.slice(0,8)}.pdf`}
-                          className="flex-1 lg:flex-none"
-                        >
-                           {({ loading: pdfLoading }) => (
-                             <button className="w-full flex items-center justify-center p-3 bg-white/5 rounded-[4px] text-white/40 hover:text-white transition-all">
-                                {pdfLoading ? <div className="w-4 h-4 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" /> : <Download size={18} />}
-                             </button>
+                        <div className="flex gap-2 w-full lg:w-auto">
+                           {doc.type === 'invoice' && !doc.is_paid && (
+                              <button 
+                                onClick={() => setConfirmingPaidDoc(doc)}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-success/10 hover:bg-success/20 border border-success/20 rounded-[4px] text-[9px] font-bold uppercase tracking-[0.2em] text-success transition-all"
+                              >
+                                 <CreditCard size={14} /> Mark Paid
+                              </button>
                            )}
-                        </PDFDownloadLink>
-                        <button 
-                          onClick={() => navigate(`/invoices/${doc.id}/edit`)}
-                          className="flex-1 lg:flex-none p-3 bg-white/5 rounded-[4px] text-white/40 hover:text-gold-500 transition-all"
-                        >
-                           <FileText size={18} />
-                        </button>
-                     </div>
+                           
+                           {doc.is_paid && (
+                              <div className="flex items-center gap-2 px-4 py-2.5 bg-success/10 border border-success/20 rounded-[4px] text-[9px] font-bold uppercase tracking-[0.2em] text-success">
+                                 <CheckCircle size={14} /> Paid
+                              </div>
+                           )}
+
+                           {doc.type === 'quotation' && (
+                              <button 
+                                onClick={() => navigate(`/invoices/new?type=invoice&orderId=${doc.order_id}&fromQuote=${doc.id}`)}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-success/10 hover:bg-success/20 border border-success/20 rounded-[4px] text-[9px] font-bold uppercase tracking-[0.2em] text-success transition-all"
+                              >
+                                 <ShieldCheck size={14} /> Issue Invoice
+                              </button>
+                           )}
+
+                           <PDFDownloadLink 
+                             document={<InvoicePDF doc={doc} businessInfo={businessInfo} order={doc.orders} />} 
+                             fileName={`${doc.type}_${doc.id.slice(0,8)}.pdf`}
+                             className="flex-1 lg:flex-none"
+                           >
+                              {({ loading: pdfLoading }) => (
+                                <button className="w-full flex items-center justify-center p-3 bg-white/5 rounded-[4px] text-white/40 hover:text-white transition-all">
+                                   {pdfLoading ? <div className="w-4 h-4 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" /> : <Download size={18} />}
+                                </button>
+                              )}
+                           </PDFDownloadLink>
+
+                           <button 
+                             onClick={() => {
+                               setSharingDoc(doc);
+                               setShareNotes(`Dear ${doc.orders?.customer_name || 'Valued Client'},\n\nPlease find your ${doc.type} attached for your bespoke project. We look forward to proceeding.`);
+                             }}
+                             className="flex-1 lg:flex-none p-3 bg-gold-500/5 rounded-[4px] text-gold-500/40 hover:text-gold-500 transition-all"
+                           >
+                              <Mail size={18} />
+                           </button>
+
+                           <button 
+                             onClick={() => navigate(`/invoices/${doc.id}/edit`)}
+                             className="flex-1 lg:flex-none p-3 bg-white/5 rounded-[4px] text-white/40 hover:text-gold-500 transition-all"
+                           >
+                              <Edit2 size={18} />
+                           </button>
+                        </div>
                   </div>
                </div>
             ))
@@ -460,6 +613,93 @@ export const Invoices = () => {
               >
                 Next <ChevronRight size={14}/>
               </button>
+           </div>
+        </div>
+      )}
+
+      {/* Share Modal */}
+      {sharingDoc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-navy-950/80 backdrop-blur-sm animate-in fade-in duration-300">
+           <div className="dashboard-card w-full max-w-lg space-y-8 animate-in zoom-in-95 duration-300">
+              <div className="flex justify-between items-center">
+                 <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gold-500/10 rounded-[4px] text-gold-500">
+                       <Share2 size={20} />
+                    </div>
+                    <div>
+                       <h3 className="text-xl font-serif text-white">Share Document</h3>
+                       <p className="text-[10px] font-bold uppercase tracking-widest text-navy-500 mt-1">Direct to {sharingDoc.orders?.customer_email}</p>
+                    </div>
+                 </div>
+                 <button onClick={() => setSharingDoc(null)} className="text-navy-600 hover:text-white transition-colors"><X size={20}/></button>
+              </div>
+
+              <div className="space-y-4">
+                 <div className="p-4 bg-white/5 rounded-[4px] border border-white/5 flex items-center gap-4">
+                    <FileText size={16} className="text-gold-500" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-navy-400">Attached: {sharingDoc.type.toUpperCase()} S2S-{sharingDoc.id.slice(0,4)}</span>
+                 </div>
+
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-navy-600">Message to Client</label>
+                    <textarea 
+                      className="input-base min-h-[150px] resize-none py-4"
+                      placeholder="Enter a message for the client..."
+                      value={shareNotes}
+                      onChange={e => setShareNotes(e.target.value)}
+                    />
+                 </div>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                 <button 
+                   onClick={() => setSharingDoc(null)}
+                   className="flex-1 px-8 py-3 rounded-[4px] text-[10px] font-bold uppercase tracking-widest text-navy-500 hover:text-white transition-colors border border-white/5"
+                 >
+                    Cancel
+                 </button>
+                 <button 
+                   onClick={handleShare}
+                   disabled={isSharing}
+                   className="flex-1 btn-dashboard-primary flex items-center justify-center gap-3 h-12"
+                 >
+                    {isSharing ? <div className="w-4 h-4 border-2 border-navy-950 border-t-transparent rounded-full animate-spin" /> : <Send size={16} />}
+                    {isSharing ? 'DISPATCHING...' : 'DISPATCH DOCUMENT'}
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
+      {/* Reconciliation Confirmation Modal */}
+      {confirmingPaidDoc && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-navy-950/40 backdrop-blur-md animate-in fade-in duration-300">
+           <div className="dashboard-card w-full max-w-sm space-y-8 animate-in zoom-in-95 duration-300 border-gold-500/20 shadow-2xl shadow-gold-500/5">
+              <div className="flex flex-col items-center text-center space-y-4">
+                 <div className="p-4 bg-gold-500/10 rounded-full text-gold-500 mb-2">
+                    <ShieldCheck size={32} />
+                 </div>
+                 <div className="space-y-2">
+                    <h3 className="text-xl font-serif text-white">Reconcile Ledger?</h3>
+                    <p className="text-[11px] text-navy-400 leading-relaxed px-4">
+                       Marking <span className="text-gold-400 font-bold uppercase tracking-tighter">S2S-{confirmingPaidDoc.id.slice(0,4)}</span> as paid will automatically close the linked project and adjust artisanal inventory.
+                    </p>
+                 </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                 <button 
+                   onClick={handleMarkAsPaid}
+                   className="w-full btn-dashboard-primary h-12 text-[10px] font-bold uppercase tracking-[0.2em]"
+                 >
+                    Confirm Ledger Payment
+                 </button>
+                 <button 
+                   onClick={() => setConfirmingPaidDoc(null)}
+                   className="w-full h-12 text-[10px] font-bold uppercase tracking-[0.2em] text-navy-600 hover:text-white transition-colors"
+                 >
+                    Cancel
+                 </button>
+              </div>
            </div>
         </div>
       )}
