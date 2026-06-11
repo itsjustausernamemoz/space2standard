@@ -7,30 +7,35 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex bg-navy-950 min-h-screen text-cream-100">
-      {/* Sidebar - Desktop logic and Mobile Drawer */}
+    {/* h-screen + overflow-hidden: locks the outer shell to the viewport so the sidebar never scrolls */}
+    <div className="flex bg-navy-950 h-screen overflow-hidden text-cream-100">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-      
-      <main className="flex-1 flex flex-col min-w-0">
-        {/* Mobile Header (Branding & Global Actions) */}
-        <div className="lg:hidden flex items-center justify-between p-4 border-b border-navy-800 bg-navy-900/50 backdrop-blur-md sticky top-0 z-30">
-          <h2 className="text-sm font-serif text-white tracking-widest uppercase truncate min-w-0 pr-4">
-            Space<span className="text-gold-500 italic">2</span>Standard
-          </h2>
+
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Mobile sticky header */}
+        <div className="lg:hidden flex items-center justify-between px-4 h-[44px] shrink-0 border-b border-white/[0.06] bg-[#0d1220]/80 backdrop-blur-md z-30">
+          <div className="flex items-center gap-2.5">
+            <img src="/s2s-square.png" alt="Space2Standard" className="h-7 w-7 object-contain" />
+            <span
+              className="text-white"
+              style={{ fontFamily: 'SF Pro Display, system-ui, -apple-system, sans-serif', fontSize: '14px', fontWeight: 600, letterSpacing: '-0.2px' }}
+            >
+              Space2Standard
+            </span>
+          </div>
           <NotificationPanel />
         </div>
 
-        <div className="flex-1 overflow-x-hidden pb-24 lg:pb-0 relative">
-          {/* Desktop Global Actions Frame */}
+        {/* Only this div scrolls — sidebar stays put */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden pb-24 lg:pb-0 relative">
           <div className="hidden lg:block absolute top-8 right-10 z-40">
-             <NotificationPanel />
+            <NotificationPanel />
           </div>
           <div className="container mx-auto p-6 md:p-10 pt-8 lg:pt-16 max-w-7xl animate-in fade-in duration-700">
             {children}
           </div>
         </div>
 
-        {/* Mobile Native Bottom Navigation */}
         <BottomNav onMenuClick={() => setIsSidebarOpen(true)} />
       </main>
     </div>

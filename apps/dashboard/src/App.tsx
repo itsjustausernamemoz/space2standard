@@ -1,22 +1,41 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import { AuthGuard } from './components/AuthGuard';
 import { Layout } from './components/Layout';
+
+// Eagerly load Login — needed before auth resolves
 import { Login } from './pages/Login';
-import { Dashboard } from './pages/Dashboard';
-import { Gallery } from './pages/Gallery';
-import { Products } from './pages/Products';
-import { ProductForm } from './pages/ProductForm';
-import { Categories } from './pages/Categories';
-import { Orders } from './pages/Orders';
-import { Invoices } from './pages/Invoices';
-import { InvoiceForm } from './pages/InvoiceForm';
-import { Inventory } from './pages/Inventory';
-import { Settings } from './pages/Settings';
-import { Messages } from './pages/Messages';
-import { Clients } from './pages/Clients';
+
+// Lazy-load all protected pages — only fetched after auth passes
+const Dashboard   = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
+const Gallery     = lazy(() => import('./pages/Gallery').then(m => ({ default: m.Gallery })));
+const Products    = lazy(() => import('./pages/Products').then(m => ({ default: m.Products })));
+const ProductForm = lazy(() => import('./pages/ProductForm').then(m => ({ default: m.ProductForm })));
+const Categories  = lazy(() => import('./pages/Categories').then(m => ({ default: m.Categories })));
+const Orders      = lazy(() => import('./pages/Orders').then(m => ({ default: m.Orders })));
+const Invoices    = lazy(() => import('./pages/Invoices').then(m => ({ default: m.Invoices })));
+const InvoiceForm = lazy(() => import('./pages/InvoiceForm').then(m => ({ default: m.InvoiceForm })));
+const Inventory   = lazy(() => import('./pages/Inventory').then(m => ({ default: m.Inventory })));
+const Settings    = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
+const Messages    = lazy(() => import('./pages/Messages').then(m => ({ default: m.Messages })));
+const Clients     = lazy(() => import('./pages/Clients').then(m => ({ default: m.Clients })));
+
+const sfText = 'SF Pro Text, system-ui, -apple-system, sans-serif';
+
+// Page-level suspense fallback — matches the app shell so there's no jarring flash
+const PageFallback = () => (
+  <div
+    className="flex-1 flex items-center justify-center"
+    style={{ minHeight: '60vh' }}
+  >
+    <div
+      className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
+      style={{ borderColor: '#c9a46a', borderTopColor: 'transparent' }}
+    />
+  </div>
+);
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -26,24 +45,16 @@ class ErrorBoundary extends React.Component<
     super(props);
     this.state = { hasError: false, error: null };
   }
-
   static getDerivedStateFromError(error: Error) {
     return { hasError: true, error };
   }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ErrorBoundary caught:', error, errorInfo);
-  }
-
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: 40, color: '#ef4444', fontFamily: 'monospace', background: '#0a0a0a', minHeight: '100vh' }}>
-          <h1 style={{ color: '#c19b3a', marginBottom: 20 }}>⚠️ Dashboard Render Error</h1>
-          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#f87171' }}>
+        <div style={{ padding: 40, background: '#060b18', minHeight: '100vh', fontFamily: sfText }}>
+          <p style={{ color: '#c9a46a', fontSize: 14, marginBottom: 16 }}>Something went wrong.</p>
+          <pre style={{ color: '#ef4444', fontSize: 12, whiteSpace: 'pre-wrap' }}>
             {this.state.error?.message}
-            {'\n\n'}
-            {this.state.error?.stack}
           </pre>
         </div>
       );
@@ -57,37 +68,38 @@ function App() {
     <ErrorBoundary>
       <Router>
         <AuthProvider>
-          <Toaster 
-            position="top-right" 
+          <Toaster
+            position="top-right"
             toastOptions={{
               style: {
-                background: '#121212',
-                color: '#f5f0e8',
-                border: '1px solid #c9a84c20',
-                fontFamily: 'Inter, sans-serif',
-                fontSize: '12px',
+                background: '#0d1220',
+                color: '#ffffff',
+                border: '1px solid rgba(201,164,106,0.15)',
+                fontFamily: sfText,
+                fontSize: '14px',
                 padding: '12px 20px',
+                borderRadius: '12px',
               },
-            }} 
+            }}
           />
           <Routes>
             <Route path="/login" element={<Login />} />
-            
+
             <Route element={<AuthGuard />}>
-              <Route path="/" element={<Layout><Dashboard /></Layout>} />
-              <Route path="/gallery" element={<Layout><Gallery /></Layout>} />
-              <Route path="/categories" element={<Layout><Categories /></Layout>} />
-              <Route path="/products" element={<Layout><Products /></Layout>} />
-              <Route path="/clients" element={<Layout><Clients /></Layout>} />
-              <Route path="/products/new" element={<Layout><ProductForm /></Layout>} />
-              <Route path="/products/:id/edit" element={<Layout><ProductForm /></Layout>} />
-              <Route path="/orders" element={<Layout><Orders /></Layout>} />
-              <Route path="/invoices" element={<Layout><Invoices /></Layout>} />
-              <Route path="/invoices/new" element={<Layout><InvoiceForm /></Layout>} />
-              <Route path="/invoices/:id/edit" element={<Layout><InvoiceForm /></Layout>} />
-              <Route path="/inventory" element={<Layout><Inventory /></Layout>} />
-              <Route path="/settings" element={<Layout><Settings /></Layout>} />
-              <Route path="/messages" element={<Layout><Messages /></Layout>} />
+              <Route path="/" element={<Layout><Suspense fallback={<PageFallback />}><Dashboard /></Suspense></Layout>} />
+              <Route path="/gallery" element={<Layout><Suspense fallback={<PageFallback />}><Gallery /></Suspense></Layout>} />
+              <Route path="/categories" element={<Layout><Suspense fallback={<PageFallback />}><Categories /></Suspense></Layout>} />
+              <Route path="/products" element={<Layout><Suspense fallback={<PageFallback />}><Products /></Suspense></Layout>} />
+              <Route path="/clients" element={<Layout><Suspense fallback={<PageFallback />}><Clients /></Suspense></Layout>} />
+              <Route path="/products/new" element={<Layout><Suspense fallback={<PageFallback />}><ProductForm /></Suspense></Layout>} />
+              <Route path="/products/:id/edit" element={<Layout><Suspense fallback={<PageFallback />}><ProductForm /></Suspense></Layout>} />
+              <Route path="/orders" element={<Layout><Suspense fallback={<PageFallback />}><Orders /></Suspense></Layout>} />
+              <Route path="/invoices" element={<Layout><Suspense fallback={<PageFallback />}><Invoices /></Suspense></Layout>} />
+              <Route path="/invoices/new" element={<Layout><Suspense fallback={<PageFallback />}><InvoiceForm /></Suspense></Layout>} />
+              <Route path="/invoices/:id/edit" element={<Layout><Suspense fallback={<PageFallback />}><InvoiceForm /></Suspense></Layout>} />
+              <Route path="/inventory" element={<Layout><Suspense fallback={<PageFallback />}><Inventory /></Suspense></Layout>} />
+              <Route path="/settings" element={<Layout><Suspense fallback={<PageFallback />}><Settings /></Suspense></Layout>} />
+              <Route path="/messages" element={<Layout><Suspense fallback={<PageFallback />}><Messages /></Suspense></Layout>} />
             </Route>
           </Routes>
         </AuthProvider>
@@ -97,4 +109,3 @@ function App() {
 }
 
 export default App;
-

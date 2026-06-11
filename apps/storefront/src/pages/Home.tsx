@@ -45,21 +45,26 @@ export const Home = () => {
           <ScrollReveal>
             <div className="space-y-8">
               <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">Excellence in Craftsmanship</span>
-              <h1 className="text-[56px] sm:text-[72px] md:text-[96px] font-serif text-white tracking-[-0.03em] leading-[1.05]">
+              <h1
+                className="text-white"
+                style={{ fontFamily: 'SF Pro Display, system-ui, -apple-system, sans-serif', fontSize: 'clamp(40px, 8vw, 80px)', fontWeight: 600, lineHeight: 1.07, letterSpacing: '-0.28px' }}
+              >
                 Space<span className="text-[#c9a46a]">2</span>Standard
               </h1>
-              <p className="text-[17px] md:text-[20px] font-light text-[#a0a8b8] max-w-2xl mx-auto leading-[1.8]">
-                Bespoke furniture crafted to your vision. <br className="hidden md:inline" /> 
-                Built to last generations with artisan precision.
+              <p
+                className="text-[#a0a8b8] max-w-2xl mx-auto"
+                style={{ fontFamily: 'SF Pro Display, system-ui, -apple-system, sans-serif', fontSize: '28px', fontWeight: 400, lineHeight: 1.14, letterSpacing: '0.196px' }}
+              >
+                Bespoke furniture crafted to your vision.
+                <br className="hidden md:inline" />
+                Built to last generations.
               </p>
-              <div className="pt-10 flex flex-col sm:flex-row items-center justify-center gap-6">
+              <div className="pt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link to="/products">
-                  <button className="px-10 py-4 bg-[#c9a46a] text-[#060b18] rounded-[4px] text-[11px] font-bold uppercase tracking-[0.15em] transition-all hover:bg-white">
-                    Order a Piece
-                  </button>
+                  <button className="btn-apple-hero">Order a Piece</button>
                 </Link>
                 <Link to="/products">
-                  <button className="px-10 py-4 border border-white text-white rounded-[4px] text-[11px] font-bold uppercase tracking-[0.15em] transition-all hover:bg-white hover:text-[#060b18]">
+                  <button className="btn-apple-outline" style={{ color: '#c9a46a', borderColor: '#c9a46a', fontSize: '18px', fontWeight: 300 }}>
                     Explore Collection
                   </button>
                 </Link>
@@ -75,7 +80,12 @@ export const Home = () => {
           <div className="flex flex-col md:flex-row justify-between items-end gap-12 mb-32">
             <div className="space-y-6 text-center md:text-left">
               <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">Our Masterpieces</span>
-              <h2 className="text-[48px] md:text-[64px] font-serif text-white tracking-tight leading-tight">Featured Collection</h2>
+              <h2
+                className="text-white"
+                style={{ fontFamily: 'SF Pro Display, system-ui, -apple-system, sans-serif', fontSize: 'clamp(34px, 5vw, 56px)', fontWeight: 600, lineHeight: 1.07, letterSpacing: '-0.28px' }}
+              >
+                Featured Collection
+              </h2>
             </div>
             <Link to="/products" className="group flex items-center gap-3 text-[#c9a46a] uppercase text-[11px] font-bold tracking-[0.2em] border-b border-[#c9a46a]/20 hover:border-[#c9a46a] transition-all pb-2">
               Browse All <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
@@ -109,7 +119,12 @@ export const Home = () => {
             <div className="space-y-16">
               <div className="space-y-8">
                 <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">The Artisan Way</span>
-                <h2 className="text-[48px] md:text-[64px] font-serif text-white tracking-tight leading-tight">From Tree <br/> to Table</h2>
+                <h2
+                  className="text-white"
+                  style={{ fontFamily: 'SF Pro Display, system-ui, -apple-system, sans-serif', fontSize: 'clamp(34px, 5vw, 56px)', fontWeight: 600, lineHeight: 1.07, letterSpacing: '-0.28px' }}
+                >
+                  From Tree<br />to Table
+                </h2>
                 <p className="text-[17px] font-light leading-[1.8] text-[#a0a8b8] max-w-xl">
                   At Space2Standard, we don't just build furniture; we curate masterpieces. 
                   Our process combines ancient woodworking techniques with modern precision to 
@@ -128,7 +143,12 @@ export const Home = () => {
                       <CheckCircle2 className="text-[#c9a46a]" size={16} />
                     </div>
                     <div className="space-y-2">
-                      <h3 className="text-[18px] font-serif text-white tracking-wide">{item.title}</h3>
+                      <h3
+                    className="text-white"
+                    style={{ fontFamily: 'SF Pro Display, system-ui, -apple-system, sans-serif', fontSize: '21px', fontWeight: 600, lineHeight: 1.19, letterSpacing: '0.231px' }}
+                  >
+                    {item.title}
+                  </h3>
                       <p className="text-[13px] font-light text-[#a0a8b8] leading-relaxed italic">{item.desc}</p>
                     </div>
                   </div>

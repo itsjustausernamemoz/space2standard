@@ -1,11 +1,12 @@
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────
-   Space2Standard — Luxury Design Tokens
+   Space2Standard — Design Tokens
+   Apple-principle typography + brand colors
    ───────────────────────────────────────── */
 @theme {
-  --font-display: "Playfair Display", "Cormorant Garamond", Georgia, serif;
-  --font-body: "Inter", "DM Sans", system-ui, sans-serif;
+  --font-display: "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  --font-body: "SF Pro Text", system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
 
   --color-background: #060b18;
   --color-surface: #1a1f2e;
@@ -40,19 +41,46 @@
     font-family: var(--font-body);
     background-color: var(--color-background);
     color: var(--color-text-muted);
-    line-height: 1.75;
+    font-size: 17px;
+    line-height: 1.47;
+    letter-spacing: -0.374px;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   a, button {
     transition: all 0.15s ease;
   }
 
-  h1, h2, h3, h4, h5 {
+  /* Apple active micro-interaction — system-wide */
+  button:active { transform: scale(0.95); }
+
+  h1 {
     font-family: var(--font-display);
-    font-weight: 400;
-    line-height: 1.2;
-    letter-spacing: -0.01em;
+    font-weight: 600;
+    line-height: 1.07;
+    letter-spacing: -0.28px;
+    color: var(--color-text-bright);
+  }
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: 0;
+    color: var(--color-text-bright);
+  }
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.19;
+    letter-spacing: 0.231px;
+    color: var(--color-text-bright);
+  }
+  h4, h5 {
+    font-family: var(--font-body);
+    font-weight: 600;
+    line-height: 1.24;
+    letter-spacing: -0.374px;
     color: var(--color-text-bright);
   }
 }
@@ -67,81 +95,97 @@
 
   .section-label {
     display: block;
-    font-size: 0.65rem;
+    font-family: var(--font-body);
+    font-size: 12px;
     font-weight: 600;
-    letter-spacing: 0.25em;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--color-gold);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
   }
 
+  /* Primary pill CTA — Apple signature action */
   .btn-apple-cta {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.75rem 2rem;
+    padding: 11px 22px;
     background-color: var(--color-gold);
     color: var(--color-background);
     font-family: var(--font-body);
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    border-radius: 4px;
-    transition: all 0.2s ease;
+    font-size: 17px;
+    font-weight: 400;
+    letter-spacing: -0.374px;
+    border-radius: 9999px;
+    transition: background-color 0.15s ease, transform 0.1s ease;
   }
-  .btn-apple-cta:hover {
-    background-color: var(--color-text-bright);
-    color: var(--color-background);
-  }
+  .btn-apple-cta:hover { background-color: var(--color-text-bright); }
+  .btn-apple-cta:active { transform: scale(0.95); }
 
+  /* Ghost pill — secondary CTA */
   .btn-apple-outline {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.75rem 2rem;
+    padding: 11px 22px;
     background-color: transparent;
     color: var(--color-gold);
     font-family: var(--font-body);
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
+    font-size: 17px;
+    font-weight: 400;
+    letter-spacing: -0.374px;
     border: 1px solid var(--color-gold);
-    border-radius: 4px;
-    transition: all 0.2s ease;
+    border-radius: 9999px;
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
   }
   .btn-apple-outline:hover {
     background-color: var(--color-gold);
     color: var(--color-background);
   }
+  .btn-apple-outline:active { transform: scale(0.95); }
+
+  /* Store hero CTA — larger pill */
+  .btn-apple-hero {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 28px;
+    background-color: var(--color-gold);
+    color: var(--color-background);
+    font-family: var(--font-body);
+    font-size: 18px;
+    font-weight: 300;
+    border-radius: 9999px;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+  }
+  .btn-apple-hero:hover { background-color: var(--color-text-bright); }
+  .btn-apple-hero:active { transform: scale(0.95); }
 
   .input-apple {
     width: 100%;
     background-color: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--color-text-bright);
-    padding: 0.75rem 1rem;
-    border-radius: 4px;
-    font-size: 0.9rem;
+    padding: 12px 20px;
+    border-radius: 9999px;
+    font-family: var(--font-body);
+    font-size: 17px;
+    height: 44px;
     transition: all 0.2s ease;
   }
   .input-apple:focus {
     outline: none;
     border-color: var(--color-gold);
     background-color: rgba(255, 255, 255, 0.05);
-    box-shadow: 0 0 0 1px rgba(201, 164, 106, 0.2);
+    box-shadow: 0 0 0 2px rgba(201, 164, 106, 0.25);
   }
-  .input-apple::placeholder {
-    color: #3a4050;
-  }
+  .input-apple::placeholder { color: #3a4050; }
 
   .reveal-up {
     opacity: 0;
     transform: translateY(24px);
   }
 
-  /* Thin borders */
   .border-thin {
     border: 0.5px solid rgba(255, 255, 255, 0.08);
   }

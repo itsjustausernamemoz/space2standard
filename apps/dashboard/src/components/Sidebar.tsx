@@ -1,18 +1,17 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingCart, 
-  FileText, 
-  BarChart3, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  FileText,
+  BarChart3,
+  Settings,
   LogOut,
-  ChevronRight,
   X,
   Image as ImageIcon,
   MessageSquare,
-  Users
+  Users,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -22,77 +21,114 @@ interface SidebarProps {
   onClose: () => void;
 }
 
+const sfDisplay = { fontFamily: 'SF Pro Display, system-ui, -apple-system, sans-serif' };
+const sfText = { fontFamily: 'SF Pro Text, system-ui, -apple-system, sans-serif' };
+
+const menuItems = [
+  { name: 'Overview',      icon: <LayoutDashboard size={17} />, path: '/' },
+  { name: 'Products',      icon: <Package size={17} />,         path: '/products' },
+  { name: 'Clients',       icon: <Users size={17} />,           path: '/clients' },
+  { name: 'Image Gallery', icon: <ImageIcon size={17} />,       path: '/gallery' },
+  { name: 'Categories',    icon: <Package size={17} />,         path: '/categories' },
+  { name: 'Orders',        icon: <ShoppingCart size={17} />,    path: '/orders' },
+  { name: 'Invoices',      icon: <FileText size={17} />,        path: '/invoices' },
+  { name: 'Inventory',     icon: <BarChart3 size={17} />,       path: '/inventory' },
+  { name: 'Messages',      icon: <MessageSquare size={17} />,   path: '/messages' },
+  { name: 'Settings',      icon: <Settings size={17} />,        path: '/settings' },
+];
+
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { signOut } = useAuth();
 
-  const menuItems = [
-    { name: 'Overview', icon: <LayoutDashboard size={18} />, path: '/' },
-    { name: 'Products', icon: <Package size={18} />, path: '/products' },
-    { name: 'Clients', icon: <Users size={18} />, path: '/clients' },
-    { name: 'Image Gallery', icon: <ImageIcon size={18} />, path: '/gallery' },
-    { name: 'Categories', icon: <Package size={18} />, path: '/categories' },
-    { name: 'Orders', icon: <ShoppingCart size={18} />, path: '/orders' },
-    { name: 'Invoices', icon: <FileText size={18} />, path: '/invoices' },
-    { name: 'Inventory', icon: <BarChart3 size={18} />, path: '/inventory' },
-    { name: 'Messages', icon: <MessageSquare size={18} />, path: '/messages' },
-    { name: 'Settings', icon: <Settings size={18} />, path: '/settings' },
-  ];
-
   return (
     <>
-      {/* Mobile Backdrop */}
+      {/* Mobile backdrop */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 bg-navy-black/60 backdrop-blur-sm z-40 lg:hidden"
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
           onClick={onClose}
         />
       )}
 
+      {/* Mobile: fixed drawer. Desktop: static column, height is 100% of the h-screen parent — never scrolls */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 w-72 bg-navy-950 border-r border-[#ffffff0a] flex flex-col z-50 transition-transform duration-300 transform lg:relative lg:translate-x-0 outline-none",
-        isOpen ? "translate-x-0" : "-translate-x-full"
+        'fixed inset-y-0 left-0 w-64 bg-[#0d1220] border-r border-white/[0.06] flex flex-col z-50 transition-transform duration-300',
+        'lg:static lg:translate-x-0 lg:h-full lg:shrink-0',
+        isOpen ? 'translate-x-0' : '-translate-x-full'
       )}>
-        <div className="p-10 border-b border-[#ffffff0a] flex justify-between items-center">
-          <div>
-            <h2 className="text-xl font-serif text-white tracking-widest uppercase">
-              Space<span className="text-gold-500 italic">2</span>Standard
-            </h2>
-            <p className="text-[10px] uppercase font-bold text-navy-500 tracking-[0.2em] mt-2">Atelier Dashboard</p>
+
+        {/* Logo header — matches Apple global-nav height cadence */}
+        <div className="h-[60px] flex items-center justify-between px-6 border-b border-white/[0.06] shrink-0">
+          <div className="flex items-center gap-3">
+            <img
+              src="/s2s-square.png"
+              alt="Space2Standard"
+              className="h-8 w-8 object-contain"
+            />
+            <div>
+              <p
+                className="text-white leading-none"
+                style={{ ...sfDisplay, fontSize: '14px', fontWeight: 600, letterSpacing: '-0.2px' }}
+              >
+                Space2Standard
+              </p>
+              <p
+                className="text-[#5a6070] leading-none mt-0.5"
+                style={{ ...sfText, fontSize: '11px', letterSpacing: '-0.08px' }}
+              >
+                Admin
+              </p>
+            </div>
           </div>
-          <button onClick={onClose} className="lg:hidden p-2 text-navy-500 hover:text-white">
-            <X size={20} />
+          <button
+            onClick={onClose}
+            className="lg:hidden text-[#5a6070] hover:text-white transition-colors p-1"
+          >
+            <X size={18} />
           </button>
         </div>
 
-        <nav className="flex-1 p-8 space-y-1.5 overflow-y-auto scrollbar-hide">
+        {/* Nav items */}
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
           {menuItems.map((item) => (
             <NavLink
               key={item.name}
               to={item.path}
               onClick={() => { if (window.innerWidth < 1024) onClose(); }}
-              className={({ isActive }) => 
+              className={({ isActive }) =>
                 cn(
-                  'sidebar-link group',
-                  isActive ? 'sidebar-link-active' : 'text-navy-400'
+                  'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 group',
+                  isActive
+                    ? 'bg-[#c9a46a]/10 text-[#c9a46a]'
+                    : 'text-[#6a7080] hover:text-white hover:bg-white/[0.05]'
                 )
               }
+              style={{ ...sfText, fontSize: '14px', letterSpacing: '-0.224px' }}
             >
-              <span className="group-hover:scale-110 transition-transform opacity-70 group-hover:opacity-100">{item.icon}</span>
-              <span className="flex-1">{item.name}</span>
-              <ChevronRight size={12} className={cn(
-                "transition-all duration-300 opacity-0 group-hover:opacity-40 group-hover:translate-x-1"
-              )} />
+              {({ isActive }) => (
+                <>
+                  <span className={cn('shrink-0 transition-colors', isActive ? 'text-[#c9a46a]' : 'text-[#4a5060] group-hover:text-white')}>
+                    {item.icon}
+                  </span>
+                  <span className="flex-1">{item.name}</span>
+                  {isActive && (
+                    <span className="w-1 h-1 rounded-full bg-[#c9a46a]" />
+                  )}
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
 
-        <div className="p-8 border-t border-[#ffffff0a]">
-          <button 
+        {/* Sign out */}
+        <div className="px-3 pb-4 pt-2 border-t border-white/[0.06]">
+          <button
             onClick={signOut}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-[4px] text-[10px] font-bold uppercase tracking-widest text-[#ef4444]/60 hover:text-[#ef4444] hover:bg-[#ef4444]/5 transition-all"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#ef4444]/50 hover:text-[#ef4444] hover:bg-[#ef4444]/[0.05] transition-all duration-150"
+            style={{ ...sfText, fontSize: '14px', letterSpacing: '-0.224px' }}
           >
-            <LogOut size={18} />
-            <span>Terminate Session</span>
+            <LogOut size={17} className="shrink-0" />
+            <span>Sign Out</span>
           </button>
         </div>
       </aside>

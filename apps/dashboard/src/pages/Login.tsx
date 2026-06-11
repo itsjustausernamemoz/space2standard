@@ -3,67 +3,44 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
+import { Mail } from 'lucide-react';
+
+const sfDisplay = { fontFamily: 'SF Pro Display, system-ui, -apple-system, sans-serif' };
+const sfText    = { fontFamily: 'SF Pro Text, system-ui, -apple-system, sans-serif' };
 
 export const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [loginMethod, setLoginMethod] = useState<'password' | 'magic-link'>('password');
-  const [isMagicLinkSent, setIsMagicLinkSent] = useState(false);
-  
+  const [email, setEmail]           = useState('');
+  const [password, setPassword]     = useState('');
+  const [loading, setLoading]       = useState(false);
+  const [method, setMethod]         = useState<'password' | 'magic-link'>('password');
+  const [linkSent, setLinkSent]     = useState(false);
+
   const { user, isAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already logged in as admin
-  if (!authLoading && user && isAdmin) {
-    return <Navigate to="/" replace />;
-  }
+  if (!authLoading && user && isAdmin) return <Navigate to="/" replace />;
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
-      console.log('Login: Auth success. Fetching profile for user:', data.user.id);
-
-      // Check if the user is actually an admin in the profiles table
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('role')
         .eq('id', data.user.id)
         .single();
-      
-      console.log('Login: Profile response:', { profile, profileError });
 
-      if (profileError) {
-        console.error('Login: Profile fetch error:', profileError);
-        if (profileError.code === 'PGRST116') {
-          toast.error('Admin profile not found. Please run the setup SQL.');
-        } else {
-          toast.error(`Database error: ${profileError.message}`);
-        }
+      if (profileError || profile?.role !== 'admin') {
         await supabase.auth.signOut();
+        toast.error('Access denied — admin accounts only.');
         return;
       }
-
-      if (profile?.role !== 'admin') {
-        console.warn('Login: Unauthorized role detected:', profile?.role);
-        await supabase.auth.signOut();
-        toast.error(`Access Denied: Your account role is "${profile?.role}". Administrator access only.`);
-      } else {
-        toast.success(`Welcome session active: ${profile.role} portal.`);
-        navigate('/');
-      }
+      navigate('/');
     } catch (error: any) {
-      console.error('Login: Auth error:', error);
-      toast.error(error.message || 'Error signing in.');
+      toast.error(error.message || 'Sign-in failed.');
     } finally {
       setLoading(false);
     }
@@ -72,123 +49,215 @@ export const Login = () => {
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: {
-          emailRedirectTo: window.location.origin,
-        },
+        options: { emailRedirectTo: window.location.origin },
       });
-
       if (error) throw error;
-      
-      setIsMagicLinkSent(true);
-      toast.success('Confirmation email sent. Please check your inbox.');
+      setLinkSent(true);
     } catch (error: any) {
-      toast.error(error.message || 'Error sending magic link.');
+      toast.error(error.message || 'Could not send link.');
     } finally {
       setLoading(false);
     }
   };
 
-  if (isMagicLinkSent) {
+  // ── Magic link sent confirmation ──────────────────────────────────────────
+  if (linkSent) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-charcoal-950 px-6">
-        <div className="w-full max-w-md text-center space-y-8">
-          <div className="w-20 h-20 bg-gold-500/10 rounded-full flex items-center justify-center mx-auto border border-gold-500/20">
-            <svg className="w-10 h-10 text-gold-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
+      <div
+        className="min-h-screen flex flex-col items-center justify-center px-6"
+        style={{ background: '#060b18' }}
+      >
+        <div className="w-full max-w-[400px] text-center space-y-8">
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
+            style={{ background: 'rgba(201,164,106,0.1)', border: '1px solid rgba(201,164,106,0.2)' }}
+          >
+            <Mail size={24} style={{ color: '#c9a46a' }} />
           </div>
-          <div className="space-y-4">
-            <h2 className="text-2xl font-serif text-white tracking-wide">Check Your Email</h2>
-            <p className="text-sm text-charcoal-400 leading-relaxed font-light font-inter">
-              We've sent a signature login link to <span className="text-gold-300 font-medium">{email}</span>. 
-              Click the link to securely access the artisan dashboard.
+
+          <div>
+            <h2 style={{ ...sfDisplay, fontSize: '28px', fontWeight: 600, lineHeight: 1.14, color: '#fff', marginBottom: 8 }}>
+              Check your email
+            </h2>
+            <p style={{ ...sfText, fontSize: '17px', lineHeight: 1.47, letterSpacing: '-0.374px', color: '#a0a8b8' }}>
+              We sent a sign-in link to{' '}
+              <span style={{ color: '#c9a46a' }}>{email}</span>
             </p>
           </div>
-          <button 
-            onClick={() => setIsMagicLinkSent(false)} 
-            className="text-[10px] font-bold uppercase tracking-[0.25em] text-gold-500 hover:text-gold-400 transition"
+
+          <button
+            onClick={() => setLinkSent(false)}
+            style={{ ...sfText, fontSize: '14px', color: '#c9a46a', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '-0.224px' }}
           >
-            ← Use a different method
+            ← Try a different method
           </button>
         </div>
       </div>
     );
   }
 
+  // ── Main login ────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex items-center justify-center bg-charcoal-950 px-6">
-      <div className="w-full max-w-md space-y-12">
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-serif text-white tracking-widest uppercase">
-            Space<span className="text-gold-500 italic">2</span>Standard
-          </h1>
-          <p className="text-xs uppercase tracking-[0.3em] text-gold-500 font-bold">Admin Portal</p>
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-6"
+      style={{ background: '#060b18' }}
+    >
+      <div className="w-full max-w-[400px] space-y-10">
+
+        {/* Logo + title */}
+        <div className="flex flex-col items-center gap-4 text-center">
+          <img src="/s2s-square.png" alt="Space2Standard" className="h-16 w-16 object-contain" />
+          <div>
+            <h1 style={{ ...sfDisplay, fontSize: '34px', fontWeight: 600, lineHeight: 1.1, letterSpacing: '-0.374px', color: '#fff' }}>
+              Space2Standard
+            </h1>
+            <p style={{ ...sfText, fontSize: '14px', color: '#c9a46a', letterSpacing: '-0.224px', marginTop: 4 }}>
+              Admin Portal
+            </p>
+          </div>
         </div>
 
-        <div className="dashboard-card bg-charcoal-900/50 backdrop-blur-xl border border-charcoal-800 shadow-2xl space-y-8">
-          {/* Method Toggle */}
-          <div className="flex bg-charcoal-950/50 p-1 rounded-lg border border-charcoal-800">
-            <button 
-              onClick={() => setLoginMethod('password')}
-              className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded transition-all ${
-                loginMethod === 'password' ? 'bg-gold-500/10 text-gold-500' : 'text-charcoal-500 hover:text-charcoal-300'
-              }`}
-            >
-              Password
-            </button>
-            <button 
-              onClick={() => setLoginMethod('magic-link')}
-              className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded transition-all ${
-                loginMethod === 'magic-link' ? 'bg-gold-500/10 text-gold-500' : 'text-charcoal-500 hover:text-charcoal-300'
-              }`}
-            >
-              Confirmation Link
-            </button>
+        {/* Card */}
+        <div
+          className="rounded-2xl p-8 space-y-8"
+          style={{ background: '#0d1220', border: '1px solid rgba(255,255,255,0.06)' }}
+        >
+          {/* Method toggle — Apple segment control */}
+          <div
+            className="flex rounded-xl p-1"
+            style={{ background: 'rgba(255,255,255,0.04)' }}
+          >
+            {(['password', 'magic-link'] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => setMethod(m)}
+                style={{
+                  ...sfText,
+                  flex: 1,
+                  padding: '8px 0',
+                  fontSize: '13px',
+                  letterSpacing: '-0.12px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  background: method === m ? '#1a2030' : 'transparent',
+                  color: method === m ? '#fff' : '#5a6070',
+                  fontWeight: method === m ? 600 : 400,
+                }}
+              >
+                {m === 'password' ? 'Password' : 'Email Link'}
+              </button>
+            ))}
           </div>
 
-          <form onSubmit={loginMethod === 'password' ? handlePasswordLogin : handleMagicLink} className="space-y-8">
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-charcoal-500 block ml-1">
-                Email Address
+          <form onSubmit={method === 'password' ? handlePasswordLogin : handleMagicLink} className="space-y-5">
+            {/* Email */}
+            <div className="space-y-1.5">
+              <label
+                style={{ ...sfText, fontSize: '12px', fontWeight: 600, letterSpacing: '-0.12px', color: '#5a6070', display: 'block' }}
+              >
+                Email
               </label>
               <input
                 type="email"
                 required
-                className="input-base"
                 placeholder="admin@space2standard.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                style={{
+                  ...sfText,
+                  width: '100%',
+                  height: '44px',
+                  padding: '0 16px',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '17px',
+                  letterSpacing: '-0.374px',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+                onFocus={e => (e.target.style.borderColor = 'rgba(201,164,106,0.5)')}
+                onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.08)')}
               />
             </div>
 
-            {loginMethod === 'password' && (
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-charcoal-500 block ml-1">
+            {/* Password */}
+            {method === 'password' && (
+              <div className="space-y-1.5">
+                <label
+                  style={{ ...sfText, fontSize: '12px', fontWeight: 600, letterSpacing: '-0.12px', color: '#5a6070', display: 'block' }}
+                >
                   Password
                 </label>
                 <input
                   type="password"
                   required
-                  className="input-base"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  style={{
+                    ...sfText,
+                    width: '100%',
+                    height: '44px',
+                    padding: '0 16px',
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: '12px',
+                    color: '#fff',
+                    fontSize: '17px',
+                    letterSpacing: '-0.374px',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                  onFocus={e => (e.target.style.borderColor = 'rgba(201,164,106,0.5)')}
+                  onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.08)')}
                 />
               </div>
             )}
 
-            <button type="submit" disabled={loading} className="btn-dashboard-primary w-full shadow-lg shadow-gold-500/10">
-              {loading ? 'Authenticating...' : loginMethod === 'password' ? 'Sign In' : 'Send Login Link'}
+            {/* Submit — Apple pill CTA */}
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                ...sfText,
+                width: '100%',
+                height: '50px',
+                background: loading ? 'rgba(201,164,106,0.5)' : '#c9a46a',
+                color: '#060b18',
+                borderRadius: '9999px',
+                border: 'none',
+                fontSize: '17px',
+                fontWeight: 400,
+                letterSpacing: '-0.374px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                transition: 'background 0.15s ease, transform 0.1s ease',
+                marginTop: 8,
+              }}
+              onMouseEnter={e => { if (!loading) (e.target as HTMLElement).style.background = '#fff'; }}
+              onMouseLeave={e => { if (!loading) (e.target as HTMLElement).style.background = '#c9a46a'; }}
+            >
+              {loading
+                ? 'Please wait…'
+                : method === 'password'
+                ? 'Sign In'
+                : 'Send Sign-In Link'}
             </button>
           </form>
         </div>
 
-        <p className="text-center text-[10px] text-charcoal-600 uppercase tracking-widest font-bold">
-          Restricted access. Authorized admin only.
+        {/* Fine print */}
+        <p
+          className="text-center"
+          style={{ ...sfText, fontSize: '12px', color: '#3a4050', letterSpacing: '-0.12px' }}
+        >
+          Restricted to authorized administrators only.
         </p>
       </div>
     </div>
