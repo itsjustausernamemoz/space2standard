@@ -5,11 +5,16 @@ import { NotificationPanel } from './NotificationPanel';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    {/* h-screen + overflow-hidden: locks the outer shell to the viewport so the sidebar never scrolls */}
     <div className="flex bg-navy-950 h-screen overflow-hidden text-cream-100">
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        isCollapsed={isCollapsed}
+        onToggleCollapse={() => setIsCollapsed((c) => !c)}
+      />
 
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile sticky header */}
