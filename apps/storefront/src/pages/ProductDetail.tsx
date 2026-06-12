@@ -125,16 +125,16 @@ export const ProductDetail = () => {
   };
 
   return (
-    <div className="pt-[56px] min-h-screen bg-[#060b18]">
-      <div className="container mx-auto px-6">
-        <header className="py-12">
-          <Link to="/products" className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#c9a46a] hover:text-white transition-colors">
+    <div className="min-h-screen bg-[#060b18]" style={{ paddingTop: 88 }}>
+      <div className="max-w-[980px] mx-auto px-6">
+        <header className="mb-8">
+          <Link to="/products" className="inline-flex items-center gap-2 text-[12px] text-[#5a6070] hover:text-[#c9a46a] transition-colors">
             <ChevronLeft size={14} />
-            Artisan Collection
+            Collection
           </Link>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
           {/* Image Gallery */}
           <div className="space-y-8">
             <ScrollReveal>
@@ -269,27 +269,18 @@ export const ProductDetail = () => {
         </div>
 
         {/* Reviews Section */}
-        <section className="mt-[160px] border-t border-white/5 pt-[120px] pb-[160px]">
+        <section className="mt-24 border-t border-white/5 pt-16 pb-24">
           <ScrollReveal>
             <div className="max-w-5xl mx-auto">
-              <div className="text-center space-y-8 mb-24">
-                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#c9a46a]">Client Feedback</span>
-                <h2 className="text-[40px] md:text-[56px] font-serif text-white tracking-tight">Insights</h2>
-                
+              <div className="flex items-center gap-4 mb-12">
+                <h2 className="text-[17px] font-semibold text-white">Reviews</h2>
                 {approvedReviews.length > 0 && (
-                  <div className="flex justify-center items-center gap-4">
-                    <div className="flex gap-1 text-[#c9a46a]">
-                       {[...Array(5)].map((_, i) => (
-                         <Star 
-                           key={i} 
-                           size={16} 
-                           className={i < Math.round(avgRating) ? "fill-current" : "opacity-20"} 
-                         />
-                       ))}
+                  <>
+                    <div className="flex gap-0.5 text-[#c9a46a]">
+                      {[...Array(5)].map((_, i) => <Star key={i} size={13} className={i < Math.round(avgRating) ? 'fill-current' : 'opacity-20'} />)}
                     </div>
-                    <span className="text-[18px] font-serif text-white">{avgRating.toFixed(1)}</span>
-                    <span className="text-[12px] font-light text-[#a0a8b8]">({approvedReviews.length} Reviews)</span>
-                  </div>
+                    <span className="text-[13px] text-[#a0a8b8]">{avgRating.toFixed(1)} · {approvedReviews.length} {approvedReviews.length === 1 ? 'review' : 'reviews'}</span>
+                  </>
                 )}
               </div>
 
