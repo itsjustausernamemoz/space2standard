@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { useConfirm } from '@/components/ConfirmDialog';
 import {
   Plus, X, Search, CalendarDays, Clock,
   Edit2, Trash2, RefreshCw, Phone, Mail,
@@ -58,6 +59,7 @@ const fmtTime  = (t: string) => {
 const empty = { client_name: '', client_email: '', client_phone: '', type: 'consultation', appointment_date: todayStr(), appointment_time: '09:00', duration_minutes: 60, status: 'scheduled', notes: '', order_id: '' };
 
 export const Appointments = () => {
+  const { confirm, dialog } = useConfirm();
   const [appts, setAppts]         = useState<Appointment[]>([]);
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState('');
@@ -114,7 +116,7 @@ export const Appointments = () => {
   };
 
   const deleteAppt = async (id: string) => {
-    if (!confirm('Delete this appointment?')) return;
+    if (!await confirm({ title: 'Delete Appointment', message: 'This appointment will be permanently removed from the schedule.', danger: true })) return;
     const { error } = await supabase.from('appointments').delete().eq('id', id);
     if (error) toast.error(error.message);
     else { toast.success('Deleted'); fetchAppts(); }
@@ -138,6 +140,8 @@ export const Appointments = () => {
   const lbl  = { fontSize: 12, color: '#5a6070', fontWeight: 600 as const, letterSpacing: '0.05em' as const, textTransform: 'uppercase' as const, display: 'block' as const, marginBottom: 6 };
 
   return (
+    <>
+    {dialog}
     <div style={{ background: '#060b18', minHeight: '100vh', padding: '28px 24px', fontFamily: sfText }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
@@ -338,5 +342,6 @@ export const Appointments = () => {
         </div>
       )}
     </div>
+    </>
   );
 };

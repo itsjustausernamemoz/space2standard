@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Plus, Trash2, Edit } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useConfirm } from '@/components/ConfirmDialog';
 
 interface Category {
   id: string;
@@ -10,6 +11,7 @@ interface Category {
 }
 
 export const Categories = () => {
+  const { confirm, dialog } = useConfirm();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -91,7 +93,7 @@ export const Categories = () => {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (window.confirm(`Are you sure you want to delete the category "${name}"?`)) {
+    if (await confirm({ title: `Delete "${name}"`, message: 'This category will be permanently deleted. Products in this category will become uncategorised.', danger: true })) {
       const { error } = await supabase.from('categories').delete().eq('id', id);
       if (error) {
         toast.error('Failed to delete category');
@@ -103,6 +105,8 @@ export const Categories = () => {
   };
 
   return (
+    <>
+    {dialog}
     <div className="space-y-12">
       <header className="flex justify-between items-center">
         <div className="space-y-1">
@@ -203,5 +207,6 @@ export const Categories = () => {
         </div>
       )}
     </div>
+    </>
   );
 };

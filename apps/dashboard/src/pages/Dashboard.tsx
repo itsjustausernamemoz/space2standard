@@ -1,16 +1,17 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
-import { 
-  TrendingUp, 
-  ShoppingCart, 
-  Users, 
-  Package, 
-  ArrowUpRight, 
+import {
+  TrendingUp,
+  ShoppingCart,
+  Users,
+  Package,
+  ArrowUpRight,
   ArrowDownRight,
   FileText,
   Download,
-  Calendar
+  Calendar,
+  AlertTriangle
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { 
@@ -46,6 +47,7 @@ export const Dashboard = () => {
   const [allOrdersList, setAllOrdersList] = useState<any[]>([]);
   const [businessInfo, setBusinessInfo] = useState<any>({});
   const [loading, setLoading] = useState(true);
+  const [outOfStock, setOutOfStock] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     async function fetchData() {
@@ -130,11 +132,10 @@ export const Dashboard = () => {
           supabase.from('settings').select('*')
         ]);
 
-        const { data: recentActivityData } = await supabase
-          .from('orders')
-          .select('id, customer_name, created_at')
-          .order('created_at', { ascending: false })
-          .limit(5);
+        const [{ data: recentActivityData }, { data: outOfStockData }] = await Promise.all([
+          supabase.from('orders').select('id, customer_name, created_at').order('created_at', { ascending: false }).limit(5),
+          supabase.from('products').select('id, name').eq('is_published', true).eq('stock_quantity', 0),
+        ]);
 
         const allOrders = recentOrdersRes.data || [];
         const lifetimeInvoices = lifetimeRevenueRes.data || [];
@@ -198,6 +199,7 @@ export const Dashboard = () => {
 
         setRevenueData(chartData);
         setRecentActivity(recentActivityData || []);
+        setOutOfStock(outOfStockData || []);
       } catch (err) {
         console.error('Dashboard Fetch Error:', err);
         toast.error('Metrics manifesting...');
@@ -279,6 +281,24 @@ export const Dashboard = () => {
            )}
         </div>
       </header>
+
+      {/* Out-of-stock alert */}
+      {outOfStock.length > 0 && (
+        <div style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.22)', borderRadius: 12, padding: '14px 20px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+          <AlertTriangle size={16} style={{ color: '#f87171', flexShrink: 0, marginTop: 2 }} />
+          <div style={{ flex: 1 }}>
+            <p style={{ color: '#f87171', fontSize: 13, fontWeight: 600, margin: 0 }}>
+              {outOfStock.length} product{outOfStock.length > 1 ? 's' : ''} out of stock — hidden from the storefront
+            </p>
+            <p style={{ color: '#9aa5b8', fontSize: 12, marginTop: 4 }}>
+              {outOfStock.map(p => p.name).join(' · ')}
+            </p>
+          </div>
+          <a href="/products" style={{ color: '#f87171', fontSize: 12, fontWeight: 600, textDecoration: 'none', flexShrink: 0, alignSelf: 'center' }}>
+            Manage →
+          </a>
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

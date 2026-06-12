@@ -3,10 +3,12 @@ import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Upload, Image as ImageIcon, PlusCircle, Trash2, Search } from 'lucide-react';
+import { useConfirm } from '@/components/ConfirmDialog';
 import { toast } from 'react-hot-toast';
 
 export const Gallery = () => {
   const navigate = useNavigate();
+  const { confirm, dialog } = useConfirm();
   const [images, setImages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -83,7 +85,7 @@ export const Gallery = () => {
   };
 
   const deleteImage = async (id: string, storageUrl: string) => {
-    if (!window.confirm("Delete this asset from your historical gallery?")) return;
+    if (!await confirm({ title: 'Delete Asset', message: 'Remove this image from your gallery? This cannot be undone.', danger: true })) return;
     try {
       // Delete from DB
       const { error } = await supabase.from('app_gallery').delete().eq('id', id);
@@ -106,9 +108,11 @@ export const Gallery = () => {
   );
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.98 }} 
-      animate={{ opacity: 1, scale: 1 }} 
+    <>
+    {dialog}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4 }}
       className="space-y-12"
     >
@@ -187,5 +191,6 @@ export const Gallery = () => {
         </div>
       )}
     </motion.div>
+    </>
   );
 };

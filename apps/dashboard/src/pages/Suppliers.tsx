@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { useConfirm } from '@/components/ConfirmDialog';
 import {
   Plus, X, Search, Truck, Edit2, Trash2,
   RefreshCw, Phone, Mail, MapPin, Package,
@@ -56,6 +57,7 @@ const emptySupplier = { name: '', contact_name: '', email: '', phone: '', addres
 const emptyPO = { supplier_id: '', po_number: '', status: 'draft', items: [{ description: '', quantity: 1, unit_price: 0 }] as POItem[], total_amount: 0, expected_delivery: '', notes: '' };
 
 export const Suppliers = () => {
+  const { confirm, dialog } = useConfirm();
   const [tab, setTab] = useState<'suppliers' | 'orders'>('suppliers');
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [pos, setPOs] = useState<PO[]>([]);
@@ -115,7 +117,7 @@ export const Suppliers = () => {
     setSaving(false);
   };
   const deleteSupplier = async (id: string) => {
-    if (!confirm('Delete this supplier?')) return;
+    if (!await confirm({ title: 'Delete Supplier', message: 'This supplier and all associated data will be permanently removed.', danger: true })) return;
     const { error } = await supabase.from('suppliers').delete().eq('id', id);
     if (error) toast.error(error.message);
     else { toast.success('Supplier deleted'); fetchAll(); }
@@ -154,6 +156,8 @@ export const Suppliers = () => {
   const lbl  = { fontSize: 12, color: '#5a6070', fontWeight: 600 as const, letterSpacing: '0.05em' as const, textTransform: 'uppercase' as const, display: 'block' as const, marginBottom: 6 };
 
   return (
+    <>
+    {dialog}
     <div style={{ background: '#060b18', minHeight: '100vh', padding: '28px 24px', fontFamily: sfText }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
@@ -410,5 +414,6 @@ export const Suppliers = () => {
         </div>
       )}
     </div>
+    </>
   );
 };

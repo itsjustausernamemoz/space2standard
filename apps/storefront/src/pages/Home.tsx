@@ -64,7 +64,7 @@ export const Home = () => {
   React.useEffect(() => {
     async function fetchData() {
       const [pRes, sRes, cRes, aRes] = await Promise.all([
-        supabase.from('products').select('*, images:product_images(*), product_reviews(*)').eq('is_published', true).limit(6),
+        supabase.from('products').select('*, images:product_images(*), product_reviews(*)').eq('is_published', true).gt('stock_quantity', 0).limit(6),
         supabase.from('settings').select('*'),
         supabase.from('site_content').select('key, value'),
         supabase.from('announcements')

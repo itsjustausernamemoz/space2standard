@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { useConfirm } from '@/components/ConfirmDialog';
 import {
   Plus, X, Search, Receipt, TrendingDown,
   Edit2, Trash2, RefreshCw, Filter
@@ -45,6 +46,7 @@ const thisMonthStart = () => {
 const emptyForm = { category: 'Materials', description: '', amount: '', expense_date: new Date().toISOString().split('T')[0], supplier_id: '', notes: '' };
 
 export const Expenses = () => {
+  const { confirm, dialog } = useConfirm();
   const [expenses, setExpenses]     = useState<Expense[]>([]);
   const [suppliers, setSuppliers]   = useState<Supplier[]>([]);
   const [loading, setLoading]       = useState(true);
@@ -97,7 +99,7 @@ export const Expenses = () => {
     setSaving(false);
   };
   const deleteExpense = async (id: string) => {
-    if (!confirm('Delete this expense?')) return;
+    if (!await confirm({ title: 'Delete Expense', message: 'This expense record will be permanently removed.', danger: true })) return;
     const { error } = await supabase.from('expenses').delete().eq('id', id);
     if (error) toast.error(error.message);
     else { toast.success('Deleted'); fetchAll(); }
@@ -113,6 +115,8 @@ export const Expenses = () => {
   const lbl  = { fontSize: 12, color: '#5a6070', fontWeight: 600 as const, letterSpacing: '0.05em' as const, textTransform: 'uppercase' as const, display: 'block' as const, marginBottom: 6 };
 
   return (
+    <>
+    {dialog}
     <div style={{ background: '#060b18', minHeight: '100vh', padding: '28px 24px', fontFamily: sfText }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
@@ -313,5 +317,6 @@ export const Expenses = () => {
         </div>
       )}
     </div>
+    </>
   );
 };

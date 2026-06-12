@@ -14,14 +14,15 @@ export default defineConfig({
   envDir: '../../',
   server: { port: 3001 },
   build: {
+    chunkSizeWarningLimit: 1600,
     rollupOptions: {
       output: {
         manualChunks(id: string) {
-          if (id.includes('lucide-react'))       return 'vendor-lucide';
-          if (id.includes('framer-motion'))      return 'vendor-motion';
-          if (id.includes('recharts'))           return 'vendor-charts';
-          if (id.includes('@supabase'))          return 'vendor-supabase';
-          if (id.includes('react-dom') || id.includes('react-router')) return 'vendor-react';
+          if (id.includes('lucide-react'))                               return 'vendor-lucide';
+          if (id.includes('framer-motion'))                              return 'vendor-motion';
+          if (id.includes('recharts'))                                   return 'vendor-charts';
+          if (id.includes('@supabase'))                                  return 'vendor-supabase';
+          if (id.includes('react-dom') || id.includes('react-router'))   return 'vendor-react';
         },
       },
     },

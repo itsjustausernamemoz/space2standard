@@ -15,8 +15,10 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { useConfirm } from '@/components/ConfirmDialog';
 
 export const Products = () => {
+  const { confirm, dialog } = useConfirm();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -81,7 +83,7 @@ export const Products = () => {
   };
 
   const deleteProduct = async (id: string) => {
-    if (!window.confirm('Are you sure you want to discard this artisanal piece?')) return;
+    if (!await confirm({ title: 'Remove Product', message: 'This piece will be permanently removed from the catalogue and cannot be recovered.', danger: true })) return;
     
     const { error } = await supabase
       .from('products')
@@ -97,6 +99,8 @@ export const Products = () => {
   };
 
   return (
+    <>
+    {dialog}
     <div className="space-y-12">
       <header className="flex justify-between items-center">
         <div className="space-y-1">
@@ -237,5 +241,6 @@ export const Products = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };

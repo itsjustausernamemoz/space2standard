@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Globe, Megaphone, Quote, HelpCircle, FileText, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Save, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
+import { useConfirm } from '@/components/ConfirmDialog';
 
 const sfText = { fontFamily: 'SF Pro Text, system-ui, -apple-system, sans-serif' };
 const sfDisplay = { fontFamily: 'SF Pro Display, system-ui, -apple-system, sans-serif' };
@@ -146,6 +147,7 @@ const emptyAnn = (): AnnouncementForm => ({
 });
 
 const AnnouncementsTab: React.FC = () => {
+  const { confirm, dialog } = useConfirm();
   const [rows, setRows]             = useState<Announcement[]>([]);
   const [loading, setLoading]       = useState(true);
   const [allProducts, setAllProducts] = useState<{ id: string; name: string }[]>([]);
@@ -237,7 +239,7 @@ const AnnouncementsTab: React.FC = () => {
   };
 
   const del = async (id: string) => {
-    if (!confirm('Delete this announcement?')) return;
+    if (!await confirm({ title: 'Delete Announcement', message: 'This announcement will be removed from the website immediately.', danger: true })) return;
     await supabase.from('announcements').delete().eq('id', id);
     toast.success('Deleted');
     load();
@@ -257,6 +259,8 @@ const AnnouncementsTab: React.FC = () => {
   const activeCount = rows.filter(r => r.is_active).length;
 
   return (
+    <>
+    {dialog}
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -383,6 +387,7 @@ const AnnouncementsTab: React.FC = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 
@@ -393,6 +398,7 @@ const emptyTest = (): Omit<Testimonial, 'id' | 'created_at'> => ({
 });
 
 const TestimonialsTab: React.FC = () => {
+  const { confirm, dialog } = useConfirm();
   const [rows, setRows]       = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal]     = useState<{ open: boolean; data: Omit<Testimonial, 'id' | 'created_at'>; editing: string | null }>({
@@ -429,7 +435,7 @@ const TestimonialsTab: React.FC = () => {
   };
 
   const del = async (id: string) => {
-    if (!confirm('Delete this testimonial?')) return;
+    if (!await confirm({ title: 'Delete Testimonial', message: 'This review will be permanently removed from the website.', danger: true })) return;
     await supabase.from('testimonials').delete().eq('id', id);
     toast.success('Deleted'); load();
   };
@@ -438,6 +444,8 @@ const TestimonialsTab: React.FC = () => {
     setModal(m => ({ ...m, data: { ...m.data, [k]: v } }));
 
   return (
+    <>
+    {dialog}
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <p style={{ color: '#a0a8b8', fontSize: 13 }}>{rows.length} testimonials · <span style={{ color: '#c9a46a' }}>{rows.filter(r => r.is_featured).length} featured</span></p>
@@ -525,6 +533,7 @@ const TestimonialsTab: React.FC = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 
@@ -535,6 +544,7 @@ const emptyFaq = (): Omit<Faq, 'id' | 'created_at'> => ({
 });
 
 const FaqsTab: React.FC = () => {
+  const { confirm, dialog } = useConfirm();
   const [rows, setRows]       = useState<Faq[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -568,7 +578,7 @@ const FaqsTab: React.FC = () => {
   };
 
   const del = async (id: string) => {
-    if (!confirm('Delete this FAQ?')) return;
+    if (!await confirm({ title: 'Delete FAQ', message: 'This question will be permanently removed from the website.', danger: true })) return;
     await supabase.from('faqs').delete().eq('id', id);
     toast.success('Deleted'); load();
   };
@@ -584,6 +594,8 @@ const FaqsTab: React.FC = () => {
   const categories = [...new Set(rows.map(r => r.category))];
 
   return (
+    <>
+    {dialog}
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <p style={{ color: '#a0a8b8', fontSize: 13 }}>{rows.length} questions across {categories.length} categories</p>
@@ -669,6 +681,7 @@ const FaqsTab: React.FC = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

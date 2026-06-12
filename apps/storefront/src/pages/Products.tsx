@@ -17,7 +17,7 @@ export const Products = () => {
     async function fetchData() {
       const now = new Date().toISOString();
       const [{ data: pData }, { data: sData }, { data: promoData }] = await Promise.all([
-        supabase.from('products').select('*, images:product_images(*), product_reviews(*), category_rel:categories(name)').eq('is_published', true),
+        supabase.from('products').select('*, images:product_images(*), product_reviews(*), category_rel:categories(name)').eq('is_published', true).gt('stock_quantity', 0),
         supabase.from('settings').select('*'),
         supabase.from('announcements')
           .select('discount_percent, announcement_products(product_id)')
