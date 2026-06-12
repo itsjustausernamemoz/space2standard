@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Globe, Megaphone, Quote, HelpCircle, FileText, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Save, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Globe, Megaphone, Quote, HelpCircle, FileText, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Save, X, ChevronDown, ChevronUp, Package } from 'lucide-react';
+import { SelectField } from '@/components/SelectField';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 import { useConfirm } from '@/components/ConfirmDialog';
@@ -43,6 +44,7 @@ interface Testimonial {
   is_featured: boolean;
   is_active: boolean;
   sort_order: number;
+  product_id: string | null;
   created_at: string;
 }
 
@@ -539,12 +541,13 @@ const AnnouncementsTab: React.FC = () => {
 // ── Testimonials Tab ──────────────────────────────────────────
 
 const emptyTest = (): Omit<Testimonial, 'id' | 'created_at'> => ({
-  client_name: '', client_role: null, quote: '', rating: 5, is_featured: false, is_active: true, sort_order: 0,
+  client_name: '', client_role: null, quote: '', rating: 5, is_featured: false, is_active: true, sort_order: 0, product_id: null,
 });
 
 const TestimonialsTab: React.FC = () => {
   const { confirm, dialog } = useConfirm();
   const [rows, setRows]       = useState<Testimonial[]>([]);
+  const [products, setProducts] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal]     = useState<{ open: boolean; data: Omit<Testimonial, 'id' | 'created_at'>; editing: string | null }>({
     open: false, data: emptyTest(), editing: null,
@@ -553,15 +556,19 @@ const TestimonialsTab: React.FC = () => {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase.from('testimonials').select('*').order('sort_order').order('created_at', { ascending: false });
-    setRows(data ?? []);
+    const [tRes, pRes] = await Promise.all([
+      supabase.from('testimonials').select('*').order('sort_order').order('created_at', { ascending: false }),
+      supabase.from('products').select('id, name').eq('is_published', true).order('name'),
+    ]);
+    setRows(tRes.data ?? []);
+    setProducts(pRes.data ?? []);
     setLoading(false);
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
   const openAdd  = () => setModal({ open: true, data: emptyTest(), editing: null });
-  const openEdit = (t: Testimonial) => setModal({ open: true, data: { client_name: t.client_name, client_role: t.client_role, quote: t.quote, rating: t.rating, is_featured: t.is_featured, is_active: t.is_active, sort_order: t.sort_order }, editing: t.id });
+  const openEdit = (t: Testimonial) => setModal({ open: true, data: { client_name: t.client_name, client_role: t.client_role, quote: t.quote, rating: t.rating, is_featured: t.is_featured, is_active: t.is_active, sort_order: t.sort_order, product_id: t.product_id ?? null }, editing: t.id });
 
   const save = async () => {
     if (!modal.data.client_name.trim() || !modal.data.quote.trim()) { toast.error('Name and quote are required'); return; }
@@ -623,6 +630,12 @@ const TestimonialsTab: React.FC = () => {
                     <span style={{ color: '#c9a46a', fontSize: 12 }}>{'★'.repeat(t.rating)}</span>
                     {t.is_featured && <span style={{ fontSize: 11, color: '#c9a46a', fontWeight: 600, background: 'rgba(201,164,106,0.12)', padding: '2px 8px', borderRadius: 6 }}>Featured</span>}
                     {!t.is_active && <span style={{ fontSize: 11, color: '#5a6070', fontWeight: 600 }}>Hidden</span>}
+                    {t.product_id && products.find(p => p.id === t.product_id) && (
+                      <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 500, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', padding: '2px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Package size={10} style={{ color: '#c9a46a' }} />
+                        {products.find(p => p.id === t.product_id)?.name}
+                      </span>
+                    )}
                   </div>
                   <p style={{ color: '#a0a8b8', fontSize: 13, fontStyle: 'italic', lineHeight: 1.5 }} className="line-clamp-2">"{t.quote}"</p>
                 </div>
@@ -673,6 +686,16 @@ const TestimonialsTab: React.FC = () => {
                   <input type="checkbox" checked={modal.data.is_active} onChange={e => set('is_active', e.target.checked)} style={{ accentColor: '#c9a46a', width: 15, height: 15 }} />
                   <span style={{ color: '#a0a8b8', fontSize: 13 }}>Visible on website</span>
                 </label>
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', color: '#c9a46a', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>Linked Product (for best-seller tracking)</label>
+                <SelectField
+                  value={modal.data.product_id ?? ''}
+                  onChange={v => set('product_id', v || null)}
+                  placeholder="No product linked"
+                  options={[{ value: '', label: 'No product linked' }, ...products.map(p => ({ value: p.id, label: p.name }))]}
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, color: '#fff', fontFamily: 'SF Pro Text, system-ui, -apple-system, sans-serif', fontSize: 14, padding: '10px 14px', outline: 'none', width: '100%' }}
+                />
               </div>
               <InputField label="Sort Order" value={String(modal.data.sort_order)} onChange={v => set('sort_order', parseInt(v) || 0)} type="number" placeholder="0" />
             </div>

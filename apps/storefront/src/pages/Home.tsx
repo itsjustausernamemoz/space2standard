@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Megaphone } from 'lucide-react';
+import { ArrowRight, Megaphone, Star } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { ProductCard } from '../components/ui/ProductCard';
 
@@ -55,6 +55,7 @@ const sfText    = { fontFamily: 'SF Pro Text, system-ui, -apple-system, sans-ser
 
 export const Home = () => {
   const [featuredProducts, setFeaturedProducts] = React.useState<any[]>([]);
+  const [bestSellerId, setBestSellerId]         = React.useState<string | null>(null);
   const [vatRate, setVatRate]                   = React.useState(15);
   const [loading, setLoading]                   = React.useState(true);
   const [content, setContent]                   = React.useState<Record<string, string>>({});
@@ -63,7 +64,7 @@ export const Home = () => {
 
   React.useEffect(() => {
     async function fetchData() {
-      const [pRes, sRes, cRes, aRes] = await Promise.all([
+      const [pRes, sRes, cRes, aRes, bsRes] = await Promise.all([
         supabase.from('products').select('*, images:product_images(*), product_reviews(*)').eq('is_published', true).gt('stock_quantity', 0).limit(6),
         supabase.from('settings').select('*'),
         supabase.from('site_content').select('key, value'),
@@ -71,9 +72,44 @@ export const Home = () => {
           .select('id, title, body, type, cta_label, cta_url, expires_at, discount_percent, announcement_products(product_id)')
           .eq('is_active', true)
           .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`),
+        // Best seller: product with highest total quantity sold
+        supabase.from('order_items').select('product_id, quantity').not('product_id', 'is', null),
       ]);
 
-      if (pRes.data) setFeaturedProducts(pRes.data);
+      if (pRes.data) {
+        // Compute best seller from order_items
+        let bestId: string | null = null;
+        if (bsRes.data && bsRes.data.length > 0) {
+          const totals: Record<string, number> = {};
+          bsRes.data.forEach((item: any) => {
+            if (item.product_id) {
+              totals[item.product_id] = (totals[item.product_id] || 0) + (item.quantity || 1);
+            }
+          });
+          bestId = Object.entries(totals).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+        }
+        // If no order history, fall back to testimonial count
+        if (!bestId) {
+          const tRes = await supabase.from('testimonials').select('product_id').eq('is_active', true).not('product_id', 'is', null);
+          if (tRes.data && tRes.data.length > 0) {
+            const counts: Record<string, number> = {};
+            tRes.data.forEach((t: any) => {
+              if (t.product_id) counts[t.product_id] = (counts[t.product_id] || 0) + 1;
+            });
+            bestId = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+          }
+        }
+        setBestSellerId(bestId);
+
+        // Sort so best seller appears first
+        const sorted = bestId
+          ? [
+              ...pRes.data.filter((p: any) => p.id === bestId),
+              ...pRes.data.filter((p: any) => p.id !== bestId),
+            ]
+          : pRes.data;
+        setFeaturedProducts(sorted);
+      }
 
       const vRate = sRes.data?.find((s: any) => s.key === 'vat_rate')?.value;
       if (vRate) setVatRate(parseFloat(vRate));
@@ -217,9 +253,14 @@ export const Home = () => {
               {get('featured_heading', 'Featured Collection')}
             </h2>
           </div>
-          <Link to="/products" style={{ ...sfText, color: '#c9a46a', fontSize: 13, fontWeight: 500, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
-            All products <ArrowRight size={13} />
-          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+            <Link to="/reviews" style={{ ...sfText, color: '#5a6070', fontSize: 13, fontWeight: 500, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Star size={12} style={{ color: '#c9a46a' }} /> Reviews
+            </Link>
+            <Link to="/products" style={{ ...sfText, color: '#c9a46a', fontSize: 13, fontWeight: 500, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+              All products <ArrowRight size={13} />
+            </Link>
+          </div>
         </div>
 
         {loading ? (
@@ -231,7 +272,7 @@ export const Home = () => {
         ) : featuredProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredProducts.map(product => (
-              <ProductCard key={product.id} product={product} vatRate={vatRate} promoDiscountPercent={promoMap[product.id]} />
+              <ProductCard key={product.id} product={product} vatRate={vatRate} promoDiscountPercent={promoMap[product.id]} isBestSeller={product.id === bestSellerId} />
             ))}
           </div>
         ) : (

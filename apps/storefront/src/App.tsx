@@ -15,6 +15,7 @@ import { StorefrontAuthProvider } from './contexts/StorefrontAuthContext';
 import { Auth } from './pages/Auth';
 import { AccountSettings } from './pages/AccountSettings';
 import { FAQ } from './pages/FAQ';
+import { Reviews } from './pages/Reviews';
 import { CartDrawer } from './components/CartDrawer';
 
 function ScrollToTop() {
@@ -58,6 +59,7 @@ function App() {
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/settings" element={<AccountSettings />} />
                 <Route path="/faqs" element={<FAQ />} />
+                <Route path="/reviews" element={<Reviews />} />
               </Routes>
             </main>
             <Footer />
