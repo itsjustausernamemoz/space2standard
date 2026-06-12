@@ -18,6 +18,7 @@ import {
   Truck,
   Receipt,
   CalendarDays,
+  Globe,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -43,6 +44,7 @@ const menuItems = [
   { name: 'Invoices',      icon: <FileText size={17} />,        path: '/invoices' },
   { name: 'Suppliers',     icon: <Truck size={17} />,           path: '/suppliers' },
   { name: 'Expenses',      icon: <Receipt size={17} />,         path: '/expenses' },
+  { name: 'Website',       icon: <Globe size={17} />,           path: '/content' },
   { name: 'Messages',      icon: <MessageSquare size={17} />,   path: '/messages' },
   { name: 'Image Gallery', icon: <ImageIcon size={17} />,       path: '/gallery' },
   { name: 'Categories',    icon: <Package size={17} />,         path: '/categories' },

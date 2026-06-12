@@ -24,7 +24,8 @@ const Clients      = lazy(() => import('./pages/Clients').then(m => ({ default: 
 const Production   = lazy(() => import('./pages/Production').then(m => ({ default: m.Production })));
 const Suppliers    = lazy(() => import('./pages/Suppliers').then(m => ({ default: m.Suppliers })));
 const Expenses     = lazy(() => import('./pages/Expenses').then(m => ({ default: m.Expenses })));
-const Appointments = lazy(() => import('./pages/Appointments').then(m => ({ default: m.Appointments })));
+const Appointments     = lazy(() => import('./pages/Appointments').then(m => ({ default: m.Appointments })));
+const WebsiteContent   = lazy(() => import('./pages/WebsiteContent').then(m => ({ default: m.WebsiteContent })));
 
 const sfText = 'SF Pro Text, system-ui, -apple-system, sans-serif';
 
@@ -108,6 +109,7 @@ function App() {
               <Route path="/suppliers"    element={<Layout><Suspense fallback={<PageFallback />}><Suppliers /></Suspense></Layout>} />
               <Route path="/expenses"     element={<Layout><Suspense fallback={<PageFallback />}><Expenses /></Suspense></Layout>} />
               <Route path="/appointments" element={<Layout><Suspense fallback={<PageFallback />}><Appointments /></Suspense></Layout>} />
+              <Route path="/content"      element={<Layout><Suspense fallback={<PageFallback />}><WebsiteContent /></Suspense></Layout>} />
             </Route>
           </Routes>
         </AuthProvider>
