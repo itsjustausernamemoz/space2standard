@@ -109,18 +109,25 @@ export const Suppliers = () => {
     if (!sForm.name.trim()) { toast.error('Supplier name required'); return; }
     setSaving(true);
     const payload = { name: sForm.name.trim(), contact_name: sForm.contact_name || null, email: sForm.email || null, phone: sForm.phone || null, address: sForm.address || null, materials: sForm.materials || null, payment_terms: sForm.payment_terms || null, notes: sForm.notes || null, is_active: sForm.is_active };
-    const { error } = editingSupplier
-      ? await supabase.from('suppliers').update(payload).eq('id', editingSupplier.id)
-      : await supabase.from('suppliers').insert(payload);
-    if (error) toast.error(error.message);
-    else { toast.success(editingSupplier ? 'Supplier updated' : 'Supplier added'); setSupplierModal(false); fetchAll(); }
+    if (editingSupplier) {
+      const { error } = await supabase.from('suppliers').update(payload).eq('id', editingSupplier.id);
+      if (error) { toast.error(error.message); setSaving(false); return; }
+      setSuppliers(prev => prev.map(s => s.id === editingSupplier.id ? { ...s, ...payload } as Supplier : s));
+    } else {
+      const { data, error } = await supabase.from('suppliers').insert(payload).select('*').single();
+      if (error) { toast.error(error.message); setSaving(false); return; }
+      setSuppliers(prev => [...prev, data as Supplier]);
+    }
+    toast.success(editingSupplier ? 'Supplier updated' : 'Supplier added');
+    setSupplierModal(false);
     setSaving(false);
   };
   const deleteSupplier = async (id: string) => {
     if (!await confirm({ title: 'Delete Supplier', message: 'This supplier and all associated data will be permanently removed.', danger: true })) return;
     const { error } = await supabase.from('suppliers').delete().eq('id', id);
-    if (error) toast.error(error.message);
-    else { toast.success('Supplier deleted'); fetchAll(); }
+    if (error) { toast.error(error.message); return; }
+    setSuppliers(prev => prev.filter(s => s.id !== id));
+    toast.success('Supplier deleted');
   };
 
   // PO CRUD
@@ -136,11 +143,17 @@ export const Suppliers = () => {
     setSaving(true);
     const total = recalcTotal(poForm.items.filter(i => i.description));
     const payload = { supplier_id: poForm.supplier_id || null, po_number: poForm.po_number || null, status: poForm.status, items: poForm.items.filter(i => i.description), total_amount: total, expected_delivery: poForm.expected_delivery || null, notes: poForm.notes || null };
-    const { error } = editingPO
-      ? await supabase.from('purchase_orders').update(payload).eq('id', editingPO.id)
-      : await supabase.from('purchase_orders').insert(payload);
-    if (error) toast.error(error.message);
-    else { toast.success(editingPO ? 'PO updated' : 'PO created'); setPOModal(false); fetchAll(); }
+    if (editingPO) {
+      const { error } = await supabase.from('purchase_orders').update(payload).eq('id', editingPO.id);
+      if (error) { toast.error(error.message); setSaving(false); return; }
+      setPOs(prev => prev.map(p => p.id === editingPO.id ? { ...p, ...payload } as PO : p));
+    } else {
+      const { data, error } = await supabase.from('purchase_orders').insert(payload).select('*').single();
+      if (error) { toast.error(error.message); setSaving(false); return; }
+      setPOs(prev => [data as PO, ...prev]);
+    }
+    toast.success(editingPO ? 'PO updated' : 'PO created');
+    setPOModal(false);
     setSaving(false);
   };
   const updateItem = (i: number, field: keyof POItem, val: string | number) => {

@@ -101,25 +101,33 @@ export const Appointments = () => {
     if (!form.appointment_date)   { toast.error('Date required'); return; }
     setSaving(true);
     const payload = { client_name: form.client_name.trim(), client_email: form.client_email || null, client_phone: form.client_phone || null, type: form.type, appointment_date: form.appointment_date, appointment_time: form.appointment_time, duration_minutes: form.duration_minutes, status: form.status, notes: form.notes.trim() || null, order_id: form.order_id || null };
-    const { error } = editing
-      ? await supabase.from('appointments').update(payload).eq('id', editing.id)
-      : await supabase.from('appointments').insert(payload);
-    if (error) toast.error(error.message);
-    else { toast.success(editing ? 'Appointment updated' : 'Appointment created'); setModal(false); fetchAppts(); }
+    if (editing) {
+      const { error } = await supabase.from('appointments').update(payload).eq('id', editing.id);
+      if (error) { toast.error(error.message); setSaving(false); return; }
+      setAppts(prev => prev.map(a => a.id === editing.id ? { ...a, ...payload } as Appointment : a));
+    } else {
+      const { data, error } = await supabase.from('appointments').insert(payload).select('*').single();
+      if (error) { toast.error(error.message); setSaving(false); return; }
+      setAppts(prev => ([...prev, data as Appointment]).sort((a, b) => a.appointment_date.localeCompare(b.appointment_date) || a.appointment_time.localeCompare(b.appointment_time)));
+    }
+    toast.success(editing ? 'Appointment updated' : 'Appointment created');
+    setModal(false);
     setSaving(false);
   };
 
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase.from('appointments').update({ status }).eq('id', id);
-    if (error) toast.error(error.message);
-    else { toast.success(`Marked as ${statLabel(status)}`); fetchAppts(); }
+    if (error) { toast.error(error.message); return; }
+    setAppts(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+    toast.success(`Marked as ${statLabel(status)}`);
   };
 
   const deleteAppt = async (id: string) => {
     if (!await confirm({ title: 'Delete Appointment', message: 'This appointment will be permanently removed from the schedule.', danger: true })) return;
     const { error } = await supabase.from('appointments').delete().eq('id', id);
-    if (error) toast.error(error.message);
-    else { toast.success('Deleted'); fetchAppts(); }
+    if (error) { toast.error(error.message); return; }
+    setAppts(prev => prev.filter(a => a.id !== id));
+    toast.success('Deleted');
   };
 
   const today      = todayStr();

@@ -91,18 +91,25 @@ export const Expenses = () => {
     if (!form.amount || isNaN(parseFloat(form.amount))) { toast.error('Valid amount required'); return; }
     setSaving(true);
     const payload = { category: form.category, description: form.description.trim(), amount: parseFloat(form.amount), expense_date: form.expense_date, supplier_id: form.supplier_id || null, notes: form.notes.trim() || null };
-    const { error } = editing
-      ? await supabase.from('expenses').update(payload).eq('id', editing.id)
-      : await supabase.from('expenses').insert(payload);
-    if (error) toast.error(error.message);
-    else { toast.success(editing ? 'Expense updated' : 'Expense recorded'); setModal(false); fetchAll(); }
+    if (editing) {
+      const { error } = await supabase.from('expenses').update(payload).eq('id', editing.id);
+      if (error) { toast.error(error.message); setSaving(false); return; }
+      setExpenses(prev => prev.map(e => e.id === editing.id ? { ...e, ...payload } as Expense : e));
+    } else {
+      const { data, error } = await supabase.from('expenses').insert(payload).select('*').single();
+      if (error) { toast.error(error.message); setSaving(false); return; }
+      setExpenses(prev => [data as Expense, ...prev]);
+    }
+    toast.success(editing ? 'Expense updated' : 'Expense recorded');
+    setModal(false);
     setSaving(false);
   };
   const deleteExpense = async (id: string) => {
     if (!await confirm({ title: 'Delete Expense', message: 'This expense record will be permanently removed.', danger: true })) return;
     const { error } = await supabase.from('expenses').delete().eq('id', id);
-    if (error) toast.error(error.message);
-    else { toast.success('Deleted'); fetchAll(); }
+    if (error) { toast.error(error.message); return; }
+    setExpenses(prev => prev.filter(e => e.id !== id));
+    toast.success('Deleted');
   };
 
   // Computed stats

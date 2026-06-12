@@ -47,11 +47,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, vatRate = 0, 
         />
         
         {/* Badges */}
-        <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
+        <div className="absolute top-4 left-4 z-20 flex flex-col gap-1.5">
           {promoDiscountPercent != null ? (
-            <span className="bg-[#c9a46a] text-[#060b18] px-2 py-1 rounded-[3px] text-[9px] font-bold uppercase tracking-[0.1em]">
-              -{promoDiscountPercent}%
-            </span>
+            <>
+              <span className="bg-[#c9a46a] text-[#060b18] px-2 py-1 rounded-[3px] text-[9px] font-bold uppercase tracking-[0.12em]">
+                Promo
+              </span>
+              <span className="bg-[#060b18] text-[#c9a46a] border border-[#c9a46a]/50 px-2 py-1 rounded-[3px] text-[9px] font-bold uppercase tracking-[0.1em]">
+                −{promoDiscountPercent}%
+              </span>
+            </>
           ) : hasDiscount ? (
             <span className="bg-[#c9a46a] text-[#060b18] px-2 py-1 rounded-[3px] text-[9px] font-bold uppercase tracking-[0.1em]">
               Sale

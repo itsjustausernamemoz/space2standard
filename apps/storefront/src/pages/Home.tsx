@@ -135,11 +135,21 @@ export const Home = () => {
                   <span style={{ ...sfText, fontSize: 11, fontWeight: 700, color: s.badge, letterSpacing: '0.08em', textTransform: 'uppercase', background: s.badgeBg, padding: '2px 7px', borderRadius: 5, flexShrink: 0 }}>{s.label}</span>
                   <span style={{ ...sfText, color: '#d0d8e8', fontSize: 13, flex: 1 }}>{ann.title}{ann.body ? ` — ${ann.body}` : ''}</span>
                   {ann.type === 'promo' && ann.discount_percent && (
-                    <span style={{ ...sfText, fontSize: 11, color: s.badge, fontWeight: 700, flexShrink: 0 }}>−{ann.discount_percent}%</span>
+                    <span style={{ ...sfText, fontSize: 13, color: s.badge, fontWeight: 800, flexShrink: 0, letterSpacing: '-0.02em' }}>−{ann.discount_percent}%</span>
                   )}
-                  {ann.type === 'promo' && ann.expires_at && (
-                    <span style={{ ...sfText, fontSize: 12, color: s.badge, fontWeight: 600, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4, background: s.badgeBg, padding: '3px 9px', borderRadius: 5, border: `1px solid ${s.border}` }}>
-                      ⏱ <PromoCountdown expiresAt={ann.expires_at} onExpired={() => setAnnouncements(prev => prev.filter(a => a.id !== ann.id))} />
+                  {ann.type === 'promo' && (
+                    <span style={{
+                      ...sfText, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5,
+                      background: s.badgeBg, padding: '5px 11px', borderRadius: 6,
+                      border: `1px solid ${s.border}`,
+                      fontSize: 13, color: s.badge, fontWeight: 700,
+                      fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em',
+                    }}>
+                      ⏱{' '}
+                      {ann.expires_at
+                        ? <PromoCountdown expiresAt={ann.expires_at} onExpired={() => setAnnouncements(prev => prev.filter(a => a.id !== ann.id))} />
+                        : <span>Ongoing</span>
+                      }
                     </span>
                   )}
                   {ann.cta_label && ann.cta_url && (

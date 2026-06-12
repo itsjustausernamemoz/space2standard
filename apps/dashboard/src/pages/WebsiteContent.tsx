@@ -140,6 +140,135 @@ const InputField: React.FC<{
   </div>
 );
 
+// ── Custom Date/Time Picker ───────────────────────────────────
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS   = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+const DateTimePicker: React.FC<{
+  label: string;
+  value: string | null;
+  onChange: (v: string | null) => void;
+}> = ({ label, value, onChange }) => {
+  const parsed   = value ? new Date(value) : null;
+  const [open, setOpen]           = React.useState(false);
+  const [viewYear, setViewYear]   = React.useState(parsed?.getFullYear() ?? new Date().getFullYear());
+  const [viewMonth, setViewMonth] = React.useState(parsed?.getMonth() ?? new Date().getMonth());
+  const [timeH, setTimeH]         = React.useState(parsed ? String(parsed.getHours()).padStart(2,'0') : '00');
+  const [timeM, setTimeM]         = React.useState(parsed ? String(parsed.getMinutes()).padStart(2,'0') : '00');
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const buildISO = (y: number, mo: number, d: number, h: number, m: number) =>
+    `${y}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+
+  const selectDay = (day: number) => {
+    const h = parseInt(timeH) || 0;
+    const m = parseInt(timeM) || 0;
+    onChange(buildISO(viewYear, viewMonth, day, h, m));
+    setOpen(false);
+  };
+
+  const applyTime = (rawH: string, rawM: string) => {
+    const h = Math.min(23, Math.max(0, parseInt(rawH) || 0));
+    const m = Math.min(59, Math.max(0, parseInt(rawM) || 0));
+    setTimeH(String(h).padStart(2,'0'));
+    setTimeM(String(m).padStart(2,'0'));
+    if (parsed) onChange(buildISO(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), h, m));
+  };
+
+  const prevMonth = () => viewMonth === 0 ? (setViewMonth(11), setViewYear(y => y-1)) : setViewMonth(m => m-1);
+  const nextMonth = () => viewMonth === 11 ? (setViewMonth(0), setViewYear(y => y+1)) : setViewMonth(m => m+1);
+
+  const firstDay   = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const today      = new Date();
+
+  const displayLabel = parsed
+    ? `${String(parsed.getDate()).padStart(2,'0')} ${MONTHS[parsed.getMonth()].slice(0,3)} ${parsed.getFullYear()}  ·  ${String(parsed.getHours()).padStart(2,'0')}:${String(parsed.getMinutes()).padStart(2,'0')}`
+    : null;
+
+  const inputBase: React.CSSProperties = { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff', outline: 'none', fontFamily: 'inherit', fontSize: 15, textAlign: 'center' as const };
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <label style={{ display: 'block', fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', color: '#c9a46a', textTransform: 'uppercase', marginBottom: 6 }}>
+        {label}
+      </label>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <div
+          onClick={() => { setViewYear(parsed?.getFullYear() ?? new Date().getFullYear()); setViewMonth(parsed?.getMonth() ?? new Date().getMonth()); setOpen(v => !v); }}
+          style={{ flex: 1, ...inputBase, padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: 10, textAlign: 'left' as const }}
+        >
+          <span style={{ color: displayLabel ? '#fff' : '#5a6070', fontSize: 14 }}>{displayLabel ?? 'Select date & time'}</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9a46a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        {value && (
+          <button onClick={() => { onChange(null); setTimeH('00'); setTimeM('00'); }} style={{ ...inputBase, padding: '0 14px', cursor: 'pointer', color: '#6a7080', fontSize: 18, borderRadius: 10 }}>×</button>
+        )}
+      </div>
+
+      {open && (
+        <div style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 9999, background: '#0d1220', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 20, boxShadow: '0 24px 64px rgba(0,0,0,0.8)', width: 300 }}>
+
+          {/* Month nav */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <button onClick={prevMonth} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#c9a46a', width: 32, height: 32, borderRadius: 8, cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
+            <span style={{ color: '#fff', fontSize: 14, fontWeight: 600 }}>{MONTHS[viewMonth]} {viewYear}</span>
+            <button onClick={nextMonth} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#c9a46a', width: 32, height: 32, borderRadius: 8, cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
+          </div>
+
+          {/* Day-of-week headers */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4, marginBottom: 8 }}>
+            {DAYS.map(d => <div key={d} style={{ textAlign: 'center', fontSize: 10, fontWeight: 700, color: '#5a6070', letterSpacing: '0.06em' }}>{d}</div>)}
+          </div>
+
+          {/* Day grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4, marginBottom: 20 }}>
+            {Array.from({ length: firstDay }).map((_, i) => <div key={`e${i}`} />)}
+            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
+              const isSel = parsed && parsed.getFullYear() === viewYear && parsed.getMonth() === viewMonth && parsed.getDate() === day;
+              const isTod = today.getFullYear() === viewYear && today.getMonth() === viewMonth && today.getDate() === day;
+              return (
+                <button key={day} onClick={() => selectDay(day)} style={{ background: isSel ? '#c9a46a' : isTod ? 'rgba(201,164,106,0.12)' : 'transparent', border: isTod && !isSel ? '1px solid rgba(201,164,106,0.35)' : '1px solid transparent', borderRadius: 8, color: isSel ? '#000' : '#d0d8e8', fontWeight: isSel ? 700 : 400, fontSize: 13, padding: '7px 0', cursor: 'pointer', textAlign: 'center' }}>
+                  {day}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Time picker */}
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 16 }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: '#5a6070', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Time</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                <button onClick={() => applyTime(String((parseInt(timeH)+1)%24), timeM)} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#c9a46a', width: 56, height: 28, borderRadius: 7, cursor: 'pointer', fontSize: 16 }}>▲</button>
+                <input value={timeH} onChange={e => setTimeH(e.target.value)} onBlur={e => applyTime(e.target.value, timeM)} maxLength={2} style={{ ...inputBase, width: 56, height: 40, borderRadius: 8 }} />
+                <button onClick={() => applyTime(String((parseInt(timeH)+23)%24), timeM)} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#c9a46a', width: 56, height: 28, borderRadius: 7, cursor: 'pointer', fontSize: 16 }}>▼</button>
+              </div>
+              <span style={{ color: '#c9a46a', fontSize: 22, fontWeight: 700, marginBottom: 2 }}>:</span>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                <button onClick={() => applyTime(timeH, String((parseInt(timeM)+1)%60))} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#c9a46a', width: 56, height: 28, borderRadius: 7, cursor: 'pointer', fontSize: 16 }}>▲</button>
+                <input value={timeM} onChange={e => setTimeM(e.target.value)} onBlur={e => applyTime(timeH, e.target.value)} maxLength={2} style={{ ...inputBase, width: 56, height: 40, borderRadius: 8 }} />
+                <button onClick={() => applyTime(timeH, String((parseInt(timeM)+59)%60))} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#c9a46a', width: 56, height: 28, borderRadius: 7, cursor: 'pointer', fontSize: 16 }}>▼</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ── Announcements Tab ─────────────────────────────────────────
 
 const emptyAnn = (): AnnouncementForm => ({
@@ -208,41 +337,57 @@ const AnnouncementsTab: React.FC = () => {
     let annId: string | null = modal.editing;
 
     if (modal.editing) {
-      // Parallelize the announcement update + old product links deletion
       const [{ error: updateErr }] = await Promise.all([
         supabase.from('announcements').update(payload).eq('id', modal.editing),
         supabase.from('announcement_products').delete().eq('announcement_id', modal.editing),
       ]);
       if (updateErr) { toast.error(updateErr.message); setSaving(false); return; }
     } else {
-      const { data: created, error } = await supabase.from('announcements').insert(payload).select('id').single();
+      const { data: created, error } = await supabase.from('announcements').insert(payload).select('id, created_at').single();
       if (error) { toast.error(error.message); setSaving(false); return; }
       annId = created.id;
     }
 
-    // Insert new product links (only for promos with selections)
-    if (annId && modal.data.type === 'promo' && modal.promoProductIds.length > 0) {
+    const links = modal.data.type === 'promo' && modal.promoProductIds.length > 0
+      ? modal.promoProductIds.map(pid => ({ product_id: pid }))
+      : [];
+
+    if (annId && links.length > 0) {
       await supabase.from('announcement_products').insert(
-        modal.promoProductIds.map(pid => ({ announcement_id: annId!, product_id: pid }))
+        links.map(l => ({ announcement_id: annId!, product_id: l.product_id }))
       );
     }
 
+    // Update local state directly — no re-fetch round trip
+    const merged: Announcement = {
+      id: annId!,
+      ...payload,
+      created_at: modal.editing
+        ? (rows.find(r => r.id === modal.editing)?.created_at ?? new Date().toISOString())
+        : new Date().toISOString(),
+      announcement_products: links,
+    } as Announcement;
+
+    setRows(prev =>
+      modal.editing
+        ? prev.map(r => r.id === modal.editing ? merged : r)
+        : [merged, ...prev]
+    );
     toast.success(modal.editing ? 'Updated' : 'Created');
     setModal(m => ({ ...m, open: false }));
-    load();
     setSaving(false);
   };
 
   const toggle = async (a: Announcement) => {
     await supabase.from('announcements').update({ is_active: !a.is_active }).eq('id', a.id);
-    load();
+    setRows(prev => prev.map(r => r.id === a.id ? { ...r, is_active: !a.is_active } : r));
   };
 
   const del = async (id: string) => {
     if (!await confirm({ title: 'Delete Announcement', message: 'This announcement will be removed from the website immediately.', danger: true })) return;
     await supabase.from('announcements').delete().eq('id', id);
+    setRows(prev => prev.filter(r => r.id !== id));
     toast.success('Deleted');
-    load();
   };
 
   const set = (k: keyof AnnouncementForm, v: string | boolean | number | null) =>
@@ -371,7 +516,7 @@ const AnnouncementsTab: React.FC = () => {
                 <InputField label="CTA Button Label" value={modal.data.cta_label ?? ''} onChange={v => set('cta_label', v)} placeholder="Shop Now" />
                 <InputField label="CTA URL" value={modal.data.cta_url ?? ''} onChange={v => set('cta_url', v)} placeholder="/products" />
               </div>
-              <InputField label="Expires At (optional)" value={modal.data.expires_at ?? ''} onChange={v => set('expires_at', v)} type="datetime-local" />
+              <DateTimePicker label="Expires At (optional)" value={modal.data.expires_at} onChange={v => set('expires_at', v)} />
               <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
                 <input type="checkbox" checked={modal.data.is_active} onChange={e => set('is_active', e.target.checked)} style={{ accentColor: '#c9a46a', width: 16, height: 16 }} />
                 <span style={{ color: '#a0a8b8', fontSize: 14 }}>Publish immediately (make live on website)</span>
@@ -422,22 +567,30 @@ const TestimonialsTab: React.FC = () => {
     if (!modal.data.client_name.trim() || !modal.data.quote.trim()) { toast.error('Name and quote are required'); return; }
     setSaving(true);
     const payload = { ...modal.data, client_role: modal.data.client_role || null };
-    const { error } = modal.editing
-      ? await supabase.from('testimonials').update(payload).eq('id', modal.editing)
-      : await supabase.from('testimonials').insert(payload);
-    if (error) { toast.error(error.message); } else { toast.success(modal.editing ? 'Updated' : 'Added'); setModal(m => ({ ...m, open: false })); load(); }
+    if (modal.editing) {
+      const { error } = await supabase.from('testimonials').update(payload).eq('id', modal.editing);
+      if (error) { toast.error(error.message); setSaving(false); return; }
+      setRows(prev => prev.map(r => r.id === modal.editing ? { ...r, ...payload } : r));
+    } else {
+      const { data, error } = await supabase.from('testimonials').insert(payload).select('*').single();
+      if (error) { toast.error(error.message); setSaving(false); return; }
+      setRows(prev => [...prev, data]);
+    }
+    toast.success(modal.editing ? 'Updated' : 'Added');
+    setModal(m => ({ ...m, open: false }));
     setSaving(false);
   };
 
   const toggle = async (t: Testimonial) => {
     await supabase.from('testimonials').update({ is_active: !t.is_active }).eq('id', t.id);
-    load();
+    setRows(prev => prev.map(r => r.id === t.id ? { ...r, is_active: !t.is_active } : r));
   };
 
   const del = async (id: string) => {
     if (!await confirm({ title: 'Delete Testimonial', message: 'This review will be permanently removed from the website.', danger: true })) return;
     await supabase.from('testimonials').delete().eq('id', id);
-    toast.success('Deleted'); load();
+    setRows(prev => prev.filter(r => r.id !== id));
+    toast.success('Deleted');
   };
 
   const set = (k: keyof typeof modal.data, v: string | boolean | number | null) =>
@@ -570,22 +723,30 @@ const FaqsTab: React.FC = () => {
   const save = async () => {
     if (!modal.data.question.trim() || !modal.data.answer.trim()) { toast.error('Question and answer are required'); return; }
     setSaving(true);
-    const { error } = modal.editing
-      ? await supabase.from('faqs').update(modal.data).eq('id', modal.editing)
-      : await supabase.from('faqs').insert(modal.data);
-    if (error) { toast.error(error.message); } else { toast.success(modal.editing ? 'Updated' : 'Added'); setModal(m => ({ ...m, open: false })); load(); }
+    if (modal.editing) {
+      const { error } = await supabase.from('faqs').update(modal.data).eq('id', modal.editing);
+      if (error) { toast.error(error.message); setSaving(false); return; }
+      setRows(prev => prev.map(r => r.id === modal.editing ? { ...r, ...modal.data } : r));
+    } else {
+      const { data, error } = await supabase.from('faqs').insert(modal.data).select('*').single();
+      if (error) { toast.error(error.message); setSaving(false); return; }
+      setRows(prev => [...prev, data]);
+    }
+    toast.success(modal.editing ? 'Updated' : 'Added');
+    setModal(m => ({ ...m, open: false }));
     setSaving(false);
   };
 
   const del = async (id: string) => {
     if (!await confirm({ title: 'Delete FAQ', message: 'This question will be permanently removed from the website.', danger: true })) return;
     await supabase.from('faqs').delete().eq('id', id);
-    toast.success('Deleted'); load();
+    setRows(prev => prev.filter(r => r.id !== id));
+    toast.success('Deleted');
   };
 
   const toggle = async (f: Faq) => {
     await supabase.from('faqs').update({ is_active: !f.is_active }).eq('id', f.id);
-    load();
+    setRows(prev => prev.map(r => r.id === f.id ? { ...r, is_active: !f.is_active } : r));
   };
 
   const set = (k: keyof typeof modal.data, v: string | boolean | number) =>
