@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { SelectField } from '@/components/SelectField';
 import {
   Plus, X, ChevronRight, Search, Hammer,
   AlertTriangle, Clock, CheckCircle2, Truck,
@@ -379,15 +380,21 @@ export const Production = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label style={{ fontSize: 12, color: '#5a6070', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Stage</label>
-                  <select value={form.stage} onChange={e => setForm(f => ({ ...f, stage: e.target.value }))} style={{ ...inp, cursor: 'pointer' }}>
-                    {STAGES.filter(s => s.key !== 'all').map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-                  </select>
+                  <SelectField
+                    value={form.stage}
+                    onChange={v => setForm(f => ({ ...f, stage: v }))}
+                    options={STAGES.filter(s => s.key !== 'all').map(s => ({ value: s.key, label: s.label }))}
+                    style={inp}
+                  />
                 </div>
                 <div>
                   <label style={{ fontSize: 12, color: '#5a6070', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Priority</label>
-                  <select value={form.priority} onChange={e => setForm(f => ({ ...f, priority: e.target.value }))} style={{ ...inp, cursor: 'pointer' }}>
-                    {PRIORITIES.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
-                  </select>
+                  <SelectField
+                    value={form.priority}
+                    onChange={v => setForm(f => ({ ...f, priority: v }))}
+                    options={PRIORITIES.map(p => ({ value: p.key, label: p.label }))}
+                    style={inp}
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">

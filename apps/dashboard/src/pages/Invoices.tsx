@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Document } from '@shared/types';
 import { formatCurrency, formatDate } from '@shared/utils';
+import { SelectField } from '@/components/SelectField';
 import { 
   Edit2,
   CheckCircle,
@@ -477,18 +478,16 @@ export const Invoices = () => {
                  onChange={(e) => setSearchTerm(e.target.value)}
                />
             </div>
-            <select 
-              className="input-base py-2.5 text-[10px] font-bold uppercase tracking-widest text-white/40 w-full md:w-32"
+            <SelectField
+              className="input-base py-2.5 w-full md:w-40"
               value={timeframe}
-              onChange={(e) => {
-                 setTimeframe(e.target.value);
-                 // fetchData handled by useEffect
-              }}
-            >
-              <option value="all">All Time</option>
-              <option value="month">Month</option>
-              <option value="year">Year</option>
-            </select>
+              onChange={setTimeframe}
+              options={[
+                { value: 'all',   label: 'All Time' },
+                { value: 'month', label: 'This Month' },
+                { value: 'year',  label: 'This Year' },
+              ]}
+            />
          </div>
       </div>
 

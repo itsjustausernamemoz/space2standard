@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { formatCurrency } from '@shared/utils';
+import { SelectField } from '@/components/SelectField';
 
 export const InvoiceForm = () => {
   const { id } = useParams<{ id: string }>();
@@ -350,28 +351,29 @@ export const InvoiceForm = () => {
               <div className="space-y-8">
                  <div className="space-y-2">
                     <label className="text-[9px] font-bold uppercase tracking-widest text-navy-600 ml-1">Artisan Client</label>
-                    <select 
-                      className="input-base py-3" 
+                    <SelectField
+                      className="input-base py-3"
                       value={selectedClientId}
-                      onChange={e => setSelectedClientId(e.target.value)}
-                    >
-                       <option value="">Select a Client...</option>
-                       {clients.map(c => (
-                         <option key={c.id} value={c.id}>{c.full_name} ({c.email})</option>
-                       ))}
-                    </select>
+                      onChange={setSelectedClientId}
+                      placeholder="Select a Client..."
+                      options={[
+                        { value: '', label: 'Select a Client...' },
+                        ...clients.map(c => ({ value: c.id, label: `${c.full_name} (${c.email})` }))
+                      ]}
+                    />
                  </div>
 
                  <div className="space-y-2">
                     <label className="text-[9px] font-bold uppercase tracking-widest text-navy-600 ml-1">Document Format</label>
-                    <select 
-                      className="input-base py-3" 
-                      value={formData.type} 
-                      onChange={e => setFormData({...formData, type: e.target.value as any})}
-                    >
-                      <option value="invoice">Commercial Tax Invoice</option>
-                      <option value="quotation">Project Quotation</option>
-                    </select>
+                    <SelectField
+                      className="input-base py-3"
+                      value={formData.type}
+                      onChange={v => setFormData({...formData, type: v as any})}
+                      options={[
+                        { value: 'invoice',   label: 'Commercial Tax Invoice' },
+                        { value: 'quotation', label: 'Project Quotation' },
+                      ]}
+                    />
                  </div>
 
                  <div className="space-y-2">

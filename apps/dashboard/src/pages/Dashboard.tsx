@@ -26,6 +26,7 @@ import {
   Area
 } from 'recharts';
 import { formatCurrency } from '@shared/utils';
+import { SelectField } from '@/components/SelectField';
 import { subDays } from 'date-fns';
 const ReportDownloadButton = lazy(() => import('@/components/ReportDownloadButton'));
 
@@ -251,15 +252,16 @@ export const Dashboard = () => {
         <div className="flex gap-4 w-full md:w-auto">
            <div className="flex items-center gap-3 bg-navy-900 border border-navy-800 px-4 py-2 rounded-lg">
               <Calendar size={14} className="text-gold-500" />
-              <select 
-                className="bg-transparent text-[10px] font-bold uppercase tracking-[0.2em] text-navy-400 focus:outline-none"
+              <SelectField
                 value={timeframe}
-                onChange={(e) => setTimeframe(e.target.value)}
-              >
-                <option value="Last 7 Days (Real-time)">Last 7 Days</option>
-                <option value="Last 30 Days">Last 30 Days</option>
-                <option value="Year-to-Date">Year-to-Date</option>
-              </select>
+                onChange={setTimeframe}
+                options={[
+                  { value: 'Last 7 Days (Real-time)', label: 'Last 7 Days' },
+                  { value: 'Last 30 Days',            label: 'Last 30 Days' },
+                  { value: 'Year-to-Date',            label: 'Year-to-Date' },
+                ]}
+                style={{ background: 'transparent', border: 'none', outline: 'none', padding: 0, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6b7280', minWidth: 100 }}
+              />
            </div>
 
            {!loading && (

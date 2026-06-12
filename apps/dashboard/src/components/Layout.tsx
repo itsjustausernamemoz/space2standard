@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { BottomNav } from './BottomNav';
-import { NotificationPanel } from './NotificationPanel';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -18,7 +17,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile sticky header */}
-        <div className="lg:hidden flex items-center justify-between px-4 h-[44px] shrink-0 border-b border-white/[0.06] bg-[#0d1220]/80 backdrop-blur-md z-30">
+        <div className="lg:hidden flex items-center px-4 h-[44px] shrink-0 border-b border-white/[0.06] bg-[#0d1220]/80 backdrop-blur-md z-30">
           <div className="flex items-center gap-2.5">
             <img src="/s2s-square.png" alt="Space2Standard" className="h-7 w-7 object-contain" />
             <span
@@ -28,15 +27,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               Space2Standard
             </span>
           </div>
-          <NotificationPanel />
         </div>
 
         {/* Only this div scrolls — sidebar stays put */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden pb-24 lg:pb-0 relative">
-          <div className="hidden lg:block absolute top-8 right-10 z-40">
-            <NotificationPanel />
-          </div>
-          <div className="container mx-auto p-6 md:p-10 pt-8 lg:pt-16 max-w-7xl animate-in fade-in duration-700">
+          <div className="container mx-auto p-6 md:p-10 pt-8 max-w-7xl animate-in fade-in duration-700">
             {children}
           </div>
         </div>

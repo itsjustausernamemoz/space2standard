@@ -13,6 +13,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { SelectField } from '@/components/SelectField';
 
 export const ProductForm = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,6 +26,8 @@ export const ProductForm = () => {
   const [images, setImages] = useState<Partial<ProductImage>[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [convCurrency, setConvCurrency] = useState('USD');
+  const [convAmount, setConvAmount] = useState('');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -247,16 +250,13 @@ export const ProductForm = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-charcoal-500 ml-1">Category</label>
-                  <select 
-                    className="input-base cursor-pointer" 
-                    value={formData.category_id} 
-                    onChange={e => setFormData({...formData, category_id: e.target.value})}
-                  >
-                    <option value="" disabled>Select a Category...</option>
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
+                  <SelectField
+                    className="input-base"
+                    value={formData.category_id}
+                    onChange={v => setFormData({...formData, category_id: v})}
+                    placeholder="Select a Category..."
+                    options={categories.map(cat => ({ value: cat.id, label: cat.name }))}
+                  />
                 </div>
               </div>
 
@@ -299,13 +299,13 @@ export const ProductForm = () => {
               </h3>
               <div className="grid md:grid-cols-3 gap-8">
                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-charcoal-500 ml-1">Base Price (ZAR)</label>
-                    <input 
-                      type="number" 
-                      className="input-base" 
-                      required 
-                      value={formData.price} 
-                      onChange={e => setFormData({...formData, price: parseFloat(e.target.value)})} 
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-charcoal-500 ml-1">Base Price (N$)</label>
+                    <input
+                      type="number"
+                      className="input-base"
+                      required
+                      value={formData.price}
+                      onChange={e => setFormData({...formData, price: parseFloat(e.target.value)})}
                     />
                  </div>
                  <div className="space-y-2">
@@ -321,25 +321,76 @@ export const ProductForm = () => {
                  <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-charcoal-500 ml-1">Discount Config</label>
                     <div className="flex gap-2">
-                      <select 
-                        className="input-base !w-1/3 text-[10px]" 
-                        value={formData.discount_type || ''} 
-                        onChange={e => setFormData({...formData, discount_type: (e.target.value as any) || null})}
-                      >
-                        <option value="">None</option>
-                        <option value="percent">%</option>
-                        <option value="fixed">Fixed</option>
-                      </select>
-                      <input 
-                        type="number" 
-                        className="input-base !w-2/3" 
-                        value={formData.discount_value} 
-                        onChange={e => setFormData({...formData, discount_value: parseFloat(e.target.value)})} 
+                      <SelectField
+                        className="input-base !w-1/3"
+                        value={formData.discount_type || ''}
+                        onChange={v => setFormData({...formData, discount_type: (v as any) || null})}
+                        options={[
+                          { value: '',       label: 'None' },
+                          { value: 'percent', label: '%' },
+                          { value: 'fixed',   label: 'Fixed' },
+                        ]}
+                      />
+                      <input
+                        type="number"
+                        className="input-base !w-2/3"
+                        value={formData.discount_value}
+                        onChange={e => setFormData({...formData, discount_value: parseFloat(e.target.value)})}
                       />
                     </div>
                  </div>
               </div>
-              
+
+              {/* Currency converter helper */}
+              {(() => {
+                const RATES: Record<string, { rate: number; name: string }> = {
+                  USD: { rate: 18.5, name: 'US Dollar' },
+                  EUR: { rate: 20.2, name: 'Euro' },
+                  GBP: { rate: 23.8, name: 'British Pound' },
+                  ZAR: { rate: 1.0,  name: 'South African Rand' },
+                  BWP: { rate: 1.35, name: 'Botswana Pula' },
+                };
+                const nadEq = convAmount && !isNaN(parseFloat(convAmount))
+                  ? (parseFloat(convAmount) * RATES[convCurrency].rate).toFixed(2)
+                  : null;
+                return (
+                  <div style={{ background: 'rgba(201,164,106,0.04)', border: '1px solid rgba(201,164,106,0.14)', borderRadius: 12, padding: '14px 18px' }}>
+                    <p style={{ fontSize: 10, color: '#c9a46a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>
+                      Convert from foreign currency → N$
+                    </p>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <SelectField
+                        value={convCurrency}
+                        onChange={setConvCurrency}
+                        options={Object.entries(RATES).map(([k, v]) => ({ value: k, label: `${k} – ${v.name}` }))}
+                        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, color: '#fff', fontFamily: 'SF Pro Text, system-ui, -apple-system, sans-serif', fontSize: 13, padding: '9px 13px', outline: 'none', minWidth: 200 }}
+                      />
+                      <input
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        value={convAmount}
+                        onChange={e => setConvAmount(e.target.value)}
+                        placeholder={`Amount in ${convCurrency}`}
+                        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, color: '#fff', fontFamily: 'SF Pro Text, system-ui, -apple-system, sans-serif', fontSize: 13, padding: '9px 13px', outline: 'none', flex: 1, minWidth: 140 }}
+                      />
+                      {nadEq && (
+                        <button
+                          type="button"
+                          onClick={() => { setFormData(fd => ({ ...fd, price: parseFloat(nadEq) })); setConvAmount(''); }}
+                          style={{ background: '#c9a46a', border: 'none', borderRadius: 10, padding: '9px 18px', color: '#060b18', fontFamily: 'SF Pro Text, system-ui, -apple-system, sans-serif', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        >
+                          Apply N$ {parseFloat(nadEq).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                        </button>
+                      )}
+                    </div>
+                    <p style={{ fontSize: 11, color: '#5a6070', marginTop: 8 }}>
+                      Rate: 1 {convCurrency} ≈ N$ {RATES[convCurrency].rate.toFixed(2)} · Approximate — update via your bank or forex provider
+                    </p>
+                  </div>
+                );
+              })()}
+
               <div className="flex gap-12 items-center bg-charcoal-900/50 p-6 rounded-xl border border-charcoal-700/30">
                  <label className="flex items-center gap-3 cursor-pointer group">
                     <input 

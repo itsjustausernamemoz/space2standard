@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { SelectField } from '@/components/SelectField';
 import { useConfirm } from '@/components/ConfirmDialog';
 import {
   Plus, X, Search, Receipt, TrendingDown,
@@ -305,10 +306,12 @@ export const Expenses = () => {
               {suppliers.length > 0 && (
                 <div>
                   <label style={lbl}>Supplier (optional)</label>
-                  <select value={form.supplier_id} onChange={e => setForm(f => ({ ...f, supplier_id: e.target.value }))} style={{ ...inp, cursor: 'pointer' }}>
-                    <option value="">None</option>
-                    {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
+                  <SelectField
+                    value={form.supplier_id}
+                    onChange={v => setForm(f => ({ ...f, supplier_id: v }))}
+                    options={[{ value: '', label: 'None' }, ...suppliers.map(s => ({ value: s.id, label: s.name }))]}
+                    style={inp}
+                  />
                 </div>
               )}
               <div>

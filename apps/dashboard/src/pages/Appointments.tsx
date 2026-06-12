@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { SelectField } from '@/components/SelectField';
 import { useConfirm } from '@/components/ConfirmDialog';
 import {
   Plus, X, Search, CalendarDays, Clock,
@@ -326,15 +327,21 @@ export const Appointments = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label style={lbl}>Duration (minutes)</label>
-                  <select value={form.duration_minutes} onChange={e => setForm(f => ({ ...f, duration_minutes: parseInt(e.target.value) }))} style={{ ...inp, cursor: 'pointer' }}>
-                    {[30, 45, 60, 90, 120, 180, 240].map(d => <option key={d} value={d}>{d >= 60 ? `${d / 60}h${d % 60 ? ` ${d % 60}min` : ''}` : `${d}min`}</option>)}
-                  </select>
+                  <SelectField
+                    value={String(form.duration_minutes)}
+                    onChange={v => setForm(f => ({ ...f, duration_minutes: parseInt(v) }))}
+                    options={[30, 45, 60, 90, 120, 180, 240].map(d => ({ value: String(d), label: d >= 60 ? `${d / 60}h${d % 60 ? ` ${d % 60}min` : ''}` : `${d}min` }))}
+                    style={inp}
+                  />
                 </div>
                 <div>
                   <label style={lbl}>Status</label>
-                  <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} style={{ ...inp, cursor: 'pointer' }}>
-                    {STATUSES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-                  </select>
+                  <SelectField
+                    value={form.status}
+                    onChange={v => setForm(f => ({ ...f, status: v }))}
+                    options={STATUSES.map(s => ({ value: s.key, label: s.label }))}
+                    style={inp}
+                  />
                 </div>
               </div>
               <div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { SelectField } from '@/components/SelectField';
 import { useConfirm } from '@/components/ConfirmDialog';
 import {
   Plus, X, Search, Truck, Edit2, Trash2,
@@ -375,10 +376,13 @@ export const Suppliers = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label style={lbl}>Supplier *</label>
-                  <select value={poForm.supplier_id} onChange={e => setPOForm(f => ({ ...f, supplier_id: e.target.value }))} style={{ ...inp, cursor: 'pointer' }}>
-                    <option value="">Select supplier…</option>
-                    {suppliers.filter(s => s.is_active).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
+                  <SelectField
+                    value={poForm.supplier_id}
+                    onChange={v => setPOForm(f => ({ ...f, supplier_id: v }))}
+                    options={[{ value: '', label: 'Select supplier…' }, ...suppliers.filter(s => s.is_active).map(s => ({ value: s.id, label: s.name }))]}
+                    placeholder="Select supplier…"
+                    style={inp}
+                  />
                 </div>
                 <div>
                   <label style={lbl}>PO Number</label>
@@ -388,9 +392,12 @@ export const Suppliers = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label style={lbl}>Status</label>
-                  <select value={poForm.status} onChange={e => setPOForm(f => ({ ...f, status: e.target.value }))} style={{ ...inp, cursor: 'pointer' }}>
-                    {PO_STATUSES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-                  </select>
+                  <SelectField
+                    value={poForm.status}
+                    onChange={v => setPOForm(f => ({ ...f, status: v }))}
+                    options={PO_STATUSES.map(s => ({ value: s.key, label: s.label }))}
+                    style={inp}
+                  />
                 </div>
                 <div>
                   <label style={lbl}>Expected Delivery</label>
