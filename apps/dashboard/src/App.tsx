@@ -20,7 +20,11 @@ const InvoiceForm = lazy(() => import('./pages/InvoiceForm').then(m => ({ defaul
 const Inventory   = lazy(() => import('./pages/Inventory').then(m => ({ default: m.Inventory })));
 const Settings    = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
 const Messages    = lazy(() => import('./pages/Messages').then(m => ({ default: m.Messages })));
-const Clients     = lazy(() => import('./pages/Clients').then(m => ({ default: m.Clients })));
+const Clients      = lazy(() => import('./pages/Clients').then(m => ({ default: m.Clients })));
+const Production   = lazy(() => import('./pages/Production').then(m => ({ default: m.Production })));
+const Suppliers    = lazy(() => import('./pages/Suppliers').then(m => ({ default: m.Suppliers })));
+const Expenses     = lazy(() => import('./pages/Expenses').then(m => ({ default: m.Expenses })));
+const Appointments = lazy(() => import('./pages/Appointments').then(m => ({ default: m.Appointments })));
 
 const sfText = 'SF Pro Text, system-ui, -apple-system, sans-serif';
 
@@ -99,7 +103,11 @@ function App() {
               <Route path="/invoices/:id/edit" element={<Layout><Suspense fallback={<PageFallback />}><InvoiceForm /></Suspense></Layout>} />
               <Route path="/inventory" element={<Layout><Suspense fallback={<PageFallback />}><Inventory /></Suspense></Layout>} />
               <Route path="/settings" element={<Layout><Suspense fallback={<PageFallback />}><Settings /></Suspense></Layout>} />
-              <Route path="/messages" element={<Layout><Suspense fallback={<PageFallback />}><Messages /></Suspense></Layout>} />
+              <Route path="/messages"      element={<Layout><Suspense fallback={<PageFallback />}><Messages /></Suspense></Layout>} />
+              <Route path="/production"   element={<Layout><Suspense fallback={<PageFallback />}><Production /></Suspense></Layout>} />
+              <Route path="/suppliers"    element={<Layout><Suspense fallback={<PageFallback />}><Suppliers /></Suspense></Layout>} />
+              <Route path="/expenses"     element={<Layout><Suspense fallback={<PageFallback />}><Expenses /></Suspense></Layout>} />
+              <Route path="/appointments" element={<Layout><Suspense fallback={<PageFallback />}><Appointments /></Suspense></Layout>} />
             </Route>
           </Routes>
         </AuthProvider>

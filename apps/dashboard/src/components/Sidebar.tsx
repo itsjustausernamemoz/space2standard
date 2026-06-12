@@ -14,6 +14,10 @@ import {
   Users,
   PanelLeftClose,
   PanelLeftOpen,
+  Hammer,
+  Truck,
+  Receipt,
+  CalendarDays,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -30,14 +34,18 @@ const sfText = { fontFamily: 'SF Pro Text, system-ui, -apple-system, sans-serif'
 
 const menuItems = [
   { name: 'Overview',      icon: <LayoutDashboard size={17} />, path: '/' },
-  { name: 'Products',      icon: <Package size={17} />,         path: '/products' },
+  { name: 'Orders',        icon: <ShoppingCart size={17} />,    path: '/orders' },
+  { name: 'Production',    icon: <Hammer size={17} />,          path: '/production' },
+  { name: 'Appointments',  icon: <CalendarDays size={17} />,    path: '/appointments' },
   { name: 'Clients',       icon: <Users size={17} />,           path: '/clients' },
+  { name: 'Products',      icon: <Package size={17} />,         path: '/products' },
+  { name: 'Inventory',     icon: <BarChart3 size={17} />,       path: '/inventory' },
+  { name: 'Invoices',      icon: <FileText size={17} />,        path: '/invoices' },
+  { name: 'Suppliers',     icon: <Truck size={17} />,           path: '/suppliers' },
+  { name: 'Expenses',      icon: <Receipt size={17} />,         path: '/expenses' },
+  { name: 'Messages',      icon: <MessageSquare size={17} />,   path: '/messages' },
   { name: 'Image Gallery', icon: <ImageIcon size={17} />,       path: '/gallery' },
   { name: 'Categories',    icon: <Package size={17} />,         path: '/categories' },
-  { name: 'Orders',        icon: <ShoppingCart size={17} />,    path: '/orders' },
-  { name: 'Invoices',      icon: <FileText size={17} />,        path: '/invoices' },
-  { name: 'Inventory',     icon: <BarChart3 size={17} />,       path: '/inventory' },
-  { name: 'Messages',      icon: <MessageSquare size={17} />,   path: '/messages' },
   { name: 'Settings',      icon: <Settings size={17} />,        path: '/settings' },
 ];
 
