@@ -11,8 +11,37 @@ interface Announcement {
   type: 'info' | 'promo' | 'alert' | 'news';
   cta_label: string | null;
   cta_url: string | null;
+  discount_percent: number | null;
   expires_at: string | null;
+  announcement_products?: { product_id: string }[];
 }
+
+const PromoCountdown: React.FC<{ expiresAt: string; onExpired: () => void }> = ({ expiresAt, onExpired }) => {
+  const [label, setLabel] = React.useState('');
+  const firedRef = React.useRef(false);
+  React.useEffect(() => {
+    const tick = () => {
+      const diff = new Date(expiresAt).getTime() - Date.now();
+      if (diff <= 0) {
+        setLabel('Ended');
+        if (!firedRef.current) { firedRef.current = true; onExpired(); }
+        return;
+      }
+      const d = Math.floor(diff / 86_400_000);
+      const h = Math.floor((diff % 86_400_000) / 3_600_000);
+      const m = Math.floor((diff % 3_600_000) / 60_000);
+      const s = Math.floor((diff % 60_000) / 1_000);
+      setLabel(d > 0
+        ? `${d}d ${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m`
+        : `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+      );
+    };
+    tick();
+    const id = setInterval(tick, 1_000);
+    return () => clearInterval(id);
+  }, [expiresAt, onExpired]);
+  return <span style={{ fontVariantNumeric: 'tabular-nums' }}>{label}</span>;
+};
 
 const TYPE_STYLES: Record<string, { bg: string; border: string; badge: string; badgeBg: string; label: string }> = {
   info:  { bg: 'rgba(59,130,246,0.06)',  border: 'rgba(59,130,246,0.18)',  badge: '#60a5fa', badgeBg: 'rgba(59,130,246,0.12)',  label: 'Info'  },
@@ -30,6 +59,7 @@ export const Home = () => {
   const [loading, setLoading]                   = React.useState(true);
   const [content, setContent]                   = React.useState<Record<string, string>>({});
   const [announcements, setAnnouncements]       = React.useState<Announcement[]>([]);
+  const [promoMap, setPromoMap]                 = React.useState<Record<string, number>>({});
 
   React.useEffect(() => {
     async function fetchData() {
@@ -38,7 +68,7 @@ export const Home = () => {
         supabase.from('settings').select('*'),
         supabase.from('site_content').select('key, value'),
         supabase.from('announcements')
-          .select('id, title, body, type, cta_label, cta_url, expires_at')
+          .select('id, title, body, type, cta_label, cta_url, expires_at, discount_percent, announcement_products(product_id)')
           .eq('is_active', true)
           .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`),
       ]);
@@ -56,7 +86,19 @@ export const Home = () => {
 
       if (aRes.data) {
         const now = new Date();
-        setAnnouncements(aRes.data.filter((a: any) => !a.expires_at || new Date(a.expires_at) > now));
+        const live = aRes.data.filter((a: any) => !a.expires_at || new Date(a.expires_at) > now);
+        setAnnouncements(live);
+
+        // Build map of product_id → highest promo discount among active promos
+        const map: Record<string, number> = {};
+        live.forEach((a: any) => {
+          if (a.type === 'promo' && a.discount_percent && a.announcement_products) {
+            a.announcement_products.forEach((link: any) => {
+              map[link.product_id] = Math.max(map[link.product_id] || 0, a.discount_percent);
+            });
+          }
+        });
+        setPromoMap(map);
       }
 
       setLoading(false);
@@ -64,12 +106,12 @@ export const Home = () => {
     fetchData();
   }, []);
 
-  // Drop expired announcements while user is on the page
+  // Backstop: drop expired announcements every 5 s in case onExpired didn't fire (e.g. tab was backgrounded)
   React.useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
       setAnnouncements(prev => prev.filter(a => !a.expires_at || new Date(a.expires_at) > now));
-    }, 30_000);
+    }, 5_000);
     return () => clearInterval(interval);
   }, []);
 
@@ -92,6 +134,14 @@ export const Home = () => {
                   <Megaphone size={13} color={s.badge} style={{ flexShrink: 0 }} />
                   <span style={{ ...sfText, fontSize: 11, fontWeight: 700, color: s.badge, letterSpacing: '0.08em', textTransform: 'uppercase', background: s.badgeBg, padding: '2px 7px', borderRadius: 5, flexShrink: 0 }}>{s.label}</span>
                   <span style={{ ...sfText, color: '#d0d8e8', fontSize: 13, flex: 1 }}>{ann.title}{ann.body ? ` — ${ann.body}` : ''}</span>
+                  {ann.type === 'promo' && ann.discount_percent && (
+                    <span style={{ ...sfText, fontSize: 11, color: s.badge, fontWeight: 700, flexShrink: 0 }}>−{ann.discount_percent}%</span>
+                  )}
+                  {ann.type === 'promo' && ann.expires_at && (
+                    <span style={{ ...sfText, fontSize: 12, color: s.badge, fontWeight: 600, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4, background: s.badgeBg, padding: '3px 9px', borderRadius: 5, border: `1px solid ${s.border}` }}>
+                      ⏱ <PromoCountdown expiresAt={ann.expires_at} onExpired={() => setAnnouncements(prev => prev.filter(a => a.id !== ann.id))} />
+                    </span>
+                  )}
                   {ann.cta_label && ann.cta_url && (
                     <a href={ann.cta_url} style={{ ...sfText, color: s.badge, fontSize: 12, fontWeight: 600, textDecoration: 'none', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
                       {ann.cta_label} <ArrowRight size={11} />
@@ -171,7 +221,7 @@ export const Home = () => {
         ) : featuredProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredProducts.map(product => (
-              <ProductCard key={product.id} product={product} vatRate={vatRate} />
+              <ProductCard key={product.id} product={product} vatRate={vatRate} promoDiscountPercent={promoMap[product.id]} />
             ))}
           </div>
         ) : (

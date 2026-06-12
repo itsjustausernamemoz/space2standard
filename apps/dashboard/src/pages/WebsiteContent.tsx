@@ -15,9 +15,22 @@ interface Announcement {
   type: 'info' | 'promo' | 'alert' | 'news';
   cta_label: string | null;
   cta_url: string | null;
+  discount_percent: number | null;
   is_active: boolean;
   expires_at: string | null;
   created_at: string;
+  announcement_products?: { product_id: string }[];
+}
+
+interface AnnouncementForm {
+  title: string;
+  body: string | null;
+  type: 'info' | 'promo' | 'alert' | 'news';
+  cta_label: string | null;
+  cta_url: string | null;
+  discount_percent: number | null;
+  is_active: boolean;
+  expires_at: string | null;
 }
 
 interface Testimonial {
@@ -128,29 +141,55 @@ const InputField: React.FC<{
 
 // ── Announcements Tab ─────────────────────────────────────────
 
-const emptyAnn = (): Omit<Announcement, 'id' | 'created_at'> => ({
-  title: '', body: null, type: 'info', cta_label: null, cta_url: null, is_active: false, expires_at: null,
+const emptyAnn = (): AnnouncementForm => ({
+  title: '', body: null, type: 'info', cta_label: null, cta_url: null, discount_percent: null, is_active: false, expires_at: null,
 });
 
 const AnnouncementsTab: React.FC = () => {
-  const [rows, setRows]       = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [modal, setModal]     = useState<{ open: boolean; data: Omit<Announcement, 'id' | 'created_at'>; editing: string | null }>({
-    open: false, data: emptyAnn(), editing: null,
-  });
-  const [saving, setSaving]   = useState(false);
+  const [rows, setRows]             = useState<Announcement[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [allProducts, setAllProducts] = useState<{ id: string; name: string }[]>([]);
+  const [modal, setModal] = useState<{
+    open: boolean;
+    data: AnnouncementForm;
+    editing: string | null;
+    promoProductIds: string[];
+  }>({ open: false, data: emptyAnn(), editing: null, promoProductIds: [] });
+  const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
+    const { data } = await supabase.from('announcements')
+      .select('*, announcement_products(product_id)')
+      .order('created_at', { ascending: false });
     setRows(data ?? []);
     setLoading(false);
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  const openAdd  = () => setModal({ open: true, data: emptyAnn(), editing: null });
-  const openEdit = (a: Announcement) => setModal({ open: true, data: { title: a.title, body: a.body, type: a.type, cta_label: a.cta_label, cta_url: a.cta_url, is_active: a.is_active, expires_at: a.expires_at }, editing: a.id });
+  useEffect(() => {
+    supabase.from('products').select('id, name').order('name')
+      .then(({ data }) => setAllProducts(data ?? []));
+  }, []);
+
+  const openAdd = () => setModal({ open: true, data: emptyAnn(), editing: null, promoProductIds: [] });
+
+  const openEdit = async (a: Announcement) => {
+    const { data: links } = await supabase.from('announcement_products')
+      .select('product_id').eq('announcement_id', a.id);
+    setModal({
+      open: true,
+      data: {
+        title: a.title, body: a.body, type: a.type,
+        cta_label: a.cta_label, cta_url: a.cta_url,
+        discount_percent: a.discount_percent,
+        is_active: a.is_active, expires_at: a.expires_at,
+      },
+      editing: a.id,
+      promoProductIds: (links ?? []).map((l: any) => l.product_id),
+    });
+  };
 
   const save = async () => {
     if (!modal.data.title.trim()) { toast.error('Title is required'); return; }
@@ -161,11 +200,34 @@ const AnnouncementsTab: React.FC = () => {
       cta_label: modal.data.cta_label || null,
       cta_url: modal.data.cta_url || null,
       expires_at: modal.data.expires_at || null,
+      discount_percent: modal.data.type === 'promo' ? (modal.data.discount_percent || null) : null,
     };
-    const { error } = modal.editing
-      ? await supabase.from('announcements').update(payload).eq('id', modal.editing)
-      : await supabase.from('announcements').insert(payload);
-    if (error) { toast.error(error.message); } else { toast.success(modal.editing ? 'Updated' : 'Created'); setModal(m => ({ ...m, open: false })); load(); }
+
+    let annId: string | null = modal.editing;
+
+    if (modal.editing) {
+      // Parallelize the announcement update + old product links deletion
+      const [{ error: updateErr }] = await Promise.all([
+        supabase.from('announcements').update(payload).eq('id', modal.editing),
+        supabase.from('announcement_products').delete().eq('announcement_id', modal.editing),
+      ]);
+      if (updateErr) { toast.error(updateErr.message); setSaving(false); return; }
+    } else {
+      const { data: created, error } = await supabase.from('announcements').insert(payload).select('id').single();
+      if (error) { toast.error(error.message); setSaving(false); return; }
+      annId = created.id;
+    }
+
+    // Insert new product links (only for promos with selections)
+    if (annId && modal.data.type === 'promo' && modal.promoProductIds.length > 0) {
+      await supabase.from('announcement_products').insert(
+        modal.promoProductIds.map(pid => ({ announcement_id: annId!, product_id: pid }))
+      );
+    }
+
+    toast.success(modal.editing ? 'Updated' : 'Created');
+    setModal(m => ({ ...m, open: false }));
+    load();
     setSaving(false);
   };
 
@@ -181,8 +243,16 @@ const AnnouncementsTab: React.FC = () => {
     load();
   };
 
-  const set = (k: keyof typeof modal.data, v: string | boolean | null) =>
+  const set = (k: keyof AnnouncementForm, v: string | boolean | number | null) =>
     setModal(m => ({ ...m, data: { ...m.data, [k]: v } }));
+
+  const toggleProduct = (pid: string) =>
+    setModal(m => ({
+      ...m,
+      promoProductIds: m.promoProductIds.includes(pid)
+        ? m.promoProductIds.filter(id => id !== pid)
+        : [...m.promoProductIds, pid],
+    }));
 
   const activeCount = rows.filter(r => r.is_active).length;
 
@@ -214,6 +284,11 @@ const AnnouncementsTab: React.FC = () => {
                   </div>
                   {a.body && <p style={{ color: '#6a7080', fontSize: 13, lineHeight: 1.5 }} className="line-clamp-2">{a.body}</p>}
                   {a.cta_label && <p style={{ fontSize: 12, color: '#c9a46a' }}>CTA: {a.cta_label} → {a.cta_url}</p>}
+                  {a.type === 'promo' && a.discount_percent != null && (
+                    <p style={{ fontSize: 12, color: '#c9a46a', fontWeight: 600 }}>
+                      {a.discount_percent}% off · {a.announcement_products?.length ?? 0} product{(a.announcement_products?.length ?? 0) !== 1 ? 's' : ''} attached
+                    </p>
+                  )}
                   {a.expires_at && <p style={{ fontSize: 11, color: '#5a6070' }}>Expires: {new Date(a.expires_at).toLocaleDateString()}</p>}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -254,6 +329,40 @@ const AnnouncementsTab: React.FC = () => {
                   ))}
                 </div>
               </div>
+
+              {/* Promo-only fields */}
+              {modal.data.type === 'promo' && (
+                <>
+                  <InputField
+                    label="Discount %"
+                    value={modal.data.discount_percent != null ? String(modal.data.discount_percent) : ''}
+                    onChange={v => set('discount_percent', v === '' ? null : (parseFloat(v) || null))}
+                    type="number"
+                    placeholder="20"
+                  />
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', color: '#c9a46a', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>
+                      Attach Products ({modal.promoProductIds.length} selected)
+                    </label>
+                    <div style={{ maxHeight: 190, overflowY: 'auto', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '6px 4px' }}>
+                      {allProducts.length === 0 ? (
+                        <p style={{ color: '#5a6070', fontSize: 13, padding: '8px 12px' }}>No products found.</p>
+                      ) : allProducts.map(p => (
+                        <label key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 12px', cursor: 'pointer', borderRadius: 7 }}>
+                          <input
+                            type="checkbox"
+                            checked={modal.promoProductIds.includes(p.id)}
+                            onChange={() => toggleProduct(p.id)}
+                            style={{ accentColor: '#c9a46a', width: 15, height: 15, flexShrink: 0 }}
+                          />
+                          <span style={{ color: modal.promoProductIds.includes(p.id) ? '#c9a46a' : '#a0a8b8', fontSize: 13 }}>{p.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <InputField label="CTA Button Label" value={modal.data.cta_label ?? ''} onChange={v => set('cta_label', v)} placeholder="Shop Now" />
                 <InputField label="CTA URL" value={modal.data.cta_url ?? ''} onChange={v => set('cta_url', v)} placeholder="/products" />

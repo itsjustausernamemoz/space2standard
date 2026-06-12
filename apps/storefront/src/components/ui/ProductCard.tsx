@@ -7,19 +7,25 @@ import { formatCurrency, calcDiscount } from '@shared/utils';
 interface ProductCardProps {
   product: Product;
   vatRate?: number;
+  promoDiscountPercent?: number;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, vatRate = 0 }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, vatRate = 0, promoDiscountPercent }) => {
   const discountedPrice = calcDiscount(
     product.price,
     product.discount_type,
     product.discount_value
   );
-  
-  const displayPrice = vatRate > 0 ? discountedPrice * (1 + vatRate / 100) : discountedPrice;
+
+  // Promo discount (from an active announcement) takes priority over the product's own discount
+  const effectiveBasePrice = promoDiscountPercent != null
+    ? product.price * (1 - promoDiscountPercent / 100)
+    : discountedPrice;
+
+  const displayPrice = vatRate > 0 ? effectiveBasePrice * (1 + vatRate / 100) : effectiveBasePrice;
   const originalPriceInclVat = vatRate > 0 ? product.price * (1 + vatRate / 100) : product.price;
 
-  const hasDiscount = discountedPrice < product.price;
+  const hasDiscount = effectiveBasePrice < product.price;
   const primaryImage = product.images?.find(img => img.is_primary)?.storage_url || '/images/placeholder.jpg';
 
   return (
@@ -42,11 +48,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, vatRate = 0 }
         
         {/* Badges */}
         <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
-          {hasDiscount && (
+          {promoDiscountPercent != null ? (
+            <span className="bg-[#c9a46a] text-[#060b18] px-2 py-1 rounded-[3px] text-[9px] font-bold uppercase tracking-[0.1em]">
+              -{promoDiscountPercent}%
+            </span>
+          ) : hasDiscount ? (
             <span className="bg-[#c9a46a] text-[#060b18] px-2 py-1 rounded-[3px] text-[9px] font-bold uppercase tracking-[0.1em]">
               Sale
             </span>
-          )}
+          ) : null}
         </div>
         
         <div className="absolute top-4 right-4 z-20">

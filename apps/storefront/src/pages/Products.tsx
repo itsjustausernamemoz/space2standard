@@ -11,16 +11,35 @@ export const Products = () => {
   const [loading, setLoading]   = useState(true);
   const [category, setCategory] = useState('All');
   const [vatRate, setVatRate]   = useState(15);
+  const [promoMap, setPromoMap] = useState<Record<string, number>>({});
 
   useEffect(() => {
     async function fetchData() {
-      const [{ data: pData }, { data: sData }] = await Promise.all([
+      const now = new Date().toISOString();
+      const [{ data: pData }, { data: sData }, { data: promoData }] = await Promise.all([
         supabase.from('products').select('*, images:product_images(*), product_reviews(*), category_rel:categories(name)').eq('is_published', true),
         supabase.from('settings').select('*'),
+        supabase.from('announcements')
+          .select('discount_percent, announcement_products(product_id)')
+          .eq('is_active', true)
+          .eq('type', 'promo')
+          .not('discount_percent', 'is', null)
+          .or(`expires_at.is.null,expires_at.gt.${now}`),
       ]);
       setProducts(pData || []);
-      const vRate = sData?.find(s => s.key === 'vat_rate')?.value;
+      const vRate = sData?.find((s: any) => s.key === 'vat_rate')?.value;
       if (vRate) setVatRate(parseFloat(vRate));
+
+      const map: Record<string, number> = {};
+      (promoData ?? []).forEach((ann: any) => {
+        if (ann.discount_percent && ann.announcement_products) {
+          ann.announcement_products.forEach((link: any) => {
+            map[link.product_id] = Math.max(map[link.product_id] || 0, ann.discount_percent);
+          });
+        }
+      });
+      setPromoMap(map);
+
       setLoading(false);
     }
     fetchData();
@@ -76,7 +95,7 @@ export const Products = () => {
             </div>
           ) : filteredProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredProducts.map(product => <ProductCard key={product.id} product={product} vatRate={vatRate} />)}
+              {filteredProducts.map(product => <ProductCard key={product.id} product={product} vatRate={vatRate} promoDiscountPercent={promoMap[product.id]} />)}
             </div>
           ) : (
             <div className="py-24 text-center">
