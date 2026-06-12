@@ -8,20 +8,28 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
+interface UrlAttachment {
+  name: string;
+  url: string;
+  size: number;
+  mimeType: string;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const { 
-      to, 
-      subject, 
-      message, 
-      recipientName, 
-      adminName, 
-      attachmentPath, 
-      documentType 
+    const {
+      to,
+      subject,
+      message,
+      recipientName,
+      adminName,
+      attachmentPath,
+      documentType,
+      attachments: urlAttachments,
     } = await req.json();
 
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -54,9 +62,9 @@ Deno.serve(async (req) => {
     const businessPhone = settings?.business_phone || '';
     const businessEmail = settings?.business_email || SMTP_USER;
 
-    const attachments = [];
+    const attachments: any[] = [];
 
-    // Fetch and attach file from storage if path provided
+    // Legacy: fetch single document from storage path (used by invoices/quotations)
     if (attachmentPath) {
       const { data: fileData, error: fileError } = await supabase.storage
         .from('communications')
@@ -73,6 +81,28 @@ Deno.serve(async (req) => {
         });
       }
     }
+
+    // Fetch files from public URLs (used by Messages reply attachments)
+    if (Array.isArray(urlAttachments) && urlAttachments.length > 0) {
+      await Promise.all(
+        (urlAttachments as UrlAttachment[]).map(async (att) => {
+          try {
+            const res = await fetch(att.url);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const buffer = await res.arrayBuffer();
+            attachments.push({
+              filename: att.name,
+              content: new Uint8Array(buffer),
+              contentType: att.mimeType || 'application/octet-stream',
+            });
+          } catch (err: any) {
+            console.error(`[SMTP ERROR] Could not fetch attachment ${att.name}: ${err.message}`);
+          }
+        })
+      );
+    }
+
+    const hasAttachments = attachments.length > 0;
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -100,7 +130,7 @@ Deno.serve(async (req) => {
           <div class="content">
             <div class="greeting">Dear ${recipientName || 'Valued Client'},</div>
             <div class="message">${message}</div>
-            ${attachmentPath ? `<p style="margin-top: 30px; color: #64748b; font-size: 14px;"><strong>Note:</strong> A ${documentType || 'document'} has been attached to this email for your reference.</p>` : ''}
+            ${hasAttachments ? `<p style="margin-top: 30px; color: #64748b; font-size: 14px;"><strong>Note:</strong> ${attachments.length === 1 ? 'A file has' : `${attachments.length} files have`} been attached to this email for your reference.</p>` : ''}
           </div>
           <div class="footer">
             <div class="signature">

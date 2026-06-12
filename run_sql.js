@@ -10,7 +10,7 @@ async function run() {
 
   try {
     await client.connect();
-    const sql = fs.readFileSync(path.join(__dirname, 'supabase', 'add_reviews.sql'), 'utf8');
+    const sql = fs.readFileSync(path.join(__dirname, 'supabase', 'migrations', '20260611000000_message_attachments_storage.sql'), 'utf8');
     await client.query(sql);
     console.log("SQL executing complete!");
   } catch (err) {

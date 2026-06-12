@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
 import { 
@@ -26,8 +26,7 @@ import {
 } from 'recharts';
 import { formatCurrency } from '@shared/utils';
 import { subDays } from 'date-fns';
-import { PDFDownloadLink } from '@react-pdf/renderer';
-import { FinanceReport } from '@/components/FinanceReport';
+const ReportDownloadButton = lazy(() => import('@/components/ReportDownloadButton'));
 
 export const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -262,29 +261,21 @@ export const Dashboard = () => {
            </div>
 
            {!loading && (
-             <PDFDownloadLink 
-               key={`report-${detailedLedger.length}-${stats.totalRevenue}-${timeframe}`}
-               document={
-                 <FinanceReport 
-                   stats={stats} 
-                   timeframe={timeframe} 
-                   recentActivity={recentActivity} 
-                   detailedLedger={detailedLedger}
-                   inventoryList={inventoryList}
-                   allOrdersList={allOrdersList}
-                   businessInfo={businessInfo}
-                 />
-               } 
-             fileName={`Artisan_Ledger_Report_${new Date().toISOString().split('T')[0]}.pdf`}
-             className="flex items-center gap-3 bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/20 px-6 py-2 rounded-lg text-[10px] font-bold uppercase tracking-[0.2em] text-gold-500 transition-all"
-           >
-             {({ loading }) => (
-               <>
-                 <Download size={14} />
-                 {loading ? 'Preparing Ledger...' : 'Generate High-Fidelity Report'}
-               </>
-             )}
-           </PDFDownloadLink>
+             <Suspense fallback={
+               <span className="flex items-center gap-3 bg-gold-500/10 border border-gold-500/20 px-6 py-2 rounded-lg text-[10px] font-bold uppercase tracking-[0.2em] text-gold-500/50">
+                 <Download size={14} /> Loading…
+               </span>
+             }>
+               <ReportDownloadButton
+                 stats={stats}
+                 timeframe={timeframe}
+                 recentActivity={recentActivity}
+                 detailedLedger={detailedLedger}
+                 inventoryList={inventoryList}
+                 allOrdersList={allOrdersList}
+                 businessInfo={businessInfo}
+               />
+             </Suspense>
            )}
         </div>
       </header>

@@ -265,6 +265,8 @@ export const Messages = () => {
       const attachments = files.length > 0 ? await uploadFiles(files) : [];
 
       const { data: { session } } = await supabase.auth.getSession();
+      const adminId = session?.user?.id;
+
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-reply`, {
         method: 'POST',
         headers: {
@@ -280,14 +282,18 @@ export const Messages = () => {
       });
       if (!res.ok) throw new Error('Send failed');
 
-      await supabase.from('communication_logs').insert({
+      // Log outbound message — best-effort; a logging failure must never surface as a send error
+      const logEntry: Record<string, any> = {
         type: 'outbound',
         sender_name: adminProfile?.full_name || 'Admin',
         sender_email: 'studio@space2standard.com',
         recipient_email: to, subject, body,
-        admin_id: (await supabase.auth.getUser()).data.user?.id,
-        metadata: attachments.length > 0 ? { attachments } : null,
-      });
+        admin_id: adminId,
+      };
+      if (attachments.length > 0) logEntry.metadata = { attachments };
+
+      const { error: logError } = await supabase.from('communication_logs').insert(logEntry);
+      if (logError) console.warn('Outbound log failed:', logError.message);
 
       if (!manual && !selected?.isLog) {
         await supabase.from('contact_messages').update({ status: 'replied' }).eq('id', selected.id);
